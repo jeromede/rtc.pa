@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2017 jeromede@fr.ibm.com
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 package rtc.model;
 
 import java.io.FileInputStream;
@@ -14,14 +30,21 @@ public class Project extends Item implements Serializable {
 	private static final long serialVersionUID = 6293925306051459254L;
 
 	private String name;
-	private Map<Integer, User> users = new HashMap<Integer, User>();
+	private Map<Integer, Member> members = new HashMap<Integer, Member>();
+	private Map<String, Member> members0 = new HashMap<String, Member>();
+	private Map<Integer, Administrator> administrators = new HashMap<Integer, Administrator>();
+	private Map<String, Administrator> administrators0 = new HashMap<String, Administrator>();
+	private Map<Integer, Category> categories = new HashMap<Integer, Category>();
+	private Map<String, Category> categories0 = new HashMap<String, Category>();
 	private Map<Integer, Task> tasks = new HashMap<Integer, Task>();
-	private Map<String, User> users0 = new HashMap<String, User>();
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
 
+	public String toString() {
+		return super.toString() + ", name: \"" + this.name + "\"";
+	}
+
 	public Project(String name) {
-		super();
-		this.name = new String(name);
+		this(null, name);
 	}
 
 	public Project(String oldId, String name) {
@@ -33,17 +56,43 @@ public class Project extends Item implements Serializable {
 		return this.name;
 	}
 
-	public void putUser(User user) {
-		users.put(user.getId(), user);
-		users0.put(user.getOldId(), user);
+	public void putMember(Member member) {
+		members.put(member.getId(), member);
+		members0.put(member.getOldId(), member);
 	}
 
-	public User getUser(int id) {
-		return users.get(id);
+	public Member getMember(int id) {
+		return members.get(id);
 	}
 
-	public User getUser(String id) {
-		return users0.get(id);
+	public Member getMember(String id) {
+		return members0.get(id);
+	}
+
+	public void putAdministrator(Administrator user) {
+		administrators.put(user.getId(), user);
+		administrators0.put(user.getOldId(), user);
+	}
+
+	public Administrator getAdministrator(int id) {
+		return administrators.get(id);
+	}
+
+	public Administrator getAdministrator(String id) {
+		return administrators0.get(id);
+	}
+
+	public void putCategory(Category category) {
+		categories.put(category.getId(), category);
+		categories0.put(category.getOldId(), category);
+	}
+
+	public Category getCategory(int id) {
+		return categories.get(id);
+	}
+
+	public Category getCategory(String id) {
+		return categories0.get(id);
 	}
 
 	public void putTask(Task task) {
@@ -57,11 +106,6 @@ public class Project extends Item implements Serializable {
 
 	public Task getTask(String id) {
 		return tasks0.get(id);
-	}
-
-	public String dump() {
-		return "project id: " + this.getId() + "\nproject name: " + this.name + "\nproject users: "
-				+ dump_users(this.users) + "\nproject tasks: " + dump_tasks(this.tasks);
 	}
 
 	public void serialize(String filename) {
@@ -95,13 +139,38 @@ public class Project extends Item implements Serializable {
 		return null;
 	}
 
-	private static String dump_users(Map<Integer, User> users) {
+	public String dump() {
+		return "project: " + this.toString() + "\nproject admins: " + dump_administrators(this.administrators)
+				+ "\nproject members: " + dump_users(this.members) + "\nproject categories: "
+				+ dump_categories(this.categories) + "\nproject tasks: " + dump_tasks(this.tasks);
+	}
+
+	private static String dump_users(Map<Integer, Member> users) {
 		String buffer = new String();
-		User user;
+		Member user;
 		for (Integer i : users.keySet()) {
 			user = users.get(i);
-			buffer = buffer + "\nuser id: " + user.getId() + "\nuser old id: " + user.getOldId() + "\nuser name: "
-					+ user.getName();
+			buffer = buffer + "\n\t" + user.toString();
+		}
+		return buffer;
+	}
+
+	private static String dump_administrators(Map<Integer, Administrator> users) {
+		String buffer = new String();
+		Administrator user;
+		for (Integer i : users.keySet()) {
+			user = users.get(i);
+			buffer = buffer + "\n\t" + user.toString();
+		}
+		return buffer;
+	}
+
+	private static String dump_categories(Map<Integer, Category> categories) {
+		String buffer = new String();
+		Category category;
+		for (Integer i : categories.keySet()) {
+			category = categories.get(i);
+			buffer = buffer + "\n\t" + category.toString();
 		}
 		return buffer;
 	}
@@ -111,8 +180,7 @@ public class Project extends Item implements Serializable {
 		Task task;
 		for (Integer i : tasks.keySet()) {
 			task = tasks.get(i);
-			buffer = buffer + "\ntask id: " + task.getId() + "\ntask old id: " + task.getOldId() + "\ntask name: "
-					+ task.getName();
+			buffer = buffer + "\n\t" + task.toString();
 		}
 		return buffer;
 	}

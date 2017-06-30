@@ -16,44 +16,35 @@
 
 package rtc.model;
 
-public abstract class Item implements java.io.Serializable {
+import java.io.Serializable;
 
-	private static final long serialVersionUID = 8450163754687832796L;
+public class User extends Item implements Serializable {
 
-	private static int nextId = Integer.MIN_VALUE;
+	private static final long serialVersionUID = -7116824774676758450L;
 
-	private Integer id;
-	private String oldId = null;
-	private transient String newId = null;
+	private String name;
+	private String userId;
 
 	public String toString() {
-		return "id: \"" + this.id + "\", oldId: \"" + this.oldId + "\"";
+		return super.toString() + ", name: \"" + this.name + "\", userId: \"" + this.userId + "\"";
 	}
 
-	public Item(String oldId) {
-		this.id = nextId++;
-		if (null != oldId)
-			this.oldId = new String(oldId);
+	public User(String name, String userid) {
+		this(null, name, userid);
 	}
 
-	public int getId() {
-		return this.id;
+	public User(String oldId, String name, String userId) {
+		super(oldId);
+		this.name = new String(name);
+		this.userId = new String(userId);
 	}
 
-	public String setOldId(String id) {
-		return this.oldId = new String(id);
+	public String getName() {
+		return this.name;
 	}
 
-	public String getOldId() {
-		return this.oldId;
-	}
-
-	public String setNewId(String id) {
-		return this.newId = new String(id);
-	}
-
-	public String getNewId() {
-		return this.newId;
+	public String getUserId() {
+		return this.userId;
 	}
 
 }

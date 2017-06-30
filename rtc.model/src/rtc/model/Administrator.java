@@ -16,44 +16,18 @@
 
 package rtc.model;
 
-public abstract class Item implements java.io.Serializable {
+import java.io.Serializable;
 
-	private static final long serialVersionUID = 8450163754687832796L;
+public class Administrator extends User implements Serializable {
 
-	private static int nextId = Integer.MIN_VALUE;
+	private static final long serialVersionUID = 3897817385244772203L;
 
-	private Integer id;
-	private String oldId = null;
-	private transient String newId = null;
-
-	public String toString() {
-		return "id: \"" + this.id + "\", oldId: \"" + this.oldId + "\"";
+	public Administrator(String name, String userId) {
+		this(null, name, userId);
 	}
 
-	public Item(String oldId) {
-		this.id = nextId++;
-		if (null != oldId)
-			this.oldId = new String(oldId);
-	}
-
-	public int getId() {
-		return this.id;
-	}
-
-	public String setOldId(String id) {
-		return this.oldId = new String(id);
-	}
-
-	public String getOldId() {
-		return this.oldId;
-	}
-
-	public String setNewId(String id) {
-		return this.newId = new String(id);
-	}
-
-	public String getNewId() {
-		return this.newId;
+	public Administrator(String oldId, String name, String userId) {
+		super(oldId, name, userId);
 	}
 
 }
