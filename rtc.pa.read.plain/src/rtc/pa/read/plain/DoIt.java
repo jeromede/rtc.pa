@@ -267,7 +267,6 @@ public class DoIt {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
 
 		monitor.out("Now reading work items...");
-		Task task;
 		IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
 		IQueryClient queryClient = (IQueryClient) repo.getClientLibrary(IQueryClient.class);
 		IQueryableAttribute attribute = null;
@@ -282,16 +281,13 @@ public class DoIt {
 		IQueryResult<IResolvedResult<IWorkItem>> results = queryClient.getResolvedExpressionResults(pa, expression,
 				IWorkItem.FULL_PROFILE);
 		results.setLimit(Integer.MAX_VALUE);
-		IResolvedResult<IWorkItem> result;
-		IWorkItem wi;
+		String result;
 		try {
 			while (results.hasNext(monitor)) {
-				result = results.next(monitor);
-				wi = result.getItem();
-				task = new Task(wi.getItemId().getUuidValue(), wi.getItemId().getUuidValue(),
-						p.getMember(wi.getCreator().getItemId().getUuidValue()));
-				p.putTask(task);
-				readWorkItem(wi, repo, pa, wiClient, wiCommon, itemManager, "", monitor, p, task);
+				result = readWorkItem(results.next(monitor).getItem(), repo, pa, wiClient, wiCommon, itemManager,
+						monitor, p);
+				if (null != result)
+					return result;
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -302,8 +298,20 @@ public class DoIt {
 	}
 
 	private static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, String prefix, ProgressMonitor monitor, Project p,
-			Task task) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
+
+		Task task;
+		task = new Task(wi.getItemId().getUuidValue(), "" + wi.getId(),
+				p.getMember(wi.getCreator().getItemId().getUuidValue()));
+		p.putTask(task);
+		monitor.out("\tjust added work item " + task.getName() + trace(wi));
+		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
+		return null;
+	}
+
+	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
+			Project p, Task task) {
 
 		IAuditableHandle auditableHandle = (IAuditableHandle) wi.getItemHandle();
 		List<IWorkItemHandle> handles;
@@ -315,39 +323,87 @@ public class DoIt {
 			e.printStackTrace();
 			return "Error reading history of work item " + wi.getId();
 		}
+		String result;
 		for (IWorkItem w : workItems) {
-			readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, prefix + "\t", monitor, p, task);
+			result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
+			if (null != result)
+				return result;
 		}
-
 		return null;
 	}
 
-	private static String readWorkItemVersion(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
-			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, String prefix,
-			ProgressMonitor monitor, Project p, Task task) {
+	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
+			Project p, Task task) {
 
-		monitor.out("\n" + prefix + "workitem " + wi.getId() + " " + wi.getCreationDate() + " — " + wi.getFullState()
-				.toString().replaceAll(", ", "\n " + prefix).replaceAll(" \\(", "\n" + prefix + "\\("));
-		monitor.out(prefix + "TARGET: " + ((null == wi.getTarget()) ? "null" : wi.getTarget().toString()));
-		monitor.out(prefix + "MODIFIED: " + wi.modified().toString());
-		IContributor contributor;
+		int id = w.getId();
+		String type = w.getWorkItemType();
+		Date creation = w.getCreationDate();
+		Date modified = w.modified();
+		Date due = w.getDueDate();
+		long duration = w.getDuration();
+		ICategoryHandle category = w.getCategory();
+		IIterationHandle target = w.getTarget();
+		IContributor createdBy;
 		try {
-			contributor = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) wi.getModifiedBy(),
+			createdBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getCreator(),
 					IItemManager.DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "Problem retrieving contributor for workitem.";
+			return "Problem retrieving creator for workitem.";
 		}
-		monitor.out(prefix + "MODIFIER: " + contributor.getUserId() + " (" + contributor.getName() + " <"
-				+ contributor.getEmailAddress() + ">)");
+		IContributor ownedBy;
 		try {
-			monitor.out(prefix + "CATEGORY: "
-					+ wiCommon.resolveHierarchicalName((ICategoryHandle) wi.getCategory(), monitor));
+			ownedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getOwner(),
+					IItemManager.DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "Error while reading category for work item " + wi.getId();
+			return "Problem retrieving owner for workitem.";
 		}
-		monitor.out(prefix + "TARGET: " + ((null == wi.getTarget()) ? "null" : wi.getTarget().toString()));
+		IContributor modifiedBy;
+		try {
+			modifiedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getModifiedBy(),
+					IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "Problem retrieving modifier for workitem.";
+		}
+		IContributor resolvedBy;
+		try {
+			resolvedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getResolver(),
+					IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "Problem retrieving resolver for workitem.";
+		}
+		monitor.out("\tjust ***NOT*** added work item version " + task.getName() + trace(w));
+
+		monitor.out(trace("\tid", "" + id));
+		monitor.out(trace("\ttype", type));
+		monitor.out(trace("\tcreation", creation));
+		monitor.out(trace("\tmodified", modified));
+		monitor.out(trace("\tdue", due));
+		monitor.out(trace("\tduration", "" + duration));
+		monitor.out(trace("\tcategory", category));
+		monitor.out(trace("\ttarget", target));
+		monitor.out(trace("\tcreatedBy", createdBy));
+		monitor.out(trace("\townedBy", ownedBy));
+		monitor.out(trace("\tmodifiedBy", modifiedBy));
+		monitor.out(trace("\tresolvedBy", resolvedBy));
+
+		// TO DO
+		w.getApprovals();
+		w.getComments();
+		w.getCustomAttributes();
+		w.getHTMLDescription();
+		w.getHTMLSummary();
+		w.getPriority();
+		w.getResolver();
+		w.getResolutionDate();
+		w.getSeverity();
+		w.getState2();
+		w.getTags2();
+		// w.getValue(null);
 
 		return null;
 	}
