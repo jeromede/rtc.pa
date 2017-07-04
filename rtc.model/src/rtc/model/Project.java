@@ -36,11 +36,13 @@ public class Project extends Item implements Serializable {
 	private Map<String, Administrator> administrators0 = new HashMap<String, Administrator>();
 	private Map<Integer, Category> categories = new HashMap<Integer, Category>();
 	private Map<String, Category> categories0 = new HashMap<String, Category>();
+	private Map<Integer, Line> lines = new HashMap<Integer, Line>();
+	private Map<String, Line> lines0 = new HashMap<String, Line>();
 	private Map<Integer, Task> tasks = new HashMap<Integer, Task>();
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
 
 	public String toString() {
-		return super.toString() + ", name: \"" + this.name + "\"";
+		return super.toString() + Item.SEP + Item.trace("name", name);
 	}
 
 	public Project(String name) {
@@ -95,6 +97,19 @@ public class Project extends Item implements Serializable {
 		return categories0.get(id);
 	}
 
+	public void putLine(Line line) {
+		lines.put(line.getId(), line);
+		lines0.put(line.getOldId(), line);
+	}
+
+	public Line getLine(int id) {
+		return lines.get(id);
+	}
+
+	public Line getLine(String id) {
+		return lines0.get(id);
+	}
+
 	public void putTask(Task task) {
 		tasks.put(task.getId(), task);
 		tasks0.put(task.getOldId(), task);
@@ -142,7 +157,8 @@ public class Project extends Item implements Serializable {
 	public String dump() {
 		return "project: " + this.toString() + "\nproject admins: " + dump_administrators(this.administrators)
 				+ "\nproject members: " + dump_users(this.members) + "\nproject categories: "
-				+ dump_categories(this.categories) + "\nproject tasks: " + dump_tasks(this.tasks);
+				+ dump_categories(this.categories) + "\nproject development lines: " + dump_lines(this.lines)
+				+ "\nproject tasks: " + dump_tasks(this.tasks);
 	}
 
 	private static String dump_users(Map<Integer, Member> users) {
@@ -171,6 +187,16 @@ public class Project extends Item implements Serializable {
 		for (Integer i : categories.keySet()) {
 			category = categories.get(i);
 			buffer = buffer + "\n\t" + category.toString();
+		}
+		return buffer;
+	}
+
+	private static String dump_lines(Map<Integer, Line> lines) {
+		String buffer = new String();
+		Line line;
+		for (Integer i : lines.keySet()) {
+			line = lines.get(i);
+			buffer = buffer + "\n\t" + line.toString();
 		}
 		return buffer;
 	}

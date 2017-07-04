@@ -20,13 +20,13 @@ import java.io.Serializable;
 
 public class TaskVersion extends Item implements Serializable {
 
-	private static final long serialVersionUID = 1325028522439850990L;
+	private static final long serialVersionUID = -7763110461126796356L;
 
 	private String name;
 	private Member member;
 
 	public String toString() {
-		return super.toString() + ", name: \"" + this.name + "\", member: {" + this.member.toString() + "}";
+		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member);
 	}
 
 	public TaskVersion(String name, Member member) {

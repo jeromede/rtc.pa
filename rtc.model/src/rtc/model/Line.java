@@ -16,31 +16,36 @@
 
 package rtc.model;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Line extends Item implements Serializable {
 
-	private static final long serialVersionUID = 6293925306051459254L;
+	private static final long serialVersionUID = 6185617986682800843L;
 
 	private String name;
-	private Map<Integer, Member> members = new HashMap<Integer, Member>();
-	private Map<String, Member> members0 = new HashMap<String, Member>();
-	private Map<Integer, Administrator> administrators = new HashMap<Integer, Administrator>();
-	private Map<String, Administrator> administrators0 = new HashMap<String, Administrator>();
-	private Map<Integer, Category> categories = new HashMap<Integer, Category>();
-	private Map<String, Category> categories0 = new HashMap<String, Category>();
-	private Map<Integer, Task> tasks = new HashMap<Integer, Task>();
-	private Map<String, Task> tasks0 = new HashMap<String, Task>();
+	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
+	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
 
 	public String toString() {
-		return super.toString() + ", name: \"" + this.name + "\"";
+		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP
+				+ Item.trace("iterations", iterationsToString());
+	}
+
+	private String iterationsToString() {
+		String result = "";
+		Iteration i;
+		int n = 0;
+		for (Integer k : iterations.keySet()) {
+			i = iterations.get(k);
+			if (result.isEmpty()) {
+				result = Item.trace(n++, i);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, i);
+			}
+		}
+		return result;
 	}
 
 	public Line(String name) {
@@ -56,133 +61,17 @@ public class Line extends Item implements Serializable {
 		return this.name;
 	}
 
-	public void putMember(Member member) {
-		members.put(member.getId(), member);
-		members0.put(member.getOldId(), member);
+	public void putIteration(Iteration iteration) {
+		iterations.put(iteration.getId(), iteration);
+		iterations0.put(iteration.getOldId(), iteration);
 	}
 
-	public Member getMember(int id) {
-		return members.get(id);
+	public Iteration getIteration(int id) {
+		return iterations.get(id);
 	}
 
-	public Member getMember(String id) {
-		return members0.get(id);
-	}
-
-	public void putAdministrator(Administrator user) {
-		administrators.put(user.getId(), user);
-		administrators0.put(user.getOldId(), user);
-	}
-
-	public Administrator getAdministrator(int id) {
-		return administrators.get(id);
-	}
-
-	public Administrator getAdministrator(String id) {
-		return administrators0.get(id);
-	}
-
-	public void putCategory(Category category) {
-		categories.put(category.getId(), category);
-		categories0.put(category.getOldId(), category);
-	}
-
-	public Category getCategory(int id) {
-		return categories.get(id);
-	}
-
-	public Category getCategory(String id) {
-		return categories0.get(id);
-	}
-
-	public void putTask(Task task) {
-		tasks.put(task.getId(), task);
-		tasks0.put(task.getOldId(), task);
-	}
-
-	public Task getTask(int id) {
-		return tasks.get(id);
-	}
-
-	public Task getTask(String id) {
-		return tasks0.get(id);
-	}
-
-	public void serialize(String filename) {
-		try {
-			FileOutputStream fileOut = new FileOutputStream(filename);
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(this);
-			out.close();
-			fileOut.close();
-			System.out.println("Serialized data is saved in " + filename);
-		} catch (IOException i) {
-			i.printStackTrace();
-		}
-	}
-
-	public static Line deserialize(String filename) {
-		Line p = null;
-		try {
-			FileInputStream fileIn = new FileInputStream(filename);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			p = (Line) in.readObject();
-			in.close();
-			fileIn.close();
-			return p;
-		} catch (IOException i) {
-			i.printStackTrace();
-		} catch (ClassNotFoundException c) {
-			System.out.println("Project class not found");
-			c.printStackTrace();
-		}
-		return null;
-	}
-
-	public String dump() {
-		return "project: " + this.toString() + "\nproject admins: " + dump_administrators(this.administrators)
-				+ "\nproject members: " + dump_users(this.members) + "\nproject categories: "
-				+ dump_categories(this.categories) + "\nproject tasks: " + dump_tasks(this.tasks);
-	}
-
-	private static String dump_users(Map<Integer, Member> users) {
-		String buffer = new String();
-		Member user;
-		for (Integer i : users.keySet()) {
-			user = users.get(i);
-			buffer = buffer + "\n\t" + user.toString();
-		}
-		return buffer;
-	}
-
-	private static String dump_administrators(Map<Integer, Administrator> users) {
-		String buffer = new String();
-		Administrator user;
-		for (Integer i : users.keySet()) {
-			user = users.get(i);
-			buffer = buffer + "\n\t" + user.toString();
-		}
-		return buffer;
-	}
-
-	private static String dump_categories(Map<Integer, Category> categories) {
-		String buffer = new String();
-		Category category;
-		for (Integer i : categories.keySet()) {
-			category = categories.get(i);
-			buffer = buffer + "\n\t" + category.toString();
-		}
-		return buffer;
-	}
-
-	private static String dump_tasks(Map<Integer, Task> tasks) {
-		String buffer = new String();
-		Task task;
-		for (Integer i : tasks.keySet()) {
-			task = tasks.get(i);
-			buffer = buffer + "\n\t" + task.toString();
-		}
-		return buffer;
+	public Iteration getIteration(String id) {
+		return iterations0.get(id);
 	}
 
 }

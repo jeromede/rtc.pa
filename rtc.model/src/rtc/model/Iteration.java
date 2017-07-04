@@ -20,31 +20,25 @@ import java.io.Serializable;
 
 public class Iteration extends Item implements Serializable {
 
-	private static final long serialVersionUID = 1325028522439850990L;
+	private static final long serialVersionUID = 7283835080445170873L;
 
 	private String name;
-	private Member member;
 
 	public String toString() {
-		return super.toString() + ", name: \"" + this.name + "\", member: {" + this.member.toString() + "}";
+		return super.toString() + Item.SEP + Item.trace("name", name);
 	}
 
-	public Iteration(String name, Member member) {
-		this(null, name, member);
+	public Iteration(String name) {
+		this(null, name);
 	}
 
-	public Iteration(String oldId, String name, Member member) {
+	public Iteration(String oldId, String name) {
 		super(oldId);
 		this.name = new String(name);
-		this.member = member;
 	}
 
 	public String getName() {
 		return this.name;
-	}
-
-	public Member getUser() {
-		return this.member;
 	}
 
 }

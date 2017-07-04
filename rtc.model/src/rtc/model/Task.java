@@ -17,6 +17,8 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Task extends Item implements Serializable {
 
@@ -24,9 +26,27 @@ public class Task extends Item implements Serializable {
 
 	private String name;
 	private Member member;
+	private Map<Integer, TaskVersion> versions = new HashMap<Integer, TaskVersion>();
+	private Map<String, TaskVersion> versions0 = new HashMap<String, TaskVersion>();
 
 	public String toString() {
-		return super.toString() + ", name: \"" + this.name + "\", member: {" + this.member.toString() + "}";
+		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member)
+				+ Item.SEP + Item.trace_list("version", versionsToString());
+	}
+
+	private String versionsToString() {
+		String result = "";
+		TaskVersion v;
+		int n = 0;
+		for (Integer k : versions.keySet()) {
+			v = versions.get(k);
+			if (result.isEmpty()) {
+				result = Item.trace(n++, v);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, v);
+			}
+		}
+		return result;
 	}
 
 	public Task(String name, Member member) {
@@ -45,6 +65,19 @@ public class Task extends Item implements Serializable {
 
 	public Member getUser() {
 		return this.member;
+	}
+
+	public void putTaskVersion(TaskVersion version) {
+		versions.put(version.getId(), version);
+		versions0.put(version.getOldId(), version);
+	}
+
+	public TaskVersion getTaskVersion(int id) {
+		return versions.get(id);
+	}
+
+	public TaskVersion getTaskVersion(String id) {
+		return versions0.get(id);
 	}
 
 }

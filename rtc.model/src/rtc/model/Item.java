@@ -18,6 +18,8 @@ package rtc.model;
 
 public abstract class Item implements java.io.Serializable {
 
+	public static final String SEP = ", ";
+
 	private static final long serialVersionUID = 8450163754687832796L;
 
 	private static int nextId = Integer.MIN_VALUE;
@@ -27,7 +29,7 @@ public abstract class Item implements java.io.Serializable {
 	private transient String newId = null;
 
 	public String toString() {
-		return "id: \"" + this.id + "\", oldId: \"" + this.oldId + "\"";
+		return trace("id", id) + SEP + trace("oldId", oldId);
 	}
 
 	public Item(String oldId) {
@@ -56,4 +58,34 @@ public abstract class Item implements java.io.Serializable {
 		return this.newId;
 	}
 
+	public static String trace(String t, int i) {
+		return t + ": \"" + i + '\"';
+	}
+
+	public static String trace(String t, String s) {
+		if (null == s) {
+			return t + ": null";
+		}
+		return t + ": \"" + s + '\"';
+	}
+
+	public static String trace(String t, Item k) {
+		if (null == k) {
+			return t + ": null";
+		}
+		return t + ": {" + k + '}';
+	}
+	public static String trace(int i, Item k) {
+		if (null == k) {
+			return i + "-> null";
+		}
+		return i + "-> {" + k + '}';
+	}
+	
+	public static String trace_list(String t, Object o) {
+		if (null == o) {
+			return t + ": null";
+		}
+		return t + ": [" + o + ']';
+	}
 }

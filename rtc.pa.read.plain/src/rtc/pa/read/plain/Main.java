@@ -42,16 +42,16 @@ public class Main {
 		Project p = null;
 
 		String url, proj, user, password;
-		IPath dir;
+		IPath file;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
-			dir = new Path(new String(args[4]));
+			file = new Path(new String(args[4]));
 		} catch (Exception e) {
-			monitor.err("arguments: url user password destination_dir");
-			monitor.err("example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou /home/issr/here");
+			monitor.err("arguments: url user password destination_file");
+			monitor.err("example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser");
 			System.err.print("Bad arguments:");
 			for (String arg : args) {
 				monitor.err(arg);
@@ -72,13 +72,12 @@ public class Main {
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
 				p = new Project(pa.getItemId().getUuidValue(), pa.getName());
-				message = DoIt.execute(repo, pa, dir, monitor, p);
+				message = DoIt.execute(repo, pa, monitor, p);
 			} else {
 				message = new String(uri + " is not a project area");
 			}
 			if (null == message && null != pa && null != p) {
-				p.serialize(dir.append(pa.getName()).toOSString());
-				monitor.out("project: " + p.dump());
+				p.serialize(file.toOSString());
 				monitor.out("OK, done.");
 			} else {
 				monitor.err("KO: " + message);
