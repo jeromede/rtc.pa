@@ -17,6 +17,7 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,12 +26,17 @@ public class Line extends Item implements Serializable {
 	private static final long serialVersionUID = 6185617986682800843L;
 
 	private String name;
+	private String id;
+	private Date starts;
+	private Date ends;
 	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
+	private Iteration current = null;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP
-				+ Item.trace("iterations", iterationsToString());
+		return super.toString() + Item.SEP + Item.trace("id", id) + Item.SEP + Item.trace("name", name) + Item.SEP
+				+ Item.trace("starts", starts) + Item.SEP + Item.trace("ends", ends) + Item.SEP
+				+ Item.trace("current iteration", current) + Item.SEP + Item.trace("iterations", iterationsToString());
 	}
 
 	private String iterationsToString() {
@@ -48,30 +54,49 @@ public class Line extends Item implements Serializable {
 		return result;
 	}
 
-	public Line(String name) {
-		this(null, name);
+	public Line(String sourceUUID, String id, String name, Date starts, Date ends) {
+		super(sourceUUID);
+		this.id = new String(id);
+		this.name = new String(name);
+		this.starts = starts;
+		this.ends = ends;
 	}
 
-	public Line(String oldId, String name) {
-		super(oldId);
-		this.name = new String(name);
+	public String getId() {
+		return this.id;
 	}
 
 	public String getName() {
 		return this.name;
 	}
 
+	public Date getStarts() {
+		return this.starts;
+	}
+
+	public Date getEnds() {
+		return this.ends;
+	}
+
 	public void putIteration(Iteration iteration) {
-		iterations.put(iteration.getId(), iteration);
-		iterations0.put(iteration.getOldId(), iteration);
+		iterations.put(iteration.getUID(), iteration);
+		iterations0.put(iteration.getSourceUUID(), iteration);
 	}
 
-	public Iteration getIteration(int id) {
-		return iterations.get(id);
+	public Iteration getIteration(int uid) {
+		return iterations.get(uid);
 	}
 
-	public Iteration getIteration(String id) {
-		return iterations0.get(id);
+	public Iteration getIteration(String sourceUUID) {
+		return iterations0.get(sourceUUID);
+	}
+
+	public void setCurrent(Iteration current) {
+		this.current = current;
+	}
+
+	public Iteration getCurrent() {
+		return this.current;
 	}
 
 }

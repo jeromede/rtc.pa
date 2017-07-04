@@ -31,12 +31,8 @@ public class Category extends Item implements Serializable {
 				+ Item.trace("hierarchicalName", hierarchicalName) + Item.SEP + Item.trace("description", description);
 	}
 
-	public Category(String name, String hierarchicalName, String description) {
-		this(null, name, hierarchicalName, description);
-	}
-
-	public Category(String oldId, String name, String hierarchicalName, String description) {
-		super(oldId);
+	public Category(String sourceUUID, String name, String hierarchicalName, String description) {
+		super(sourceUUID);
 		this.name = new String(name);
 		this.hierarchicalName = new String(hierarchicalName);
 		this.description = new String(description);

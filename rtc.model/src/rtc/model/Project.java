@@ -30,6 +30,7 @@ public class Project extends Item implements Serializable {
 	private static final long serialVersionUID = 6293925306051459254L;
 
 	private String name;
+	private String uri;
 	private Map<Integer, Member> members = new HashMap<Integer, Member>();
 	private Map<String, Member> members0 = new HashMap<String, Member>();
 	private Map<Integer, Administrator> administrators = new HashMap<Integer, Administrator>();
@@ -42,85 +43,86 @@ public class Project extends Item implements Serializable {
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name);
+		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("uri", uri);
 	}
 
-	public Project(String name) {
-		this(null, name);
-	}
-
-	public Project(String oldId, String name) {
-		super(oldId);
+	public Project(String sourceUUID, String name, String uri) {
+		super(sourceUUID);
 		this.name = new String(name);
+		this.uri = new String(uri);
 	}
 
 	public String getName() {
 		return this.name;
 	}
 
+	public String getUri() {
+		return this.uri;
+	}
+
 	public void putMember(Member member) {
-		members.put(member.getId(), member);
-		members0.put(member.getOldId(), member);
+		members.put(member.getUID(), member);
+		members0.put(member.getSourceUUID(), member);
 	}
 
-	public Member getMember(int id) {
-		return members.get(id);
+	public Member getMember(int uid) {
+		return members.get(uid);
 	}
 
-	public Member getMember(String id) {
-		return members0.get(id);
+	public Member getMember(String uid) {
+		return members0.get(uid);
 	}
 
 	public void putAdministrator(Administrator user) {
-		administrators.put(user.getId(), user);
-		administrators0.put(user.getOldId(), user);
+		administrators.put(user.getUID(), user);
+		administrators0.put(user.getSourceUUID(), user);
 	}
 
-	public Administrator getAdministrator(int id) {
-		return administrators.get(id);
+	public Administrator getAdministrator(int uid) {
+		return administrators.get(uid);
 	}
 
-	public Administrator getAdministrator(String id) {
-		return administrators0.get(id);
+	public Administrator getAdministrator(String sourceUUID) {
+		return administrators0.get(sourceUUID);
 	}
 
 	public void putCategory(Category category) {
-		categories.put(category.getId(), category);
-		categories0.put(category.getOldId(), category);
+		categories.put(category.getUID(), category);
+		categories0.put(category.getSourceUUID(), category);
 	}
 
-	public Category getCategory(int id) {
-		return categories.get(id);
+	public Category getCategory(int uid) {
+		return categories.get(uid);
 	}
 
-	public Category getCategory(String id) {
-		return categories0.get(id);
+	public Category getCategory(String sourceUUID) {
+		return categories0.get(sourceUUID);
 	}
 
 	public void putLine(Line line) {
-		lines.put(line.getId(), line);
-		lines0.put(line.getOldId(), line);
+		lines.put(line.getUID(), line);
+		lines0.put(line.getSourceUUID(), line);
 	}
 
-	public Line getLine(int id) {
-		return lines.get(id);
+	public Line getLine(int uid) {
+		return lines.get(uid);
 	}
 
-	public Line getLine(String id) {
-		return lines0.get(id);
+	public Line getLine(String sourceUUID) {
+		return lines0.get(sourceUUID);
 	}
 
 	public void putTask(Task task) {
-		tasks.put(task.getId(), task);
-		tasks0.put(task.getOldId(), task);
+		tasks.put(task.getUID(), task);
+		tasks0.put(task.getSourceUUID(), task);
 	}
 
-	public Task getTask(int id) {
-		return tasks.get(id);
+	public Task getTask(int uid) {
+		return tasks.get(uid);
 	}
 
-	public Task getTask(String id) {
-		return tasks0.get(id);
+	public Task getTask(String sourceUUID) {
+		return tasks0.get(sourceUUID);
 	}
 
 	public void serialize(String filename) {

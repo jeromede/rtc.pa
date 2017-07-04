@@ -49,12 +49,8 @@ public class Task extends Item implements Serializable {
 		return result;
 	}
 
-	public Task(String name, Member member) {
-		this(null, name, member);
-	}
-
-	public Task(String oldId, String name, Member member) {
-		super(oldId);
+	public Task(String sourceUUID, String name, Member member) {
+		super(sourceUUID);
 		this.name = new String(name);
 		this.member = member;
 	}
@@ -68,16 +64,16 @@ public class Task extends Item implements Serializable {
 	}
 
 	public void putTaskVersion(TaskVersion version) {
-		versions.put(version.getId(), version);
-		versions0.put(version.getOldId(), version);
+		versions.put(version.getUID(), version);
+		versions0.put(version.getSourceUUID(), version);
 	}
 
-	public TaskVersion getTaskVersion(int id) {
-		return versions.get(id);
+	public TaskVersion getTaskVersion(int uid) {
+		return versions.get(uid);
 	}
 
-	public TaskVersion getTaskVersion(String id) {
-		return versions0.get(id);
+	public TaskVersion getTaskVersion(String sourceUUID) {
+		return versions0.get(sourceUUID);
 	}
 
 }

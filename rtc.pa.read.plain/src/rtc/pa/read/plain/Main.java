@@ -71,7 +71,7 @@ public class Main {
 			String message;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				p = new Project(pa.getItemId().getUuidValue(), pa.getName());
+				p = new Project(pa.getItemId().getUuidValue(), pa.getName(), repo.getRepositoryURI());
 				message = DoIt.execute(repo, pa, monitor, p);
 			} else {
 				message = new String(uri + " is not a project area");

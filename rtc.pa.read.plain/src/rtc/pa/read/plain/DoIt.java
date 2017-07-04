@@ -17,28 +17,20 @@
 package rtc.pa.read.plain;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 
 import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IDevelopmentLineHandle;
 import com.ibm.team.process.common.IIteration;
 import com.ibm.team.process.common.IIterationHandle;
-import com.ibm.team.process.common.IProcessArea;
 import com.ibm.team.process.common.IProjectArea;
-import com.ibm.team.repository.client.IContributorManager;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
-import com.ibm.team.repository.client.TeamPlatform;
 import com.ibm.team.repository.common.IAuditableHandle;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
-import com.ibm.team.scm.client.IWorkspaceManager;
-import com.ibm.team.scm.client.SCMPlatform;
 import com.ibm.team.workitem.client.IAuditableClient;
 import com.ibm.team.workitem.client.IQueryClient;
 import com.ibm.team.workitem.client.IWorkItemClient;
@@ -64,10 +56,33 @@ import rtc.model.Line;
 import rtc.model.Member;
 import rtc.model.Project;
 import rtc.model.Task;
-import rtc.model.TaskVersion;
 import rtc.utils.ProgressMonitor;
 
 public class DoIt {
+
+	private static String trace(com.ibm.team.repository.common.IItemHandle item) {
+		return "\n\n-> " + item + "\n";
+	}
+
+	private static String trace(String desc, com.ibm.team.repository.common.IItemHandle item) {
+		return "\n\n" + desc + "-> " + item + "\n";
+	}
+
+	private static String trace(String s) {
+		return "\n\n-> \"" + s + "\"\n";
+	}
+
+	private static String trace(String desc, String s) {
+		return "\n\n" + desc + "-> \"" + s + "\"\n";
+	}
+
+	private static String trace(Date d) {
+		return "\n\n-> \"" + d + "\"\n";
+	}
+
+	private static String trace(String desc, Date d) {
+		return "\n\n" + desc + "-> \"" + d + "\"\n";
+	}
 
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p)
 			throws TeamRepositoryException, IOException {
@@ -149,9 +164,11 @@ public class DoIt {
 		try {
 			allCategories = wiClient.findCategories(pa, ICategory.FULL_PROFILE, monitor);
 			for (ICategory c : allCategories) {
-				p.putCategory(new Category(c.getItemId().getUuidValue(), c.getName(),
-						wiCommon.resolveHierarchicalName(c, monitor), c.getHTMLDescription().getXMLText()));
-				monitor.out("\tjust added category " + c.getName());
+				if (!c.isArchived()) {
+					p.putCategory(new Category(c.getItemId().getUuidValue(), c.getName(),
+							wiCommon.resolveHierarchicalName(c, monitor), c.getHTMLDescription().getXMLText()));
+					monitor.out("\tjust added category " + c.getName() + trace(c));
+				}
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -179,35 +196,51 @@ public class DoIt {
 				e.printStackTrace();
 				return "error resolving development line handle";
 			}
-			line = new Line(devLine.getName());
+			line = new Line(devLine.getItemId().getUuidValue(), devLine.getId(), devLine.getName(),
+					devLine.getStartDate(), devLine.getEndDate());
 			p.putLine(line);
-			monitor.out("\tjust added development line " + devLine.getName());
+			monitor.out("\tjust added development line " + devLine.getName() + trace(devLine)
+					+ trace("current", devLine.getCurrentIteration()));
 			//
 			// Iterations
 			//
 			for (IIterationHandle iterationHandle : devLine.getIterations()) {
-				readIteration(devLine, iterationHandle, repo, pa, auditableClient, itemManager, "\t", monitor, p, line);
+				readIteration(devLine, devLine.getCurrentIteration(), iterationHandle, repo, pa, auditableClient,
+						itemManager, "\t", monitor, p, line);
 			}
+
 		}
 		monitor.out("... development lines read.");
 		return null;
 	}
 
-	private static String readIteration(IDevelopmentLine devLine, IIterationHandle iterationHandle,
-			ITeamRepository repo, IProjectArea pa, IAuditableClient auditableClient, IItemManager itemManager,
-			String prefix, ProgressMonitor monitor, Project p, Line line) {
+	private static String readIteration(IDevelopmentLine devLine, IIterationHandle currentIterationHandle,
+			IIterationHandle iterationHandle, ITeamRepository repo, IProjectArea pa, IAuditableClient auditableClient,
+			IItemManager itemManager, String prefix, ProgressMonitor monitor, Project p, Line line) {
 
 		IIteration iteration;
+		Iteration ite;
 		try {
 			iteration = auditableClient.resolveAuditable(iterationHandle, ItemProfile.ITERATION_DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			return "error resolving iteration handle";
 		}
-		line.putIteration(new Iteration(iteration.getName()));
-		monitor.out(prefix + "\tjust added iteration " + iteration.getName());
+		if (iteration.isArchived()) {
+			return null;
+		}
+		ite = new Iteration(iteration.getItemId().getUuidValue(), iteration.getName(), iteration.getId(),
+				iteration.getLabel(), iteration.getDescription().getSummary(), iteration.getStartDate(),
+				iteration.getEndDate());
+		line.putIteration(ite);
+		if (iterationHandle.sameItemId(currentIterationHandle)) {
+			monitor.out(prefix + "\tcurrent iteration!");
+			line.setCurrent(ite);
+		}
+		monitor.out(prefix + "\tjust added iteration " + iteration.getName() + trace(iteration));
 		for (IIterationHandle children : iteration.getChildren()) {
-			readIteration(devLine, children, repo, pa, auditableClient, itemManager, prefix + "\t", monitor, p, line);
+			readIteration(devLine, currentIterationHandle, children, repo, pa, auditableClient, itemManager,
+					prefix + "\t", monitor, p, line);
 		}
 		return null;
 	}
@@ -220,7 +253,7 @@ public class DoIt {
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
 			for (IWorkItemType t : allWorkItemTypes) {
-				monitor.out(t.getIdentifier());
+				monitor.out('\t' + t.getIdentifier());
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -255,7 +288,8 @@ public class DoIt {
 			while (results.hasNext(monitor)) {
 				result = results.next(monitor);
 				wi = result.getItem();
-				task = new Task(wi.getItemId().getUuidValue(), p.getMember(wi.getCreator().getItemId().getUuidValue()));
+				task = new Task(wi.getItemId().getUuidValue(), wi.getItemId().getUuidValue(),
+						p.getMember(wi.getCreator().getItemId().getUuidValue()));
 				p.putTask(task);
 				readWorkItem(wi, repo, pa, wiClient, wiCommon, itemManager, "", monitor, p, task);
 			}
@@ -268,8 +302,8 @@ public class DoIt {
 	}
 
 	private static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, String prefix, ProgressMonitor monitor,
-			Project p, Task task) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, String prefix, ProgressMonitor monitor, Project p,
+			Task task) {
 
 		IAuditableHandle auditableHandle = (IAuditableHandle) wi.getItemHandle();
 		List<IWorkItemHandle> handles;
@@ -282,7 +316,7 @@ public class DoIt {
 			return "Error reading history of work item " + wi.getId();
 		}
 		for (IWorkItem w : workItems) {
-//			readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, prefix + "\t", monitor, p, task);
+			readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, prefix + "\t", monitor, p, task);
 		}
 
 		return null;

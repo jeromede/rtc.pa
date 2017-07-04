@@ -29,12 +29,8 @@ public class TaskVersion extends Item implements Serializable {
 		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member);
 	}
 
-	public TaskVersion(String name, Member member) {
-		this(null, name, member);
-	}
-
-	public TaskVersion(String oldId, String name, Member member) {
-		super(oldId);
+	public TaskVersion(String sourceUUID, String name, Member member) {
+		super(sourceUUID);
 		this.name = new String(name);
 		this.member = member;
 	}

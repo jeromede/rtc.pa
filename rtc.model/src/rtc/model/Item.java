@@ -16,46 +16,44 @@
 
 package rtc.model;
 
+import java.util.Date;
+
 public abstract class Item implements java.io.Serializable {
 
 	public static final String SEP = ", ";
 
 	private static final long serialVersionUID = 8450163754687832796L;
 
-	private static int nextId = Integer.MIN_VALUE;
+	private static int nextInternal = Integer.MIN_VALUE;
 
-	private Integer id;
-	private String oldId = null;
-	private transient String newId = null;
+	private Integer uid;
+	private String sourceUUID = null;
+	private transient String targetUUID = null;
 
 	public String toString() {
-		return trace("id", id) + SEP + trace("oldId", oldId);
+		return trace("internal", uid) + SEP + trace("sourceUUID", sourceUUID);
 	}
 
-	public Item(String oldId) {
-		this.id = nextId++;
-		if (null != oldId)
-			this.oldId = new String(oldId);
+	public Item(String sourceUUID) {
+		this.uid = nextInternal++;
+		if (null != sourceUUID)
+			this.sourceUUID = new String(sourceUUID);
 	}
 
-	public int getId() {
-		return this.id;
+	public int getUID() {
+		return this.uid;
 	}
 
-	public String setOldId(String id) {
-		return this.oldId = new String(id);
+	public String getSourceUUID() {
+		return this.sourceUUID;
 	}
 
-	public String getOldId() {
-		return this.oldId;
+	public String setTargetUUID(String id) {
+		return this.targetUUID = new String(id);
 	}
 
-	public String setNewId(String id) {
-		return this.newId = new String(id);
-	}
-
-	public String getNewId() {
-		return this.newId;
+	public String getTargetUUID() {
+		return this.targetUUID;
 	}
 
 	public static String trace(String t, int i) {
@@ -69,19 +67,27 @@ public abstract class Item implements java.io.Serializable {
 		return t + ": \"" + s + '\"';
 	}
 
+	public static String trace(String t, Date d) {
+		if (null == d) {
+			return t + "-> null";
+		}
+		return t + ": /" + d + '/';
+	}
+
 	public static String trace(String t, Item k) {
 		if (null == k) {
 			return t + ": null";
 		}
 		return t + ": {" + k + '}';
 	}
+
 	public static String trace(int i, Item k) {
 		if (null == k) {
 			return i + "-> null";
 		}
 		return i + "-> {" + k + '}';
 	}
-	
+
 	public static String trace_list(String t, Object o) {
 		if (null == o) {
 			return t + ": null";

@@ -17,28 +17,59 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Iteration extends Item implements Serializable {
 
 	private static final long serialVersionUID = 7283835080445170873L;
 
 	private String name;
+	private String id;
+	private String label;
+	private String description;
+	private Date starts;
+	private Date ends;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name);
+		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("id", id) + Item.SEP
+				+ Item.trace("label", label) + Item.SEP + Item.trace("description", description) + Item.SEP
+				+ Item.trace("starts", starts) + Item.SEP + Item.trace("name", name) + Item.SEP
+				+ Item.trace("name", name) + Item.SEP + Item.trace("ends", ends);
 	}
 
-	public Iteration(String name) {
-		this(null, name);
-	}
-
-	public Iteration(String oldId, String name) {
-		super(oldId);
+	public Iteration(String sourceUUID, String name, String id, String label, String description, Date starts,
+			Date ends) {
+		super(sourceUUID);
 		this.name = new String(name);
+		this.id = new String(id);
+		this.label = new String(label);
+		this.description = new String(description);
+		this.starts = starts;
+		this.ends = ends;
 	}
 
 	public String getName() {
 		return this.name;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public String getLabel() {
+		return this.label;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public Date getStarts() {
+		return this.starts;
+	}
+
+	public Date getEnds() {
+		return this.ends;
 	}
 
 }
