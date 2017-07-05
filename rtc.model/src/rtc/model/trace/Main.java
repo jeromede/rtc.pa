@@ -39,5 +39,4 @@ public abstract class Main {
 		p = Project.deserialize(ser);
 		p.dump(System.out);
 	}
-
 }

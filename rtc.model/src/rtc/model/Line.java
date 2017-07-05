@@ -31,17 +31,15 @@ public class Line extends Item implements Serializable {
 	private Date ends;
 	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
-	private Iteration current = null;
 
 	public String toString() {
 		return super.toString() + Item.SEP + Item.trace("id", id) + Item.SEP + Item.trace("name", name) + Item.SEP
 				+ Item.trace("starts", starts) + Item.SEP + Item.trace("ends", ends) + Item.SEP
-				+ Item.trace("current iteration", current) + Item.SEP
 				+ Item.trace_simple("\nITERATIONS", iterationsToString() + '\n');
 	}
 
 	private String iterationsToString() {
-		String result = "";
+		String result = new String();
 		Iteration i;
 		int n = 0;
 		for (Integer k : iterations.keySet()) {
@@ -79,7 +77,7 @@ public class Line extends Item implements Serializable {
 		return this.ends;
 	}
 
-	public void putIteration(Iteration iteration) {
+	void putIteration(Iteration iteration) {
 		iterations.put(iteration.getUID(), iteration);
 		iterations0.put(iteration.getSourceUUID(), iteration);
 	}
@@ -90,14 +88,6 @@ public class Line extends Item implements Serializable {
 
 	public Iteration getIteration(String sourceUUID) {
 		return iterations0.get(sourceUUID);
-	}
-
-	public void setCurrent(Iteration current) {
-		this.current = current;
-	}
-
-	public Iteration getCurrent() {
-		return this.current;
 	}
 
 }

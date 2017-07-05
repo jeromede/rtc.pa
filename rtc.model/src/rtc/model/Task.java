@@ -41,7 +41,7 @@ public class Task extends Item implements Serializable {
 	}
 
 	private String historyToString() {
-		String result = "";
+		String result = new String();
 		int n = 0;
 		for (TaskVersion v: history.values()) {
 			if (result.isEmpty()) {

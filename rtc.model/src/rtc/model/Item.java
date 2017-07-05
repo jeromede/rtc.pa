@@ -17,6 +17,7 @@
 package rtc.model;
 
 import java.util.Date;
+import java.util.List;
 
 public abstract class Item implements java.io.Serializable {
 
@@ -60,11 +61,33 @@ public abstract class Item implements java.io.Serializable {
 		return '\n' + t + ": \"" + i + '\"';
 	}
 
+	public static String trace(String t, long i) {
+		return '\n' + t + ": \"" + i + '\"';
+	}
+
 	public static String trace(String t, String s) {
 		if (null == s) {
 			return '\n' + t + ": null";
 		}
 		return '\n' + t + ": \"" + s + '\"';
+	}
+
+	private static String trace(List<String> l) {
+		String result = new String();
+		for (String t : l) {
+			if (! result.isEmpty()) {
+				result += ", ";
+			}
+			result += t;
+		}
+		return result;
+	}
+
+	public static String trace(String t, List<String> l) {
+		if (null == l) {
+			return '\n' + t + ": null";
+		}
+		return '\n' + t + ": [" + trace(l) + ']';
 	}
 
 	public static String trace_simple(String t, String s) {

@@ -17,9 +17,11 @@
 package rtc.pa.read.plain;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IDevelopmentLineHandle;
 import com.ibm.team.process.common.IIteration;
@@ -43,6 +45,8 @@ import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.ICategoryHandle;
+import com.ibm.team.workitem.common.model.IPriority;
+import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -236,10 +240,10 @@ public class DoIt {
 		ite = new Iteration(iteration.getItemId().getUuidValue(), iteration.getName(), iteration.getId(),
 				iteration.getLabel(), iteration.getDescription().getSummary(), iteration.getStartDate(),
 				iteration.getEndDate());
-		line.putIteration(ite);
+		p.putIteration(line, ite);
 		if (iterationHandle.sameItemId(currentIterationHandle)) {
 			monitor.out(prefix + "\tcurrent iteration!");
-			line.setCurrent(ite);
+			p.setCurrent(ite);
 		}
 		monitor.out(prefix + "\tjust added iteration " + iteration.getName() + trace(iteration));
 		for (IIterationHandle children : iteration.getChildren()) {
@@ -305,11 +309,11 @@ public class DoIt {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
 
 		Task task;
-		task = new Task(wi.getItemId().getUuidValue(), wi.getId(),
-				p.getMember(wi.getCreator().getItemId().getUuidValue()), wi.getCreationDate());
 		//
 		// Task
 		//
+		task = new Task(wi.getItemId().getUuidValue(), wi.getId(),
+				p.getMember(wi.getCreator().getItemId().getUuidValue()), wi.getCreationDate());
 		p.putTask(task);
 		monitor.out("\tjust added work item " + task.getId() + trace(wi));
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
@@ -340,8 +344,17 @@ public class DoIt {
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task) {
 
-		Date due = w.getDueDate();
-		long duration = w.getDuration();
+		XMLString description = w.getHTMLDescription();
+		XMLString summary = w.getHTMLSummary();
+		Identifier<IPriority> priority = w.getPriority();
+		Identifier<ISeverity> severity = w.getSeverity();
+		List<String> tags2 = w.getTags2();
+		List<String> tags = new ArrayList<String>();
+		for (String t : tags2) {
+			tags.add(t);
+		}
+		// Date due = w.getDueDate();
+		// long duration = w.getDuration();
 		ICategoryHandle category = w.getCategory();
 		IIterationHandle target = w.getTarget();
 		IContributor ownedBy;
@@ -360,31 +373,28 @@ public class DoIt {
 			e.printStackTrace();
 			return "Problem retrieving resolver for workitem.";
 		}
-		task.putTaskVersion(new TaskVersion(w.getStateHandle().getItemId().getUuidValue(), w.getWorkItemType(),
-				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), w.modified()));
-		monitor.out("\tjust added work item version " + task.getId() + trace(w));
-
-		monitor.out(trace("\tdue", due));
-		monitor.out(trace("\tduration", "" + duration));
-		monitor.out(trace("\tcategory", category));
-		monitor.out(trace("\ttarget", target));
-		monitor.out(trace("\townedBy", ownedBy));
-		monitor.out(trace("\tresolvedBy", resolvedBy));
-
+		// Date resolution = w.getResolutionDate();
 		// TO DO
 		w.getApprovals();
 		w.getComments();
 		w.getCustomAttributes();
-		w.getHTMLDescription();
-		w.getHTMLSummary();
-		w.getPriority();
-		w.getResolver();
-		w.getResolutionDate();
-		w.getSeverity();
 		w.getState2();
-		w.getTags2();
-		// w.getValue(null);
+		/* w.getValue(null); */
 
+		//
+		// TaskVersion
+		//
+		task.putTaskVersion(new TaskVersion(w.getItemId().getUuidValue(), w.getWorkItemType(),
+				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), w.modified(),
+				((null == description) ? null : description.getXMLText()),
+				((null == summary) ? null : summary.getXMLText()),
+				((null == priority) ? null : priority.getStringIdentifier()),
+				((null == severity) ? null : severity.getStringIdentifier()), tags, w.getDueDate(), w.getDuration(),
+				((null == category) ? null : p.getCategory(category.getItemId().getUuidValue())),
+				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())),
+				p.getMember(ownedBy.getItemId().getUuidValue()), p.getMember(resolvedBy.getItemId().getUuidValue()),
+				w.getResolutionDate()));
+		monitor.out("\tjust added work item version " + task.getId() + trace(w));
 		return null;
 	}
 
