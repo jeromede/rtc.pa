@@ -39,10 +39,10 @@ public class Iteration extends Item implements Serializable {
 	public Iteration(String sourceUUID, String name, String id, String label, String description, Date starts,
 			Date ends) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.id = new String(id);
-		this.label = new String(label);
-		this.description = new String(description);
+		this.name = name;
+		this.id = id;
+		this.label = label;
+		this.description = description;
 		this.starts = starts;
 		this.ends = ends;
 	}

@@ -49,8 +49,8 @@ public class Project extends Item implements Serializable {
 
 	public Project(String sourceUUID, String name, String uri) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.uri = new String(uri);
+		this.name = name;
+		this.uri = uri;
 	}
 
 	public String getName() {

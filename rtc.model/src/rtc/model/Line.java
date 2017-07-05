@@ -37,7 +37,7 @@ public class Line extends Item implements Serializable {
 		return super.toString() + Item.SEP + Item.trace("id", id) + Item.SEP + Item.trace("name", name) + Item.SEP
 				+ Item.trace("starts", starts) + Item.SEP + Item.trace("ends", ends) + Item.SEP
 				+ Item.trace("current iteration", current) + Item.SEP
-				+ Item.trace_simple("\niterations", iterationsToString() + '\n');
+				+ Item.trace_simple("\nITERATIONS", iterationsToString() + '\n');
 	}
 
 	private String iterationsToString() {
@@ -57,8 +57,8 @@ public class Line extends Item implements Serializable {
 
 	public Line(String sourceUUID, String id, String name, Date starts, Date ends) {
 		super(sourceUUID);
-		this.id = new String(id);
-		this.name = new String(name);
+		this.id = id;
+		this.name = name;
 		this.starts = starts;
 		this.ends = ends;
 	}

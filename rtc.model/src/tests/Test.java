@@ -29,13 +29,13 @@ public class Test {
 		p.putMember(new Member("UUID2", "j", "jérôme"));
 		p.putMember(new Member("UUID3", "a", "Alice"));
 		p.putMember(new Member("UUID4", "m", "Marion"));
-		p.putTask(new Task("UUID5", "1", p.getMember("j")));
-		p.putTask(new Task("UUID6", "2", p.getMember("m")));
+		p.putTask(new Task("UUID5", 1, p.getMember("j"), null));
+		p.putTask(new Task("UUID6", 2, p.getMember("m"), null));
 		p.serialize(SER_FILE);
 		Project q = Project.deserialize(SER_FILE);
 		Task t = q.getTask("2");
-		System.out.println(t.getName());
-		Member u = t.getUser();
+		System.out.println(t.getId());
+		Member u = t.getCreator();
 		System.out.println(u.getName());
 		p.dump(System.out);
 	}

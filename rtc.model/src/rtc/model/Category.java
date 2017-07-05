@@ -33,9 +33,9 @@ public class Category extends Item implements Serializable {
 
 	public Category(String sourceUUID, String name, String hierarchicalName, String description) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.hierarchicalName = new String(hierarchicalName);
-		this.description = new String(description);
+		this.name = name;
+		this.hierarchicalName = hierarchicalName;
+		this.description = description;
 	}
 
 	public String getName() {

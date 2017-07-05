@@ -31,8 +31,8 @@ public class User extends Item implements Serializable {
 
 	public User(String sourceUUID, String name, String userId) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.userId = new String(userId);
+		this.name = name;
+		this.userId = userId;
 	}
 
 	public String getName() {

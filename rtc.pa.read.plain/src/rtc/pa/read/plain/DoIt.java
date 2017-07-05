@@ -27,6 +27,7 @@ import com.ibm.team.process.common.IIterationHandle;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
+import com.ibm.team.repository.common.IAuditable;
 import com.ibm.team.repository.common.IAuditableHandle;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
@@ -42,9 +43,11 @@ import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.ICategoryHandle;
+import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
+import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.model.ItemProfile;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
@@ -56,6 +59,7 @@ import rtc.model.Line;
 import rtc.model.Member;
 import rtc.model.Project;
 import rtc.model.Task;
+import rtc.model.TaskVersion;
 import rtc.utils.ProgressMonitor;
 
 public class DoIt {
@@ -301,10 +305,13 @@ public class DoIt {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
 
 		Task task;
-		task = new Task(wi.getItemId().getUuidValue(), "" + wi.getId(),
-				p.getMember(wi.getCreator().getItemId().getUuidValue()));
+		task = new Task(wi.getItemId().getUuidValue(), wi.getId(),
+				p.getMember(wi.getCreator().getItemId().getUuidValue()), wi.getCreationDate());
+		//
+		// Task
+		//
 		p.putTask(task);
-		monitor.out("\tjust added work item " + task.getName() + trace(wi));
+		monitor.out("\tjust added work item " + task.getId() + trace(wi));
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
 		return null;
 	}
@@ -313,14 +320,11 @@ public class DoIt {
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task) {
 
-		IAuditableHandle auditableHandle = (IAuditableHandle) wi.getItemHandle();
-		List<IWorkItemHandle> handles;
 		List<IWorkItem> workItems;
 		try {
-			handles = itemManager.fetchAllStateHandles(auditableHandle, monitor);
-			workItems = itemManager.fetchCompleteStates(handles, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
+			workItems = itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(wi, monitor), monitor);
+		} catch (TeamRepositoryException e1) {
+			e1.printStackTrace();
 			return "Error reading history of work item " + wi.getId();
 		}
 		String result;
@@ -336,22 +340,10 @@ public class DoIt {
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task) {
 
-		int id = w.getId();
-		String type = w.getWorkItemType();
-		Date creation = w.getCreationDate();
-		Date modified = w.modified();
 		Date due = w.getDueDate();
 		long duration = w.getDuration();
 		ICategoryHandle category = w.getCategory();
 		IIterationHandle target = w.getTarget();
-		IContributor createdBy;
-		try {
-			createdBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getCreator(),
-					IItemManager.DEFAULT, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "Problem retrieving creator for workitem.";
-		}
 		IContributor ownedBy;
 		try {
 			ownedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getOwner(),
@@ -359,14 +351,6 @@ public class DoIt {
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			return "Problem retrieving owner for workitem.";
-		}
-		IContributor modifiedBy;
-		try {
-			modifiedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getModifiedBy(),
-					IItemManager.DEFAULT, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "Problem retrieving modifier for workitem.";
 		}
 		IContributor resolvedBy;
 		try {
@@ -376,19 +360,15 @@ public class DoIt {
 			e.printStackTrace();
 			return "Problem retrieving resolver for workitem.";
 		}
-		monitor.out("\tjust ***NOT*** added work item version " + task.getName() + trace(w));
+		task.putTaskVersion(new TaskVersion(w.getStateHandle().getItemId().getUuidValue(), w.getWorkItemType(),
+				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), w.modified()));
+		monitor.out("\tjust added work item version " + task.getId() + trace(w));
 
-		monitor.out(trace("\tid", "" + id));
-		monitor.out(trace("\ttype", type));
-		monitor.out(trace("\tcreation", creation));
-		monitor.out(trace("\tmodified", modified));
 		monitor.out(trace("\tdue", due));
 		monitor.out(trace("\tduration", "" + duration));
 		monitor.out(trace("\tcategory", category));
 		monitor.out(trace("\ttarget", target));
-		monitor.out(trace("\tcreatedBy", createdBy));
 		monitor.out(trace("\townedBy", ownedBy));
-		monitor.out(trace("\tmodifiedBy", modifiedBy));
 		monitor.out(trace("\tresolvedBy", resolvedBy));
 
 		// TO DO

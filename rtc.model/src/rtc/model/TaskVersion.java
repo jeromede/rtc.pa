@@ -17,30 +17,38 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class TaskVersion extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7763110461126796356L;
 
-	private String name;
-	private Member member;
+	private String type;
+	private Member modifier;
+	private Date modified;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member);
+		return super.toString() + Item.SEP + Item.trace("name", type) + Item.SEP + Item.trace("modifier", modifier)
+				+ Item.SEP + Item.trace("modified", modified);
 	}
 
-	public TaskVersion(String sourceUUID, String name, Member member) {
+	public TaskVersion(String sourceUUID, String type, Member modifier, Date modified) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.member = member;
+		this.type = type;
+		this.modifier = modifier;
+		this.modified = modified;
 	}
 
-	public String getName() {
-		return this.name;
+	public String getType() {
+		return this.type;
 	}
 
-	public Member getUser() {
-		return this.member;
+	public Member getModifier() {
+		return this.modifier;
+	}
+
+	public Date getModified() {
+		return this.modified;
 	}
 
 }

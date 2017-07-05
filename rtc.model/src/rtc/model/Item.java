@@ -37,7 +37,7 @@ public abstract class Item implements java.io.Serializable {
 	public Item(String sourceUUID) {
 		this.uid = nextInternal++;
 		if (null != sourceUUID)
-			this.sourceUUID = new String(sourceUUID);
+			this.sourceUUID = sourceUUID;
 	}
 
 	public int getUID() {
@@ -49,7 +49,7 @@ public abstract class Item implements java.io.Serializable {
 	}
 
 	public String setTargetUUID(String id) {
-		return this.targetUUID = new String(id);
+		return this.targetUUID = id;
 	}
 
 	public String getTargetUUID() {

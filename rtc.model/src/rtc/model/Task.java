@@ -17,29 +17,33 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class Task extends Item implements Serializable {
 
 	private static final long serialVersionUID = 1325028522439850990L;
 
-	private String name;
-	private Member member;
+	private int id;
+	private Member creator;
+	private Date creation;
 	private Map<Integer, TaskVersion> versions = new HashMap<Integer, TaskVersion>();
-	private Map<String, TaskVersion> versions0 = new HashMap<String, TaskVersion>();
+	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member)
-				+ Item.SEP + Item.trace_list("\nversions", versionsToString());
+		return super.toString() + Item.SEP + Item.trace("id", id)  + Item.SEP
+				+ Item.trace("creator", creator) + Item.SEP + Item.trace("creation date", creation) + Item.SEP
+				+ Item.trace_list("\nVERSIONS", historyToString());
 	}
 
-	private String versionsToString() {
+	private String historyToString() {
 		String result = "";
-		TaskVersion v;
 		int n = 0;
-		for (Integer k : versions.keySet()) {
-			v = versions.get(k);
+		for (TaskVersion v: history.values()) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, v);
 			} else {
@@ -49,31 +53,37 @@ public class Task extends Item implements Serializable {
 		return result;
 	}
 
-	public Task(String sourceUUID, String name, Member member) {
+	public Task(String sourceUUID, int id, Member creator, Date creation) {
 		super(sourceUUID);
-		this.name = new String(name);
-		this.member = member;
+		this.id = id;
+		this.creator = creator;
+		this.creation = creation;
 	}
 
-	public String getName() {
-		return this.name;
+	public int getId() {
+		return this.id;
 	}
 
-	public Member getUser() {
-		return this.member;
+	public Member getCreator() {
+		return this.creator;
+	}
+
+	public Date getCreation() {
+		return this.creation;
 	}
 
 	public void putTaskVersion(TaskVersion version) {
 		versions.put(version.getUID(), version);
-		versions0.put(version.getSourceUUID(), version);
+		history.put(version.getModified(), version);
 	}
 
 	public TaskVersion getTaskVersion(int uid) {
 		return versions.get(uid);
 	}
-
-	public TaskVersion getTaskVersion(String sourceUUID) {
-		return versions0.get(sourceUUID);
+	
+	public Collection<TaskVersion> getHistory() {
+		return history.values();
 	}
+
 
 }
