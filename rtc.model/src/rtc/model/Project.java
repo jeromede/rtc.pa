@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -156,61 +157,60 @@ public class Project extends Item implements Serializable {
 		return null;
 	}
 
-	public String dump() {
-		return "project: " + this.toString() + "\nproject admins: " + dump_administrators(this.administrators)
-				+ "\nproject members: " + dump_users(this.members) + "\nproject categories: "
-				+ dump_categories(this.categories) + "\nproject development lines: " + dump_lines(this.lines)
-				+ "\nproject tasks: " + dump_tasks(this.tasks);
+	private static final String SEPARATOR = "\n-----------------\n";
+
+	public void dump(PrintStream out) {
+		out.println("PROJECT: " + this.toString());
+		out.println(SEPARATOR + "PROJECT ADMINS: ");
+		dump_administrators(out, this.administrators);
+		out.println(SEPARATOR + "PROJECT MEMBERS: ");
+		dump_users(out, this.members);
+		out.println(SEPARATOR + "PROJECT CATEGORIES: ");
+		dump_categories(out, this.categories);
+		out.println(SEPARATOR + "PROJECT DEVELOPMENT LINES: ");
+		dump_lines(out, this.lines);
+		out.println(SEPARATOR + "PROJECT TASKS: ");
+		dump_tasks(out, this.tasks);
 	}
 
-	private static String dump_users(Map<Integer, Member> users) {
-		String buffer = new String();
+	private static void dump_users(PrintStream out, Map<Integer, Member> users) {
 		Member user;
 		for (Integer i : users.keySet()) {
 			user = users.get(i);
-			buffer = buffer + "\n\t" + user.toString();
+			out.println("\n" + user.toString());
 		}
-		return buffer;
 	}
 
-	private static String dump_administrators(Map<Integer, Administrator> users) {
-		String buffer = new String();
+	private static void dump_administrators(PrintStream out, Map<Integer, Administrator> users) {
 		Administrator user;
 		for (Integer i : users.keySet()) {
 			user = users.get(i);
-			buffer = buffer + "\n\t" + user.toString();
+			out.println("\n" + user.toString());
 		}
-		return buffer;
 	}
 
-	private static String dump_categories(Map<Integer, Category> categories) {
-		String buffer = new String();
+	private static void dump_categories(PrintStream out, Map<Integer, Category> categories) {
 		Category category;
 		for (Integer i : categories.keySet()) {
 			category = categories.get(i);
-			buffer = buffer + "\n\t" + category.toString();
+			out.println("\n" + category.toString());
 		}
-		return buffer;
 	}
 
-	private static String dump_lines(Map<Integer, Line> lines) {
-		String buffer = new String();
+	private static void dump_lines(PrintStream out, Map<Integer, Line> lines) {
 		Line line;
 		for (Integer i : lines.keySet()) {
 			line = lines.get(i);
-			buffer = buffer + "\n\t" + line.toString();
+			out.println("\n" + line.toString());
 		}
-		return buffer;
 	}
 
-	private static String dump_tasks(Map<Integer, Task> tasks) {
-		String buffer = new String();
+	private static void dump_tasks(PrintStream out, Map<Integer, Task> tasks) {
 		Task task;
 		for (Integer i : tasks.keySet()) {
 			task = tasks.get(i);
-			buffer = buffer + "\n\t" + task.toString();
+			out.println("\n" + task.toString());
 		}
-		return buffer;
 	}
 
 }

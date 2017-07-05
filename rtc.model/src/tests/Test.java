@@ -37,7 +37,7 @@ public class Test {
 		System.out.println(t.getName());
 		Member u = t.getUser();
 		System.out.println(u.getName());
-		System.out.println(p.dump());
+		p.dump(System.out);
 	}
 
 }

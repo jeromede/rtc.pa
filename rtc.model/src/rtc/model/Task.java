@@ -31,7 +31,7 @@ public class Task extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("member", member)
-				+ Item.SEP + Item.trace_list("version", versionsToString());
+				+ Item.SEP + Item.trace_list("\nversions", versionsToString());
 	}
 
 	private String versionsToString() {

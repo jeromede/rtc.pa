@@ -57,41 +57,48 @@ public abstract class Item implements java.io.Serializable {
 	}
 
 	public static String trace(String t, int i) {
-		return t + ": \"" + i + '\"';
+		return '\n' + t + ": \"" + i + '\"';
 	}
 
 	public static String trace(String t, String s) {
 		if (null == s) {
-			return t + ": null";
+			return '\n' + t + ": null";
 		}
-		return t + ": \"" + s + '\"';
+		return '\n' + t + ": \"" + s + '\"';
+	}
+
+	public static String trace_simple(String t, String s) {
+		if (null == s) {
+			return '\n' + t + ": null";
+		}
+		return '\n' + t + ": " + s;
 	}
 
 	public static String trace(String t, Date d) {
 		if (null == d) {
-			return t + "-> null";
+			return '\n' + t + "-> null";
 		}
-		return t + ": /" + d + '/';
+		return '\n' + t + ": /" + d + '/';
 	}
 
 	public static String trace(String t, Item k) {
 		if (null == k) {
-			return t + ": null";
+			return '\n' + t + ": null";
 		}
-		return t + ": {" + k + '}';
+		return '\n' + t + ": {" + k + '}';
 	}
 
 	public static String trace(int i, Item k) {
 		if (null == k) {
-			return i + "-> null";
+			return "\n\n" + i + "-> null";
 		}
-		return i + "-> {" + k + '}';
+		return "\n\n" + i + "-> {" + k + '}';
 	}
 
 	public static String trace_list(String t, Object o) {
 		if (null == o) {
-			return t + ": null";
+			return '\n' + t + ": null";
 		}
-		return t + ": [" + o + ']';
+		return '\n' + t + ": [" + o + ']';
 	}
 }
