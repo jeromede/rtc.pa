@@ -44,14 +44,23 @@ public class TaskVersion extends Item implements Serializable {
 	private List<Link> links = new ArrayList<Link>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("type", type) + Item.SEP + Item.trace("modifier", modifier)
-				+ Item.SEP + Item.trace("modified", modified) + Item.SEP + Item.trace("description", description)
-				+ Item.SEP + Item.trace("summary", summary) + Item.SEP + Item.trace("priority", priority) + Item.SEP
-				+ Item.trace("severity", severity) + Item.SEP + Item.trace("tags", tags) + Item.SEP
-				+ Item.trace("due", due) + Item.SEP + Item.trace("duration", duration) + Item.SEP
-				+ Item.trace("category", category) + Item.SEP + Item.trace("target", target) + Item.SEP
-				+ Item.trace("ownedBy", ownedBy) + Item.SEP + Item.trace("resolvedBy", resolvedBy) + Item.SEP
-				+ Item.trace("resolution", resolution) + Item.trace_list("\nLINKS", linksToString());
+		return super.toString()//
+				+ Item.SEP + Item.trace("type", type)//
+				+ Item.SEP + Item.trace("modifier", modifier)//
+				+ Item.SEP + Item.trace("modified", modified)//
+				+ Item.SEP + Item.trace("description", description)//
+				+ Item.SEP + Item.trace("summary", summary)//
+				+ Item.SEP + Item.trace("priority", priority)//
+				+ Item.SEP + Item.trace("severity", severity)//
+				+ Item.SEP + Item.trace("tags", tags)//
+				+ Item.SEP + Item.trace("due", due)//
+				+ Item.SEP + Item.trace("duration", duration)//
+				+ Item.SEP + Item.trace("category", category)//
+				+ Item.SEP + Item.trace("target", target)//
+				+ Item.SEP + Item.trace("ownedBy", ownedBy)//
+				+ Item.SEP + Item.trace("resolvedBy", resolvedBy)//
+				+ Item.SEP + Item.trace("resolution", resolution)//
+				+ Item.trace_list("\nLINKS", linksToString());
 	}
 
 	private String linksToString() {
@@ -67,9 +76,22 @@ public class TaskVersion extends Item implements Serializable {
 		return result;
 	}
 
-	public TaskVersion(String sourceUUID, String type, Member modifier, Date modified, String description,
-			String summary, String priority, String severity, List<String> tags, Timestamp due, long duration,
-			Category category, Iteration target, Member ownedBy, Member resolvedBy, Date resolution) {
+	public TaskVersion(//
+			String sourceUUID, //
+			String type, //
+			Member modifier, //
+			Date modified, //
+			String description, String summary, //
+			String priority, //
+			String severity, //
+			List<String> tags, //
+			Timestamp due, //
+			long duration, //
+			Category category, //
+			Iteration target, //
+			Member ownedBy, //
+			Member resolvedBy, //
+			Date resolution) {
 		super(sourceUUID);
 		this.type = type;
 		this.modifier = modifier;

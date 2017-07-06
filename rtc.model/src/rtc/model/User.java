@@ -26,10 +26,14 @@ public class User extends Item implements Serializable {
 	private String userId;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("userId", userId);
+		return super.toString()//
+				+ Item.SEP + Item.trace("name", name)//
+				+ Item.SEP + Item.trace("userId", userId);
 	}
 
-	public User(String sourceUUID, String name, String userId) {
+	public User(//
+			String sourceUUID, //
+			String name, String userId) {
 		super(sourceUUID);
 		this.name = name;
 		this.userId = userId;

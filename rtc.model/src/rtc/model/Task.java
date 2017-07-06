@@ -35,15 +35,17 @@ public class Task extends Item implements Serializable {
 	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("id", id)  + Item.SEP
-				+ Item.trace("creator", creator) + Item.SEP + Item.trace("creation date", creation) + Item.SEP
-				+ Item.trace_list("\nVERSIONS", historyToString());
+		return super.toString()//
+				+ Item.SEP + Item.trace("id", id)//
+				+ Item.SEP + Item.trace("creator", creator)//
+				+ Item.SEP + Item.trace("creation date", creation)//
+				+ Item.SEP + Item.trace_list("\nVERSIONS", historyToString());
 	}
 
 	private String historyToString() {
 		String result = new String();
 		int n = 0;
-		for (TaskVersion v: history.values()) {
+		for (TaskVersion v : history.values()) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, v);
 			} else {
@@ -80,10 +82,9 @@ public class Task extends Item implements Serializable {
 	public TaskVersion getTaskVersion(int uid) {
 		return versions.get(uid);
 	}
-	
+
 	public Collection<TaskVersion> getHistory() {
 		return history.values();
 	}
-
 
 }

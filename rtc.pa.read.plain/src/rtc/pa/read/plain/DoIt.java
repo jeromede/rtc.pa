@@ -244,8 +244,13 @@ public class DoIt {
 		if (iteration.isArchived()) {
 			return null;
 		}
-		ite = new Iteration(iteration.getItemId().getUuidValue(), iteration.getName(), iteration.getId(),
-				iteration.getLabel(), iteration.getDescription().getSummary(), iteration.getStartDate(),
+		ite = new Iteration(//
+				iteration.getItemId().getUuidValue(), //
+				iteration.getName(), //
+				iteration.getId(), //
+				iteration.getLabel(), //
+				iteration.getDescription().getSummary(), //
+				iteration.getStartDate(), //
 				iteration.getEndDate());
 		p.putIteration(line, ite);
 		if (iterationHandle.sameItemId(currentIterationHandle)) {
@@ -319,8 +324,11 @@ public class DoIt {
 		//
 		// Task
 		//
-		task = new Task(wi.getItemId().getUuidValue(), wi.getId(),
-				p.getMember(wi.getCreator().getItemId().getUuidValue()), wi.getCreationDate());
+		task = new Task(//
+				wi.getItemId().getUuidValue(), //
+				wi.getId(), //
+				p.getMember(wi.getCreator().getItemId().getUuidValue()), //
+				wi.getCreationDate());
 		p.putTask(task);
 		monitor.out("\tjust added work item " + task.getId() + trace(wi));
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
@@ -389,15 +397,22 @@ public class DoIt {
 		// TaskVersion
 		//
 		TaskVersion version;
-		version = new TaskVersion(w.getItemId().getUuidValue(), w.getWorkItemType(),
-				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), w.modified(),
-				((null == description) ? null : description.getXMLText()),
-				((null == summary) ? null : summary.getXMLText()),
-				((null == priority) ? null : priority.getStringIdentifier()),
-				((null == severity) ? null : severity.getStringIdentifier()), tags, w.getDueDate(), w.getDuration(),
-				((null == category) ? null : p.getCategory(category.getItemId().getUuidValue())),
-				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())),
-				p.getMember(ownedBy.getItemId().getUuidValue()), p.getMember(resolvedBy.getItemId().getUuidValue()),
+		version = new TaskVersion(//
+				w.getItemId().getUuidValue(), //
+				w.getWorkItemType(), //
+				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), //
+				w.modified(), //
+				((null == description) ? null : description.getXMLText()), //
+				((null == summary) ? null : summary.getXMLText()), //
+				((null == priority) ? null : priority.getStringIdentifier()), //
+				((null == severity) ? null : severity.getStringIdentifier()), //
+				tags, //
+				w.getDueDate(), //
+				w.getDuration(), //
+				((null == category) ? null : p.getCategory(category.getItemId().getUuidValue())), //
+				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())), //
+				p.getMember(ownedBy.getItemId().getUuidValue()), //
+				p.getMember(resolvedBy.getItemId().getUuidValue()), //
 				w.getResolutionDate());
 		task.putTaskVersion(version);
 		monitor.out("\tjust added work item version " + task.getId() + trace(w));
@@ -422,8 +437,10 @@ public class DoIt {
 					referencedItem = ((IItemReference) ref).getReferencedItem();
 					if (referencedItem instanceof IWorkItemHandle) {
 						link = ref.getLink();
-						version.addLink(new Link(w.getItemId().getUuidValue(),
-								referencedItem.getItemId().getUuidValue(), link.getLinkType().getLinkTypeId()));
+						version.addLink(new Link(//
+								w.getItemId().getUuidValue(), //
+								referencedItem.getItemId().getUuidValue(), //
+								link.getLinkType().getLinkTypeId()));
 						monitor.out("\t\tjust added link for " + task.getId());
 					}
 				}

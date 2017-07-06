@@ -49,10 +49,15 @@ public class Project extends Item implements Serializable {
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("uri", uri);
+		return super.toString()//
+				+ Item.SEP + Item.trace("name", name)//
+				+ Item.SEP + Item.trace("uri", uri);
 	}
 
-	public Project(String sourceUUID, String name, String uri) {
+	public Project(//
+			String sourceUUID, //
+			String name, //
+			String uri) {
 		super(sourceUUID);
 		this.name = name;
 		this.uri = uri;

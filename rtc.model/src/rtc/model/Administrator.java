@@ -22,7 +22,10 @@ public class Administrator extends User implements Serializable {
 
 	private static final long serialVersionUID = 3897817385244772203L;
 
-	public Administrator(String sourceUUID, String name, String userId) {
+	public Administrator(//
+			String sourceUUID, //
+			String name, //
+			String userId) {
 		super(sourceUUID, name, userId);
 	}
 

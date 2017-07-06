@@ -31,12 +31,22 @@ public class Iteration extends Item implements Serializable {
 	private Date ends;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP + Item.trace("id", id) + Item.SEP
-				+ Item.trace("label", label) + Item.SEP + Item.trace("description", description) + Item.SEP
-				+ Item.trace("starts", starts) + Item.SEP + Item.trace("ends", ends);
+		return super.toString()//
+				+ Item.SEP + Item.trace("name", name)//
+				+ Item.SEP + Item.trace("id", id)//
+				+ Item.SEP + Item.trace("label", label)//
+				+ Item.SEP + Item.trace("description", description)//
+				+ Item.SEP + Item.trace("starts", starts)//
+				+ Item.SEP + Item.trace("ends", ends);
 	}
 
-	public Iteration(String sourceUUID, String name, String id, String label, String description, Date starts,
+	public Iteration(//
+			String sourceUUID, //
+			String name, //
+			String id, //
+			String label, //
+			String description, //
+			Date starts, //
 			Date ends) {
 		super(sourceUUID);
 		this.name = name;

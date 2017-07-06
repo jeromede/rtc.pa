@@ -26,11 +26,15 @@ public class Link extends Item implements Serializable {
 	private String type;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("target UUID", targetUUID) + Item.SEP
-				+ Item.trace("type", type);
+		return super.toString()//
+				+ Item.SEP + Item.trace("target UUID", targetUUID)//
+				+ Item.SEP + Item.trace("type", type);
 	}
 
-	public Link(String sourceUUID, String targetUUID, String type) {
+	public Link(//
+			String sourceUUID, //
+			String targetUUID, //
+			String type) {
 		super(sourceUUID);
 		this.targetUUID = targetUUID;
 		this.type = type;

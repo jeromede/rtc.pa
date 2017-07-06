@@ -22,7 +22,10 @@ public class Member extends User implements Serializable {
 
 	private static final long serialVersionUID = -8469149376708588419L;
 
-	public Member(String sourceUUID, String name, String userId) {
+	public Member(//
+			String sourceUUID, //
+			String name, //
+			String userId) {
 		super(sourceUUID, name, userId);
 	}
 
