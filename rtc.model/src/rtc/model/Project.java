@@ -152,7 +152,7 @@ public class Project extends Item implements Serializable {
 	public Task getTask(String sourceUUID) {
 		return tasks0.get(sourceUUID);
 	}
-	
+
 	public void serialize(String filename) {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(filename);
@@ -167,8 +167,8 @@ public class Project extends Item implements Serializable {
 	}
 
 	public static Project deserialize(String filename) {
-		Project p = null;
 		try {
+			Project p;
 			FileInputStream fileIn = new FileInputStream(filename);
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			p = (Project) in.readObject();
