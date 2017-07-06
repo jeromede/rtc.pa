@@ -22,6 +22,10 @@ import java.util.Date;
 import java.util.List;
 
 import com.ibm.team.foundation.common.text.XMLString;
+import com.ibm.team.links.common.IItemReference;
+import com.ibm.team.links.common.ILink;
+import com.ibm.team.links.common.IReference;
+import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IDevelopmentLineHandle;
 import com.ibm.team.process.common.IIteration;
@@ -33,6 +37,7 @@ import com.ibm.team.repository.common.IAuditable;
 import com.ibm.team.repository.common.IAuditableHandle;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
+import com.ibm.team.repository.common.IItemHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IAuditableClient;
 import com.ibm.team.workitem.client.IQueryClient;
@@ -50,6 +55,7 @@ import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
+import com.ibm.team.workitem.common.model.IWorkItemReferences;
 import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.model.ItemProfile;
@@ -60,6 +66,7 @@ import rtc.model.Administrator;
 import rtc.model.Category;
 import rtc.model.Iteration;
 import rtc.model.Line;
+import rtc.model.Link;
 import rtc.model.Member;
 import rtc.model.Project;
 import rtc.model.Task;
@@ -329,7 +336,7 @@ public class DoIt {
 			workItems = itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(wi, monitor), monitor);
 		} catch (TeamRepositoryException e1) {
 			e1.printStackTrace();
-			return "Error reading history of work item " + wi.getId();
+			return "error reading history of work item " + wi.getId();
 		}
 		String result;
 		for (IWorkItem w : workItems) {
@@ -353,8 +360,6 @@ public class DoIt {
 		for (String t : tags2) {
 			tags.add(t);
 		}
-		// Date due = w.getDueDate();
-		// long duration = w.getDuration();
 		ICategoryHandle category = w.getCategory();
 		IIterationHandle target = w.getTarget();
 		IContributor ownedBy;
@@ -363,7 +368,7 @@ public class DoIt {
 					IItemManager.DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "Problem retrieving owner for workitem.";
+			return "problem retrieving owner for workitem " + task.getId();
 		}
 		IContributor resolvedBy;
 		try {
@@ -371,20 +376,20 @@ public class DoIt {
 					IItemManager.DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "Problem retrieving resolver for workitem.";
+			return "problem retrieving resolver for workitem " + task.getId();
 		}
-		// Date resolution = w.getResolutionDate();
 		// TO DO
-		w.getApprovals();
-		w.getComments();
-		w.getCustomAttributes();
-		w.getState2();
-		/* w.getValue(null); */
+		// w.getApprovals();
+		// w.getComments();
+		// w.getCustomAttributes();
+		// w.getState2();
+		// w.getValue(null);
 
 		//
 		// TaskVersion
 		//
-		task.putTaskVersion(new TaskVersion(w.getItemId().getUuidValue(), w.getWorkItemType(),
+		TaskVersion version;
+		version = new TaskVersion(w.getItemId().getUuidValue(), w.getWorkItemType(),
 				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), w.modified(),
 				((null == description) ? null : description.getXMLText()),
 				((null == summary) ? null : summary.getXMLText()),
@@ -393,8 +398,37 @@ public class DoIt {
 				((null == category) ? null : p.getCategory(category.getItemId().getUuidValue())),
 				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())),
 				p.getMember(ownedBy.getItemId().getUuidValue()), p.getMember(resolvedBy.getItemId().getUuidValue()),
-				w.getResolutionDate()));
+				w.getResolutionDate());
+		task.putTaskVersion(version);
 		monitor.out("\tjust added work item version " + task.getId() + trace(w));
+		//
+		// Links
+		//
+		IWorkItemReferences references;
+		ILink link;
+		try {
+			references = wiCommon.resolveWorkItemReferences(w, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "problem resolving references for workitem " + task.getId();
+		}
+		IItemHandle referencedItem;
+		for (IEndPointDescriptor iEndPointDescriptor : references.getTypes()) {
+			monitor.out("END POINT (" + task.getId() + "): " + iEndPointDescriptor.getDisplayName() + " ID: "
+					+ iEndPointDescriptor.getLinkType().getLinkTypeId() + " - " + iEndPointDescriptor);
+			List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
+			for (IReference ref : typedReferences) {
+				if (ref.isItemReference()) {
+					referencedItem = ((IItemReference) ref).getReferencedItem();
+					if (referencedItem instanceof IWorkItemHandle) {
+						link = ref.getLink();
+						version.addLink(new Link(w.getItemId().getUuidValue(),
+								referencedItem.getItemId().getUuidValue(), link.getLinkType().getLinkTypeId()));
+						monitor.out("\t\tjust added link for " + task.getId());
+					}
+				}
+			}
+		}
 		return null;
 	}
 

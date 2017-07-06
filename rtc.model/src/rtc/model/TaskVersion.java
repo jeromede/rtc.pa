@@ -18,6 +18,7 @@ package rtc.model;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -34,22 +35,36 @@ public class TaskVersion extends Item implements Serializable {
 	private String severity;
 	private List<String> tags;
 	private Timestamp due;
-	private long duration;
+	private long duration; // -1 means null
 	private Category category;
 	private Iteration target;
 	private Member ownedBy;
 	private Member resolvedBy;
 	private Date resolution;
+	private List<Link> links = new ArrayList<Link>();
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", type) + Item.SEP + Item.trace("modifier", modifier)
+		return super.toString() + Item.SEP + Item.trace("type", type) + Item.SEP + Item.trace("modifier", modifier)
 				+ Item.SEP + Item.trace("modified", modified) + Item.SEP + Item.trace("description", description)
 				+ Item.SEP + Item.trace("summary", summary) + Item.SEP + Item.trace("priority", priority) + Item.SEP
 				+ Item.trace("severity", severity) + Item.SEP + Item.trace("tags", tags) + Item.SEP
 				+ Item.trace("due", due) + Item.SEP + Item.trace("duration", duration) + Item.SEP
 				+ Item.trace("category", category) + Item.SEP + Item.trace("target", target) + Item.SEP
 				+ Item.trace("ownedBy", ownedBy) + Item.SEP + Item.trace("resolvedBy", resolvedBy) + Item.SEP
-				+ Item.trace("resolution", resolution);
+				+ Item.trace("resolution", resolution) + Item.trace_list("\nLINKS", linksToString());
+	}
+
+	private String linksToString() {
+		String result = new String();
+		int n = 0;
+		for (Link l : links) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, l);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, l);
+			}
+		}
+		return result;
 	}
 
 	public TaskVersion(String sourceUUID, String type, Member modifier, Date modified, String description,
@@ -131,6 +146,14 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Date getResolution() {
 		return this.resolution;
+	}
+
+	public void addLink(Link link) {
+		links.add(link);
+	}
+
+	public List<Link> getLinks() {
+		return links;
 	}
 
 }

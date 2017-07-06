@@ -23,7 +23,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Project extends Item implements Serializable {
@@ -150,7 +152,7 @@ public class Project extends Item implements Serializable {
 	public Task getTask(String sourceUUID) {
 		return tasks0.get(sourceUUID);
 	}
-
+	
 	public void serialize(String filename) {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(filename);
@@ -235,6 +237,12 @@ public class Project extends Item implements Serializable {
 		for (Integer i : tasks.keySet()) {
 			task = tasks.get(i);
 			out.println("\n" + task.toString());
+		}
+	}
+
+	private static void dump_links(PrintStream out, List<Link> links) {
+		for (Link l : links) {
+			out.println("\n" + l.toString());
 		}
 	}
 

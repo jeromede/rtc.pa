@@ -75,10 +75,10 @@ public abstract class Item implements java.io.Serializable {
 	private static String trace(List<String> l) {
 		String result = new String();
 		for (String t : l) {
-			if (! result.isEmpty()) {
+			if (!result.isEmpty()) {
 				result += ", ";
 			}
-			result += t;
+			result += '\"' + t + '\"';
 		}
 		return result;
 	}
@@ -122,6 +122,6 @@ public abstract class Item implements java.io.Serializable {
 		if (null == o) {
 			return '\n' + t + ": null";
 		}
-		return '\n' + t + ": [" + o + ']';
+		return '\n' + t + ": [" + o + ']' + '\n';
 	}
 }

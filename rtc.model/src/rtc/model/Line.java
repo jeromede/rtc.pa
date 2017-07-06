@@ -35,7 +35,7 @@ public class Line extends Item implements Serializable {
 	public String toString() {
 		return super.toString() + Item.SEP + Item.trace("id", id) + Item.SEP + Item.trace("name", name) + Item.SEP
 				+ Item.trace("starts", starts) + Item.SEP + Item.trace("ends", ends) + Item.SEP
-				+ Item.trace_simple("\nITERATIONS", iterationsToString() + '\n');
+				+ Item.trace_list("\nITERATIONS", iterationsToString());
 	}
 
 	private String iterationsToString() {
