@@ -19,6 +19,7 @@ package rtc.pa.write.plain;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.common.IProjectArea;
@@ -42,16 +43,51 @@ import rtc.utils.ProgressMonitor;
 
 public class DoIt {
 
-	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p)
-			throws TeamRepositoryException, IOException {
+	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
+			Map<String, String> matchingUserIDs) throws TeamRepositoryException, IOException {
+
+		String result;
 
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
-		return writeWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+
+		result = matchMembers(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, matchingUserIDs);
+		if (null != result)
+			return result;
+//		result = writeCategories(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+//		if (null != result)
+//			return result;
+//		result = writeDevelopmentLines(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+//		if (null != result)
+//			return result;
+//		result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+//		if (null != result)
+//			return result;
+
+		return null;
 	}
 
-	private static String writeWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	private static String matchMembers(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			Map<String, String> matchingUserIDs) {
+		for (String k : matchingUserIDs.keySet()) {
+			monitor.out(k + ':' + matchingUserIDs.get(k));
+		}
+		return null;
+	}
+
+	private static String writeCategories(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
+		return null;
+	}
+
+	private static String writeDevelopmentLines(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
+		return null;
+	}
+
+	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
 
 		//
@@ -100,7 +136,7 @@ public class DoIt {
 			Timestamp t = new Timestamp(1098480784979L);
 			wi.setCreationDate(t);
 			List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
-			for (IAttributeHandle a:customAttributes) {
+			for (IAttributeHandle a : customAttributes) {
 				System.out.println("custom attribute " + a.toString());
 			}
 			IAttribute tpModified;

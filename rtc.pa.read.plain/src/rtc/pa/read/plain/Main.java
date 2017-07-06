@@ -19,9 +19,6 @@ package rtc.pa.read.plain;
 import java.io.IOException;
 import java.net.URI;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-
 import com.ibm.team.process.client.IProcessClientService;
 import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IProcessArea;
@@ -42,13 +39,13 @@ public class Main {
 		Project p = null;
 
 		String url, proj, user, password;
-		IPath file;
+		String ser;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
-			file = new Path(new String(args[4]));
+			ser = new String(args[4]);
 		} catch (Exception e) {
 			monitor.err("arguments: url user password destination_file");
 			monitor.err("example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser");
@@ -77,7 +74,7 @@ public class Main {
 				message = new String(uri + " is not a project area");
 			}
 			if (null == message && null != pa && null != p) {
-				p.serialize(file.toOSString());
+				p.serialize(ser);
 				monitor.out("OK, done.");
 			} else {
 				monitor.err("KO: " + message);

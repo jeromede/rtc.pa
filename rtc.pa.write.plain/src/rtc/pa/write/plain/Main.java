@@ -18,9 +18,11 @@ package rtc.pa.write.plain;
 
 import java.io.IOException;
 import java.net.URI;
-
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.ibm.team.process.client.IProcessClientService;
 import com.ibm.team.process.client.IProcessItemService;
@@ -42,17 +44,18 @@ public class Main {
 		Project p = null;
 
 		String url, proj, user, password;
-		IPath file;
+		String ser, match;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
-			file = new Path(new String(args[4]));
+			ser = new String(args[4]);
+			match = new String(args[5]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password destination_file");
+			monitor.err("arguments: url user password destination_file members_file");
 			monitor.err(
-					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser");
+					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser /home/issr/here/members.txt");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
@@ -72,11 +75,15 @@ public class Main {
 			String message;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				p = Project.deserialize(file.toOSString());
+				p = Project.deserialize(ser);
 				if (null == p) {
 					message = "problem reading serialized project";
 				} else {
-					message = DoIt.execute(repo, pa, monitor, p);
+					Map<String, String> matchingUserIDs = new HashMap<String, String>();
+					message = matchingMembers(matchingUserIDs, match);
+					if (null == message) {
+						message = DoIt.execute(repo, pa, monitor, p, matchingUserIDs);
+					}
 				}
 			} else {
 				message = new String(uri + " is not a project area");
@@ -93,6 +100,22 @@ public class Main {
 		} finally {
 			TeamPlatform.shutdown();
 		}
+	}
+
+	static String matchingMembers(Map<String, String> map, String filename) {
+		try {
+			List<String> lines;
+			lines = java.nio.file.Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8);
+			int i;
+			for (String line : lines) {
+				i = line.trim().indexOf(' ');
+				map.put(line.substring(0, i).trim(), line.substring(i, line.length() - 1).trim());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error reading UTF-8 text file " + filename;
+		}
+		return null;
 	}
 
 }
