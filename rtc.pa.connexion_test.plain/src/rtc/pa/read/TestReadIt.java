@@ -31,7 +31,7 @@ import com.ibm.team.workitem.common.model.IWorkItemType;
 
 import rtc.utils.ProgressMonitor;
 
-public class DoIt {
+public class TestReadIt {
 
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {

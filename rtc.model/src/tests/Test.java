@@ -25,7 +25,7 @@ public class Test {
 	private static final String SER_FILE = "/tmp/pa1.ser";
 
 	public static void main(String[] args) {
-		Project p = new Project("UUID1", "pa1", "Project Area 1");
+		Project p = new Project("UUID1", "pa1", "Project Area 1", "This is my new project");
 		p.putMember(new Member("UUID2", "j", "jérôme"));
 		p.putMember(new Member("UUID3", "a", "Alice"));
 		p.putMember(new Member("UUID4", "m", "Marion"));

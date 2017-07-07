@@ -88,7 +88,7 @@ public class Main {
 			IProjectArea pa = null;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				message = DoIt.execute(repo, pa, monitor, p, matchingUserIDs);
+				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs);
 			} else {
 				message = uri + " is not a project area";
 			}

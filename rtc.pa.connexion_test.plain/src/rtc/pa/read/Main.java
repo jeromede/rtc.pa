@@ -61,7 +61,7 @@ public class Main {
 					monitor));
 			String message;
 			if (null != pa && pa instanceof IProjectArea) {
-				message = DoIt.execute(repo, (IProjectArea) pa, monitor);
+				message = TestReadIt.execute(repo, (IProjectArea) pa, monitor);
 			} else {
 				message = new String(uri + " is not a project area");
 			}

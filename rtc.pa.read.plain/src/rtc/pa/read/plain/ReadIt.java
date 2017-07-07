@@ -73,7 +73,7 @@ import rtc.model.Task;
 import rtc.model.TaskVersion;
 import rtc.utils.ProgressMonitor;
 
-public class DoIt {
+public class ReadIt {
 
 	private static String trace(com.ibm.team.repository.common.IItemHandle item) {
 		return "\n\n-> " + item + "\n";

@@ -38,10 +38,11 @@ import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
 
+import rtc.model.Category;
 import rtc.model.Project;
 import rtc.utils.ProgressMonitor;
 
-public class DoIt {
+public class WriteIt {
 
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
 			Map<String, String> matchingUserIDs) throws TeamRepositoryException, IOException {
@@ -55,15 +56,17 @@ public class DoIt {
 		result = matchMembers(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, matchingUserIDs);
 		if (null != result)
 			return result;
-//		result = writeCategories(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
-//		if (null != result)
-//			return result;
-//		result = writeDevelopmentLines(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
-//		if (null != result)
-//			return result;
-//		result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
-//		if (null != result)
-//			return result;
+		result = writeCategories(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+		if (null != result)
+			return result;
+		// result = writeDevelopmentLines(repo, pa, wiClient, wiCommon,
+		// wiCopier, monitor, p);
+		// if (null != result)
+		// return result;
+		// result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier,
+		// monitor, p);
+		// if (null != result)
+		// return result;
 
 		return null;
 	}
@@ -79,6 +82,15 @@ public class DoIt {
 
 	private static String writeCategories(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
+
+		for (Category cat : p.getCategories()) {
+			try {
+				ICategory category = wiCommon.createCategory(pa, cat.getName(), monitor);
+			} catch (TeamRepositoryException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		return null;
 	}
 
