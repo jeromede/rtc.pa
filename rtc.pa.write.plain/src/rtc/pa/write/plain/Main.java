@@ -55,11 +55,11 @@ public class Main {
 			ser = new String(args[4]);
 			match = new String(args[5]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password destination_file members_file");
+			monitor.err("arguments: url user password serialization_file members_file");
 			monitor.err(
-					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser /home/issr/here/members.txt");
+					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser members.txt");
 			monitor.err(
-					"note: the last argument has to be a UTF-8 text file with a line for each member; this line should read like: \"ID_in_source ID_in_target\"");
+					"note: the last argument has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
