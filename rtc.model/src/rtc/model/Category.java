@@ -25,21 +25,27 @@ public class Category extends Item implements Serializable {
 	private String name;
 	private String hierarchicalName;
 	private String description;
+	private String parentId;
 
 	public String toString() {
-		return super.toString() + Item.SEP + Item.trace("name", name) + Item.SEP
-				+ Item.trace("hierarchicalName", hierarchicalName) + Item.SEP + Item.trace("description", description);
+		return super.toString() //
+				+ Item.SEP + Item.trace("name", name) //
+				+ Item.SEP + Item.trace("hierarchicalName", hierarchicalName) //
+				+ Item.SEP + Item.trace("description", description)//
+				+ Item.SEP + Item.trace("parentId", parentId);
 	}
 
 	public Category(//
-			String sourceUUID, //
+			String sourceCategoryId, //
 			String name, //
 			String hierarchicalName, //
-			String description) {
-		super(sourceUUID);
+			String description, //
+			String parentId) {
+		super(sourceCategoryId);
 		this.name = name;
 		this.hierarchicalName = hierarchicalName;
 		this.description = description;
+		this.parentId = parentId;
 	}
 
 	public String getName() {
@@ -52,6 +58,10 @@ public class Category extends Item implements Serializable {
 
 	public String getDescription() {
 		return this.description;
+	}
+
+	public String getParentId() {
+		return this.parentId;
 	}
 
 }

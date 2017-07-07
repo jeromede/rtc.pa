@@ -33,8 +33,6 @@ import com.ibm.team.process.common.IIterationHandle;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
-import com.ibm.team.repository.common.IAuditable;
-import com.ibm.team.repository.common.IAuditableHandle;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.IItemHandle;
@@ -48,11 +46,11 @@ import com.ibm.team.workitem.common.expression.Expression;
 import com.ibm.team.workitem.common.expression.IQueryableAttribute;
 import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
+import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.ICategoryHandle;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.ISeverity;
-import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemReferences;
@@ -83,18 +81,22 @@ public class ReadIt {
 		return "\n\n" + desc + "-> " + item + "\n";
 	}
 
+	@SuppressWarnings("unused")
 	private static String trace(String s) {
 		return "\n\n-> \"" + s + "\"\n";
 	}
 
+	@SuppressWarnings("unused")
 	private static String trace(String desc, String s) {
 		return "\n\n" + desc + "-> \"" + s + "\"\n";
 	}
 
+	@SuppressWarnings("unused")
 	private static String trace(Date d) {
 		return "\n\n-> \"" + d + "\"\n";
 	}
 
+	@SuppressWarnings("unused")
 	private static String trace(String desc, Date d) {
 		return "\n\n" + desc + "-> \"" + d + "\"\n";
 	}
@@ -170,18 +172,24 @@ public class ReadIt {
 	private static String readCategories(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p) {
 
-		com.ibm.team.foundation.common.text.XMLString x;
 		List<ICategory> allCategories;
 		//
 		// Categories
 		//
 		monitor.out("Now reading categories...");
+		CategoryId parentId;
 		try {
 			allCategories = wiClient.findCategories(pa, ICategory.FULL_PROFILE, monitor);
 			for (ICategory c : allCategories) {
 				if (!c.isArchived()) {
-					p.putCategory(new Category(c.getItemId().getUuidValue(), c.getName(),
-							wiCommon.resolveHierarchicalName(c, monitor), c.getHTMLDescription().getXMLText()));
+					parentId = c.getParentId2();
+					p.putCategory(//
+							new Category(//
+									c.getCategoryId().getInternalRepresentation(), //
+									c.getName(), //
+									wiCommon.resolveHierarchicalName(c, monitor), //
+									c.getHTMLDescription().getXMLText(), //
+									((null == parentId) ? null : parentId.getInternalRepresentation())));
 					monitor.out("\tjust added category " + c.getName() + trace(c));
 				}
 			}
@@ -335,6 +343,7 @@ public class ReadIt {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task) {

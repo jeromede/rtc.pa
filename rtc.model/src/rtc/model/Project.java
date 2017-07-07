@@ -25,7 +25,6 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Project extends Item implements Serializable {
@@ -114,10 +113,10 @@ public class Project extends Item implements Serializable {
 		return categories.get(uid);
 	}
 
-	public Category getCategory(String sourceUUID) {
-		return categories0.get(sourceUUID);
+	public Category getCategory(String categoryId) {
+		return categories0.get(categoryId);
 	}
-	
+
 	public Collection<Category> getCategories() {
 		return categories.values();
 	}

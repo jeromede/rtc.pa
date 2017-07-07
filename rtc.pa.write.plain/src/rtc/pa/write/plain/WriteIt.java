@@ -83,12 +83,11 @@ public class WriteIt {
 	private static String writeCategories(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
 
+		ICategory category;
 		for (Category cat : p.getCategories()) {
-			try {
-				ICategory category = wiCommon.createCategory(pa, cat.getName(), monitor);
-			} catch (TeamRepositoryException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			category = WriteHelper.createCategoryIfNotExist(pa, wiCommon, monitor, p, cat);
+			if (null == category) {
+				return "error creating category " + cat.getName();
 			}
 		}
 		return null;

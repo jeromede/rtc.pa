@@ -30,6 +30,7 @@ public abstract class Item implements java.io.Serializable {
 	private Integer uid;
 	private String sourceUUID = null;
 	private transient String targetUUID = null;
+	private transient Object targetObject = null;
 
 	public String toString() {
 		return trace("internal", uid) + SEP + trace("sourceUUID", sourceUUID);
@@ -49,12 +50,17 @@ public abstract class Item implements java.io.Serializable {
 		return this.sourceUUID;
 	}
 
-	public String setTargetUUID(String id) {
-		return this.targetUUID = id;
+	public void setTargetObject(String uuid, Object o) {
+		this.targetUUID = uuid;
+		this.targetObject = o;
 	}
 
 	public String getTargetUUID() {
 		return this.targetUUID;
+	}
+
+	public Object getTargetObject() {
+		return this.targetObject;
 	}
 
 	public static String trace(String t, int i) {
