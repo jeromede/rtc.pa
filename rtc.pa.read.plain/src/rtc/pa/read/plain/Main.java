@@ -80,8 +80,10 @@ public class Main {
 				monitor.err("KO: " + message);
 			}
 		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
 			monitor.err("Unable to perform: " + e.getMessage());
 		} catch (IOException e) {
+			e.printStackTrace();
 			monitor.err("IO error: " + e.getMessage());
 		} finally {
 			TeamPlatform.shutdown();

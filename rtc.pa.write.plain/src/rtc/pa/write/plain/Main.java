@@ -42,6 +42,8 @@ public class Main {
 
 		ProgressMonitor monitor = new ProgressMonitor();
 		Project p = null;
+		Map<String, String> matchingUserIDs = new HashMap<String, String>();
+		String message;
 
 		String url, proj, user, password;
 		String ser, match;
@@ -56,11 +58,23 @@ public class Main {
 			monitor.err("arguments: url user password destination_file members_file");
 			monitor.err(
 					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou /home/issr/here/UU_PP.ser /home/issr/here/members.txt");
+			monitor.err(
+					"note: the last argument has to be a UTF-8 text file with a line for each member; this line should read like: \"ID_in_source ID_in_target\"");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
 			}
 			monitor.err();
+			return;
+		}
+		message = matchingMembers(matchingUserIDs, match);
+		if (null != message) {
+			monitor.err("problem with the matching members file: " + message);
+			return;
+		}
+		p = Project.deserialize(ser);
+		if (null == p) {
+			monitor.err("problem reading serialized project from " + ser);
 			return;
 		}
 		TeamPlatform.startup();
@@ -72,21 +86,11 @@ public class Main {
 			IProcessArea pa0 = (IProcessArea) (processClient.findProcessArea(uri, IProcessItemService.ALL_PROPERTIES,
 					monitor));
 			IProjectArea pa = null;
-			String message;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				p = Project.deserialize(ser);
-				if (null == p) {
-					message = "problem reading serialized project";
-				} else {
-					Map<String, String> matchingUserIDs = new HashMap<String, String>();
-					message = matchingMembers(matchingUserIDs, match);
-					if (null == message) {
-						message = DoIt.execute(repo, pa, monitor, p, matchingUserIDs);
-					}
-				}
+				message = DoIt.execute(repo, pa, monitor, p, matchingUserIDs);
 			} else {
-				message = new String(uri + " is not a project area");
+				message = uri + " is not a project area";
 			}
 			if (null == message) {
 				monitor.out("OK, done.");
@@ -94,8 +98,10 @@ public class Main {
 				monitor.err("KO: " + message);
 			}
 		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
 			monitor.err("Unable to perform: " + e.getMessage());
 		} catch (IOException e) {
+			e.printStackTrace();
 			monitor.err("IO error: " + e.getMessage());
 		} finally {
 			TeamPlatform.shutdown();
@@ -105,11 +111,15 @@ public class Main {
 	static String matchingMembers(Map<String, String> map, String filename) {
 		try {
 			List<String> lines;
+			String l;
 			lines = java.nio.file.Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8);
 			int i;
 			for (String line : lines) {
-				i = line.trim().indexOf(' ');
-				map.put(line.substring(0, i).trim(), line.substring(i, line.length() - 1).trim());
+				l = line.trim();
+				if (!l.isEmpty()) {
+					i = l.indexOf(' ');
+					map.put(l.substring(0, i), l.substring(i, l.length()).trim());
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

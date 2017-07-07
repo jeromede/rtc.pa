@@ -169,16 +169,16 @@ public class DoIt {
 			e.printStackTrace();
 			return ("Error fetching new work item.");
 		}
-		int wiN = wi.getId();
-		System.out.println("Created workitem: " + wiN);
+		int iwId = wi.getId();
+		System.out.println("Created workitem: " + iwId);
 		//
 		// Update
 		//
 		try {
-			wi = wiClient.findWorkItemById(wiN, IWorkItem.FULL_PROFILE, monitor);
+			wi = wiClient.findWorkItemById(iwId, IWorkItem.FULL_PROFILE, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return ("Can't find work item " + wiN);
+			return ("Can't find work item " + iwId);
 		}
 		try {
 			wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
