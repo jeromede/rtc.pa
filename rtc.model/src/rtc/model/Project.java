@@ -33,6 +33,7 @@ public class Project extends Item implements Serializable {
 
 	private String name;
 	private String uri;
+	private String summary;
 	private Map<Integer, Member> members = new HashMap<Integer, Member>();
 	private Map<String, Member> members0 = new HashMap<String, Member>();
 	private Map<Integer, Administrator> administrators = new HashMap<Integer, Administrator>();
@@ -50,16 +51,19 @@ public class Project extends Item implements Serializable {
 	public String toString() {
 		return super.toString()//
 				+ Item.SEP + Item.trace("name", name)//
-				+ Item.SEP + Item.trace("uri", uri);
+				+ Item.SEP + Item.trace("uri", uri)//
+				+ Item.SEP + Item.trace("summary", summary);
 	}
 
 	public Project(//
 			String sourceUUID, //
 			String name, //
-			String uri) {
+			String uri, //
+			String summary) {
 		super(sourceUUID);
 		this.name = name;
 		this.uri = uri;
+		this.summary = summary;
 	}
 
 	public String getName() {
@@ -68,6 +72,10 @@ public class Project extends Item implements Serializable {
 
 	public String getUri() {
 		return this.uri;
+	}
+
+	public String getSummary() {
+		return this.summary;
 	}
 
 	public void putMember(Member member) {
@@ -241,12 +249,6 @@ public class Project extends Item implements Serializable {
 		for (Integer i : tasks.keySet()) {
 			task = tasks.get(i);
 			out.println("\n" + task.toString());
-		}
-	}
-
-	private static void dump_links(PrintStream out, List<Link> links) {
-		for (Link l : links) {
-			out.println("\n" + l.toString());
 		}
 	}
 
