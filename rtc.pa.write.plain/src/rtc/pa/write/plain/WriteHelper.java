@@ -1,12 +1,16 @@
 package rtc.pa.write.plain;
 
 import com.ibm.team.foundation.common.text.XMLString;
+import com.ibm.team.process.client.IProcessItemService;
+import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.ICategory;
 
 import rtc.model.Category;
+import rtc.model.Iteration;
+import rtc.model.Line;
 import rtc.model.Project;
 import rtc.utils.ProgressMonitor;
 
@@ -51,11 +55,22 @@ public class WriteHelper {
 		return null;
 	}
 
-	public static void finaliseCategory(IWorkItemCommon wiCommon, ProgressMonitor monitor, Category cat)
+	private static void finaliseCategory(IWorkItemCommon wiCommon, ProgressMonitor monitor, Category cat)
 			throws TeamRepositoryException {
 		ICategory category = (ICategory) cat.getTargetObject();
 		category.setHTMLDescription(XMLString.createFromXMLText(cat.getDescription()));
 		wiCommon.saveCategory(category, monitor);
+	}
+
+	public static String createLine(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
+			Line line) {
+		// IDevelopmentLine devLine = service.createDevelopmentLine();
+		return null;
+	}
+
+	public static String createIteration(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor,
+			Project p, Line line, Iteration parent, Iteration ite) {
+		return null;
 	}
 
 }

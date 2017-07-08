@@ -44,7 +44,6 @@ public class Project extends Item implements Serializable {
 	private Map<String, Line> lines0 = new HashMap<String, Line>();
 	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
-	private Iteration current = null;
 	private Map<Integer, Task> tasks = new HashMap<Integer, Task>();
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
 
@@ -134,10 +133,21 @@ public class Project extends Item implements Serializable {
 		return lines0.get(sourceUUID);
 	}
 
+	public Collection<Line> getLines() {
+		return lines.values();
+	}
+
 	public void putIteration(Line line, Iteration iteration) {
 		line.putIteration(iteration);
 		iterations.put(iteration.getUID(), iteration);
 		iterations0.put(iteration.getSourceUUID(), iteration);
+	}
+	
+	public void putIteration(Line line, Iteration parent, Iteration iteration) {
+		line.putIteration(iteration);
+		iterations.put(iteration.getUID(), iteration);
+		iterations0.put(iteration.getSourceUUID(), iteration);
+		parent.putIteration(iteration);
 	}
 
 	public Iteration getIteration(int uid) {
@@ -146,14 +156,6 @@ public class Project extends Item implements Serializable {
 
 	public Iteration getIteration(String sourceUUID) {
 		return iterations0.get(sourceUUID);
-	}
-
-	public void setCurrent(Iteration current) {
-		this.current = current;
-	}
-
-	public Iteration getCurrent() {
-		return this.current;
 	}
 
 	public void putTask(Task task) {

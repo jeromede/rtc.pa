@@ -17,7 +17,10 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Iteration extends Item implements Serializable {
 
@@ -29,6 +32,7 @@ public class Iteration extends Item implements Serializable {
 	private String description;
 	private Date starts;
 	private Date ends;
+	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 
 	public String toString() {
 		return super.toString()//
@@ -37,7 +41,23 @@ public class Iteration extends Item implements Serializable {
 				+ Item.SEP + Item.trace("label", label)//
 				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("starts", starts)//
-				+ Item.SEP + Item.trace("ends", ends);
+				+ Item.SEP + Item.trace("ends", ends)//
+				+ Item.SEP + Item.trace_list("\nSUBITERATIONS", iterationsToString());
+	}
+
+	private String iterationsToString() {
+		String result = new String();
+		Iteration i;
+		int n = 0;
+		for (Integer k : iterations.keySet()) {
+			i = iterations.get(k);
+			if (result.isEmpty()) {
+				result = Item.trace(n++, i);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, i);
+			}
+		}
+		return result;
 	}
 
 	public Iteration(//
@@ -79,6 +99,14 @@ public class Iteration extends Item implements Serializable {
 
 	public Date getEnds() {
 		return this.ends;
+	}
+
+	void putIteration(Iteration iteration) {
+		iterations.put(iteration.getUID(), iteration);
+	}
+
+	public Collection<Iteration> getIterations() {
+		return iterations.values();
 	}
 
 }

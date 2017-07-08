@@ -205,6 +205,7 @@ public class ReadIt {
 			IItemManager itemManager, ProgressMonitor monitor, Project p) {
 
 		monitor.out("Now reading development lines...");
+		String message;
 		Line line;
 		IDevelopmentLineHandle[] devLines = pa.getDevelopmentLines();
 		IDevelopmentLine devLine;
@@ -228,18 +229,20 @@ public class ReadIt {
 			// Iterations
 			//
 			for (IIterationHandle iterationHandle : devLine.getIterations()) {
-				readIteration(devLine, devLine.getCurrentIteration(), iterationHandle, repo, pa, auditableClient,
-						itemManager, "\t", monitor, p, line);
+				message = readIteration(devLine, devLine.getCurrentIteration(), iterationHandle, auditableClient,
+						itemManager, "\t", monitor, p, line, null);
+				if (null != message) {
+					return "error reading iteration " + iterationHandle;
+				}
 			}
-
 		}
 		monitor.out("... development lines read.");
 		return null;
 	}
 
 	private static String readIteration(IDevelopmentLine devLine, IIterationHandle currentIterationHandle,
-			IIterationHandle iterationHandle, ITeamRepository repo, IProjectArea pa, IAuditableClient auditableClient,
-			IItemManager itemManager, String prefix, ProgressMonitor monitor, Project p, Line line) {
+			IIterationHandle iterationHandle, IAuditableClient auditableClient, IItemManager itemManager, String prefix,
+			ProgressMonitor monitor, Project p, Line line, Iteration parent) {
 
 		IIteration iteration;
 		Iteration ite;
@@ -260,15 +263,19 @@ public class ReadIt {
 				iteration.getDescription().getSummary(), //
 				iteration.getStartDate(), //
 				iteration.getEndDate());
-		p.putIteration(line, ite);
+		if (null == parent) {
+			p.putIteration(line, ite);
+		} else {
+			p.putIteration(line, parent, ite);
+		}
 		if (iterationHandle.sameItemId(currentIterationHandle)) {
 			monitor.out(prefix + "\tcurrent iteration!");
-			p.setCurrent(ite);
+			line.setCurrent(ite);
 		}
 		monitor.out(prefix + "\tjust added iteration " + iteration.getName() + trace(iteration));
 		for (IIterationHandle children : iteration.getChildren()) {
-			readIteration(devLine, currentIterationHandle, children, repo, pa, auditableClient, itemManager,
-					prefix + "\t", monitor, p, line);
+			readIteration(devLine, currentIterationHandle, children, auditableClient, itemManager, prefix + "\t",
+					monitor, p, line, ite);
 		}
 		return null;
 	}

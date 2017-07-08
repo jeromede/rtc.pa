@@ -17,6 +17,7 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class Line extends Item implements Serializable {
 	private Date ends;
 	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
+	private Iteration current = null;
 
 	public String toString() {
 		return super.toString()//
@@ -96,6 +98,18 @@ public class Line extends Item implements Serializable {
 
 	public Iteration getIteration(String sourceUUID) {
 		return iterations0.get(sourceUUID);
+	}
+
+	public Collection<Iteration> getIterations() {
+		return iterations.values();
+	}
+
+	public void setCurrent(Iteration current) {
+		this.current = current;
+	}
+
+	public Iteration getCurrent() {
+		return this.current;
 	}
 
 }
