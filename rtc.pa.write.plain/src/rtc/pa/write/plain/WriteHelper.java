@@ -6,7 +6,6 @@ import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IIteration;
 import com.ibm.team.process.common.IProcessItem;
 import com.ibm.team.process.common.IProjectArea;
-import com.ibm.team.repository.common.IItem;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.ICategory;
@@ -115,10 +114,10 @@ public class WriteHelper {
 		}
 		try {
 			IIteration iteration = null;
+			IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
+			IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
+			iterationC.setDevelopmentLine(devLineC);
 			if (null == parent) {
-				IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
-				IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
-				iterationC.setDevelopmentLine(devLineC);
 				devLineC.addIteration(iterationC);
 				IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, iterationC }, monitor);
 				devLine = (IDevelopmentLine) savedItems[0];
@@ -128,23 +127,19 @@ public class WriteHelper {
 				monitor.out("\titeration \"" + ite.getName() + "\" in line \"" + line.getName() + "\"" + '\n' + devLine
 						+ '\n' + iteration);
 			} else {
-				IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
-				IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
 				IIteration parentIteration = (IIteration) parent.getTargetObject();
 				IIteration parentIterationC = (IIteration) service.getMutableCopy(parentIteration);
-				iterationC.setDevelopmentLine(devLineC);
-				//devLineC.addIteration(iterationC);
 				iterationC.setParent(parentIterationC);
 				parentIterationC.addChild(iterationC);
-				IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, parentIterationC, iterationC }, monitor);
+				IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, parentIterationC, iterationC },
+						monitor);
 				devLine = (IDevelopmentLine) savedItems[0];
 				parentIteration = (IIteration) savedItems[1];
 				iteration = (IIteration) savedItems[2];
 				line.setTargetObject(devLine.getId(), devLine);
 				parent.setTargetObject(parentIteration.getId(), parentIteration);
 				ite.setTargetObject(iteration.getId(), iteration);
-				monitor.out("\titeration \"" + ite.getName() + "\" in parent iteration \"" + parent.getName() + "\""
-						+ '\n' + parentIteration + '\n' + iteration);
+				monitor.out("\titeration \"" + ite.getName() + "\" in parent iteration \"" + parent.getName() + "\"");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -159,14 +154,27 @@ public class WriteHelper {
 
 	public static String setLineCurrent(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor,
 			Line line) {
+
 		Iteration ite = line.getCurrent();
 		if (null == ite) {
 			monitor.out("\tno current iteration has been set for development line " + line.getName() + "\"");
 			return null;
 		}
 		IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
-		devLine.setCurrentIteration((IIteration) line.getCurrent().getTargetObject());
-		////// com.ibm.team.repository.common.internal.ImmutablePropertyException
+		IIteration iteration = (IIteration) line.getCurrent().getTargetObject();
+		try {
+			IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
+			IIteration iterationC = (IIteration) service.getMutableCopy(iteration);
+			devLineC.setCurrentIteration(iterationC);
+			IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, iterationC }, monitor);
+			devLine = (IDevelopmentLine) savedItems[0];
+			iteration = (IIteration) savedItems[1];
+			line.setTargetObject(devLine.getId(), devLine);
+			ite.setTargetObject(iteration.getId(), iteration);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "error while setting current iteration \"" + ite.getName() + "\" in line\"" + line.getName() + "\"";
+		}
 		monitor.out("\tjust set development line \"" + line.getName() + "\" current iteration to \"" + ite.getName()
 				+ "\"");
 		return null;

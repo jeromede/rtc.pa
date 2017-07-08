@@ -23,10 +23,6 @@ import java.util.Map;
 
 import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.client.IProcessItemService;
-import com.ibm.team.process.common.IDevelopmentLine;
-import com.ibm.team.process.common.IDevelopmentLineHandle;
-import com.ibm.team.process.common.IIterationHandle;
-import com.ibm.team.process.common.IProcessItem;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
@@ -37,14 +33,12 @@ import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
-import com.ibm.team.workitem.common.model.ItemProfile;
 
 import rtc.model.Category;
 import rtc.model.Iteration;
