@@ -90,6 +90,10 @@ public class Iteration extends Item implements Serializable {
 		return this.id;
 	}
 
+	public String getAlternateId() {
+		return this.alternateId;
+	}
+
 	public String getLabel() {
 		return this.label;
 	}
