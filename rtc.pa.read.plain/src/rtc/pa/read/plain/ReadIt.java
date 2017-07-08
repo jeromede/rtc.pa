@@ -181,17 +181,18 @@ public class ReadIt {
 		try {
 			allCategories = wiClient.findCategories(pa, ICategory.FULL_PROFILE, monitor);
 			for (ICategory c : allCategories) {
-				if (!c.isArchived()) {
-					parentId = c.getParentId2();
-					p.putCategory(//
-							new Category(//
-									c.getCategoryId().getInternalRepresentation(), //
-									c.getName(), //
-									wiCommon.resolveHierarchicalName(c, monitor), //
-									c.getHTMLDescription().getXMLText(), //
-									((null == parentId) ? null : parentId.getInternalRepresentation())));
-					monitor.out("\tjust added category " + c.getName() + trace(c));
+				if (c.isArchived()) {
+					continue;
 				}
+				parentId = c.getParentId2();
+				p.putCategory(//
+						new Category(//
+								c.getCategoryId().getInternalRepresentation(), //
+								c.getName(), //
+								wiCommon.resolveHierarchicalName(c, monitor), //
+								c.getHTMLDescription().getXMLText(), //
+								((null == parentId) ? null : parentId.getInternalRepresentation())));
+				monitor.out("\tjust added category " + c.getName() + trace(c));
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -209,6 +210,7 @@ public class ReadIt {
 		Line line;
 		IDevelopmentLineHandle[] devLines = pa.getDevelopmentLines();
 		IDevelopmentLine devLine;
+		IDevelopmentLineHandle current = pa.getProjectDevelopmentLine();
 		for (IDevelopmentLineHandle devLineHandle : devLines) {
 			//
 			// Development line
@@ -220,8 +222,16 @@ public class ReadIt {
 				e.printStackTrace();
 				return "error resolving development line handle";
 			}
-			line = new Line(devLine.getItemId().getUuidValue(), devLine.getId(), devLine.getName(),
-					devLine.getStartDate(), devLine.getEndDate());
+			if (devLine.isArchived()) {
+				continue;
+			}
+			line = new Line(//
+					devLine.getItemId().getUuidValue(), //
+					devLine.getId(), //
+					devLine.getName(), //
+					devLine.getStartDate(), //
+					devLine.getEndDate(), //
+					devLine.getItemId().getUuidValue().equals(current.getItemId().getUuidValue()));
 			p.putLine(line);
 			monitor.out("\tjust added development line " + devLine.getName() + trace(devLine)
 					+ trace("current", devLine.getCurrentIteration()));

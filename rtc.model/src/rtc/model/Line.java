@@ -24,22 +24,41 @@ import java.util.Map;
 
 public class Line extends Item implements Serializable {
 
+	//
+	// Timeline constraints:
+	// - unique identifier for development lines
+	// - unique identifier for iterations in a given development line
+	// - can't change the identifier of a development line or an iteration
+	// - can't delete a development line or an iteration.
+	// So: ideally reuse the existing development lines / iterations
+	// and create new ones only if necessary.
+	// But they could have been re-organised...
+	// Instead: archive everything that exists
+	// and add the source project area name as a prefix.
+	//
+
 	private static final long serialVersionUID = 6185617986682800843L;
+
+	private static int nextInternal = 0;
 
 	private String name;
 	private String id;
+	private String alternateId;
 	private Date starts;
 	private Date ends;
+	private boolean projectLine;
 	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
 	private Iteration current = null;
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("id", id)//
+				+ Item.SEP + Item.trace("original id", id)//
+				+ Item.SEP + Item.trace("alternate id", alternateId)//
 				+ Item.SEP + Item.trace("name", name)//
 				+ Item.SEP + Item.trace("starts", starts)//
 				+ Item.SEP + Item.trace("ends", ends)//
+				+ Item.SEP + Item.trace("project line", projectLine)//
 				+ Item.SEP + Item.trace("current", (null == current) ? null : current.getName())//
 				+ Item.SEP + Item.trace_list("\nITERATIONS", iterationsToString());
 	}
@@ -64,16 +83,23 @@ public class Line extends Item implements Serializable {
 			String id, //
 			String name, //
 			Date starts, //
-			Date ends) {
+			Date ends, //
+			boolean projectLine) {
 		super(sourceUUID);
 		this.id = id;
-		this.name = name;
+		this.alternateId = id + " {" + nextInternal + '}';
+		this.name = name + " {" + nextInternal++ + '}';
 		this.starts = starts;
 		this.ends = ends;
+		this.projectLine = projectLine;
 	}
 
 	public String getId() {
 		return this.id;
+	}
+
+	public String getAlternateId() {
+		return this.alternateId;
 	}
 
 	public String getName() {
@@ -86,6 +112,10 @@ public class Line extends Item implements Serializable {
 
 	public Date getEnds() {
 		return this.ends;
+	}
+
+	public boolean isProjectLine() {
+		return this.projectLine;
 	}
 
 	void putIteration(Iteration iteration) {

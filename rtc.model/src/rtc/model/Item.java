@@ -63,6 +63,9 @@ public abstract class Item implements java.io.Serializable {
 		return this.targetObject;
 	}
 
+	public static String trace(String t, boolean b) {
+		return '\n' + t + ": ?" + b + '?';
+	}
 	public static String trace(String t, int i) {
 		return '\n' + t + ": \"" + i + '\"';
 	}

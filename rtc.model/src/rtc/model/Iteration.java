@@ -26,8 +26,11 @@ public class Iteration extends Item implements Serializable {
 
 	private static final long serialVersionUID = 7283835080445170873L;
 
+	private static int nextInternal = 0;
+
 	private String name;
 	private String id;
+	private String alternateId;
 	private String label;
 	private String description;
 	private Date starts;
@@ -36,8 +39,9 @@ public class Iteration extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString()//
+				+ Item.SEP + Item.trace("original id", id)//
+				+ Item.SEP + Item.trace("alternate id", alternateId)//
 				+ Item.SEP + Item.trace("name", name)//
-				+ Item.SEP + Item.trace("id", id)//
 				+ Item.SEP + Item.trace("label", label)//
 				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("starts", starts)//
@@ -69,8 +73,9 @@ public class Iteration extends Item implements Serializable {
 			Date starts, //
 			Date ends) {
 		super(sourceUUID);
-		this.name = name;
 		this.id = id;
+		this.alternateId = id + " {" + nextInternal + '}';
+		this.name = name + " {" + nextInternal++ + '}';
 		this.label = label;
 		this.description = description;
 		this.starts = starts;
