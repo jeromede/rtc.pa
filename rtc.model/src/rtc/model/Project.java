@@ -144,7 +144,7 @@ public class Project extends Item implements Serializable {
 	}
 	
 	public void putIteration(Line line, Iteration parent, Iteration iteration) {
-		line.putIteration(iteration);
+		parent.putIteration(iteration);
 		iterations.put(iteration.getUID(), iteration);
 		iterations0.put(iteration.getSourceUUID(), iteration);
 		parent.putIteration(iteration);

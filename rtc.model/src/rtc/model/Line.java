@@ -40,7 +40,7 @@ public class Line extends Item implements Serializable {
 				+ Item.SEP + Item.trace("name", name)//
 				+ Item.SEP + Item.trace("starts", starts)//
 				+ Item.SEP + Item.trace("ends", ends)//
-				+ Item.SEP + Item.trace("current", (null == current) ? "null" : current.getName())//
+				+ Item.SEP + Item.trace("current", (null == current) ? null : current.getName())//
 				+ Item.SEP + Item.trace_list("\nITERATIONS", iterationsToString());
 	}
 

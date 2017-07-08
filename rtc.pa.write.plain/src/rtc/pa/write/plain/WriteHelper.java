@@ -65,11 +65,20 @@ public class WriteHelper {
 	public static String createLine(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
 			Line line) {
 		// IDevelopmentLine devLine = service.createDevelopmentLine();
+		monitor.out("create development line " + line.getName());
 		return null;
 	}
 
 	public static String createIteration(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor,
 			Project p, Line line, Iteration parent, Iteration ite) {
+		if (null == parent) {
+			monitor.out("create iteration " + ite.getName() + " in line " + line.getName());
+		} else {
+			monitor.out("create iteration " + ite.getName() + " in parent iteration " + parent.getName());
+		}
+		for (Iteration children : ite.getIterations()) {
+			createIteration(pa, service, monitor, p, line, ite, children);
+		}
 		return null;
 	}
 
