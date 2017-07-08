@@ -15,16 +15,17 @@ public class WriteHelper {
 	public static String createCategory(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p,
 			Category cat) {
 
-		ICategory category = (ICategory) cat.getTargetObject();
-		if (null != category) {
-			monitor.out("\tcategory already exists " + category.getName());
+		ICategory category;
+		if (null != cat.getTargetObject()) {
+			category = (ICategory) cat.getTargetObject();
+			monitor.out("\tcategory already exists " + category.getCategoryId().getInternalRepresentation());
 			return null;
 		}
 		if (null == cat.getParentId()) {
 			try {
 				category = wiCommon.createCategory(pa, cat.getName(), monitor);
 				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
-				monitor.out("\tjust created category " + category.getCategoryId().getInternalRepresentation());
+				monitor.out("\tjust created category \"" + category.getCategoryId().getInternalRepresentation() + "\"");
 				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
@@ -39,7 +40,8 @@ public class WriteHelper {
 			try {
 				category = wiCommon.createSubcategory((ICategory) par.getTargetObject(), cat.getName(), monitor);
 				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
-				monitor.out("\tjust created subcategory " + category.getCategoryId().getInternalRepresentation());
+				monitor.out(
+						"\tjust created subcategory \"" + category.getCategoryId().getInternalRepresentation() + "\"");
 				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
