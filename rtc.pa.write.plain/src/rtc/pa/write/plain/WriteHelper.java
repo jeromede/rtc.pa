@@ -1,5 +1,6 @@
 package rtc.pa.write.plain;
 
+import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.common.IWorkItemCommon;
@@ -11,44 +12,48 @@ import rtc.utils.ProgressMonitor;
 
 public class WriteHelper {
 
-	public static ICategory createCategoryIfNotExist(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor,
-			Project p, Category cat) {
-		ICategory category = null;
-		if (null != cat.getTargetObject()) {
-			category = (ICategory) cat.getTargetObject();
-			monitor.out("Category already exists " + category.getName());
-			return category;
+	public static String createCategory(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p,
+			Category cat) {
+
+		ICategory category = (ICategory) cat.getTargetObject();
+		if (null != category) {
+			monitor.out("\tcategory already exists " + category.getName());
+			return null;
 		}
 		if (null == cat.getParentId()) {
 			try {
 				category = wiCommon.createCategory(pa, cat.getName(), monitor);
 				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
-				monitor.out("Created category " + cat.getName());
+				monitor.out("\tjust created category " + category.getCategoryId().getInternalRepresentation());
+				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
-				return null;
+				return "error creating target category for source category \"" + cat.getSourceUUID() + "\"";
 			}
 		} else {
-			ICategory parent = createCategoryIfNotExist(pa, wiCommon, monitor, p, p.getCategory(cat.getParentId()));
-			if (null == parent) {
-				return null;
+			Category par = p.getCategory(cat.getParentId());
+			String message = createCategory(pa, wiCommon, monitor, p, par);
+			if (null != message) {
+				return message;
 			}
 			try {
-				category = wiCommon.createSubcategory(parent, cat.getName(), monitor);
+				category = wiCommon.createSubcategory((ICategory) par.getTargetObject(), cat.getName(), monitor);
 				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
-				monitor.out("Created subcategory " + cat.getName() + " of parent " + parent.getName());
+				monitor.out("\tjust created subcategory " + category.getCategoryId().getInternalRepresentation());
+				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
-				return null;
+				return "error creating target subcategory for source category \"" + cat.getSourceUUID() + "\"";
 			}
 		}
-		return category;
+		return null;
 	}
 
-	public static ICategory finaliseCategory(Category cat) {
+	public static void finaliseCategory(IWorkItemCommon wiCommon, ProgressMonitor monitor, Category cat)
+			throws TeamRepositoryException {
 		ICategory category = (ICategory) cat.getTargetObject();
-		category.setName(cat.getName());
-		return category;
+		category.setHTMLDescription(XMLString.createFromXMLText(cat.getDescription()));
+		wiCommon.saveCategory(category, monitor);
 	}
 
 }

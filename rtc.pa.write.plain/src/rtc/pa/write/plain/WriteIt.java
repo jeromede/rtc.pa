@@ -31,6 +31,7 @@ import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
@@ -83,11 +84,11 @@ public class WriteIt {
 	private static String writeCategories(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
 
-		ICategory category;
+		String message;
 		for (Category cat : p.getCategories()) {
-			category = WriteHelper.createCategoryIfNotExist(pa, wiCommon, monitor, p, cat);
-			if (null == category) {
-				return "error creating category " + cat.getName();
+			message = WriteHelper.createCategory(pa, wiCommon, monitor, p, cat);
+			if (null != message) {
+				return "error creating category: " + message;
 			}
 		}
 		return null;

@@ -45,7 +45,11 @@ public class Category extends Item implements Serializable {
 		this.name = name;
 		this.hierarchicalName = hierarchicalName;
 		this.description = description;
-		this.parentId = parentId;
+		if (parentId.equals("/Unassigned/")) {
+			this.parentId = null;
+		} else {
+			this.parentId = parentId;
+		}
 	}
 
 	public String getName() {
