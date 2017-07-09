@@ -63,16 +63,16 @@ public class WriteIt {
 		result = matchMembers(repo, pa, monitor, p, matchingUserIDs);
 		if (null != result)
 			return result;
-		result = writeCategories(repo, pa, wiCommon, monitor, p);
-		if (null != result)
-			return result;
-		result = writeDevelopmentLines(repo, pa, service, monitor, p);
-		if (null != result)
-			return result;
-		// result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier,
-		// monitor, p);
-		// if (null != result)
-		// return result;
+//		result = writeCategories(repo, pa, wiCommon, monitor, p);
+//		if (null != result)
+//			return result;
+//		result = writeDevelopmentLines(repo, pa, service, monitor, p);
+//		if (null != result)
+//			return result;
+		 result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier,
+		 monitor, p);
+		 if (null != result)
+		 return result;
 
 		return null;
 	}
@@ -174,20 +174,23 @@ public class WriteIt {
 			for (IAttributeHandle a : customAttributes) {
 				System.out.println("custom attribute " + a.toString());
 			}
-			IAttribute tpModified;
-			try {
-				tpModified = wiClient.findAttribute(pa, "tp_modified", monitor);
-			} catch (TeamRepositoryException e) {
-				e.printStackTrace();
-				return ("Can't find custom attribute tp_modified.");
-			}
-			System.out.println("custom attribute tp_modified " + tpModified.toString());
-			wi.setValue(tpModified, t);
+//			IAttribute tpModified;
+//			try {
+//				tpModified = wiClient.findAttribute(pa, "tp_modified", monitor);
+//			} catch (TeamRepositoryException e) {
+//				e.printStackTrace();
+//				return ("Can't find custom attribute tp_modified.");
+//			}
+//			System.out.println("custom attribute tp_modified " + tpModified.toString());
+//			wi.setValue(tpModified, t);
 			s = wc.save(monitor);
 			if (!s.isOK()) {
 				s.getException().printStackTrace();
 				return ("Error saving new work item");
 			}
+			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 updated"));
+			wi.setRequestedModified(t);
+			s = wc.save(monitor);
 			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 updated"));
 			wi.setRequestedModified(t);
 			s = wc.save(monitor);
@@ -224,6 +227,37 @@ public class WriteIt {
 		wc = wiCopier.getWorkingCopy(wi);
 		wi = wc.getWorkItem();
 		try {
+			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
+			s = wc.save(monitor);
+			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
+			s = wc.save(monitor);
+			if (!s.isOK()) {
+				s.getException().printStackTrace();
+				return ("Error saving updated work item");
+			}
+		} finally {
+			wiClient.getWorkItemWorkingCopyManager().disconnect(wi);
+		}
+		//
+		// Same Update
+		//
+		try {
+			wi = wiClient.findWorkItemById(iwId, IWorkItem.FULL_PROFILE, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("Can't find work item " + iwId);
+		}
+		try {
+			wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("Error while connecting to work item.");
+		}
+		wc = wiCopier.getWorkingCopy(wi);
+		wi = wc.getWorkItem();
+		try {
+			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
+			s = wc.save(monitor);
 			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
 			s = wc.save(monitor);
 			if (!s.isOK()) {

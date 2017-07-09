@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Line extends Item implements Serializable {
+public class /*Development*/Line extends Item implements Serializable {
 
 	//
 	// Timeline constraints:
