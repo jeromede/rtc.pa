@@ -26,13 +26,13 @@ public class TaskVersion extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7763110461126796356L;
 
-	private String type;
+	private Text type;
 	private Member modifier;
 	private Date modified;
-	private String description;
-	private String summary;
-	private String priority;
-	private String severity;
+	private Text summary;
+	private Text description;
+	private Text priority;
+	private Text severity;
 	private List<String> tags;
 	private Timestamp due;
 	private long duration; // -1 means null
@@ -45,20 +45,20 @@ public class TaskVersion extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("type", type)//
-				+ Item.SEP + Item.trace("modifier", modifier)//
+				+ Item.SEP + Item.trace_simple("type", type.value())//
+				+ Item.SEP + Item.trace_simple("modifier", (null == modifier) ? null : modifier.getUserId())//
 				+ Item.SEP + Item.trace("modified", modified)//
-				+ Item.SEP + Item.trace("description", description)//
-				+ Item.SEP + Item.trace("summary", summary)//
-				+ Item.SEP + Item.trace("priority", priority)//
-				+ Item.SEP + Item.trace("severity", severity)//
+				+ Item.SEP + Item.trace("summary", summary.value())//
+				+ Item.SEP + Item.trace("description", description.value())//
+				+ Item.SEP + Item.trace_simple("priority", priority.value())//
+				+ Item.SEP + Item.trace_simple("severity", severity.value())//
 				+ Item.SEP + Item.trace("tags", tags)//
 				+ Item.SEP + Item.trace("due", due)//
 				+ Item.SEP + Item.trace("duration", duration)//
 				+ Item.SEP + Item.trace("category", category)//
-				+ Item.SEP + Item.trace("target", target)//
-				+ Item.SEP + Item.trace("ownedBy", ownedBy)//
-				+ Item.SEP + Item.trace("resolvedBy", resolvedBy)//
+				+ Item.SEP + Item.trace_simple("target", (null == target) ? null : target.getAlternateId())//
+				+ Item.SEP + Item.trace_simple("owned by", (null == ownedBy) ? null : ownedBy.getUserId())//
+				+ Item.SEP + Item.trace_simple("resolved by", (null == resolvedBy) ? null : resolvedBy.getUserId())//
 				+ Item.SEP + Item.trace("resolution", resolution)//
 				+ Item.trace_list("\nLINKS", linksToString());
 	}
@@ -81,7 +81,8 @@ public class TaskVersion extends Item implements Serializable {
 			String type, //
 			Member modifier, //
 			Date modified, //
-			String description, String summary, //
+			String summary, //
+			String description, //
 			String priority, //
 			String severity, //
 			List<String> tags, //
@@ -93,13 +94,13 @@ public class TaskVersion extends Item implements Serializable {
 			Member resolvedBy, //
 			Date resolution) {
 		super(sourceUUID);
-		this.type = type;
+		this.type = Text.get(type);
 		this.modifier = modifier;
 		this.modified = modified;
-		this.description = description;
-		this.summary = summary;
-		this.priority = priority;
-		this.severity = severity;
+		this.description = Text.get(description);
+		this.summary = Text.get(summary);
+		this.priority = Text.get(priority);
+		this.severity = Text.get(severity);
 		this.tags = tags;
 		this.due = due;
 		this.duration = duration;
@@ -111,7 +112,7 @@ public class TaskVersion extends Item implements Serializable {
 	}
 
 	public String getType() {
-		return this.type;
+		return this.type.value();
 	}
 
 	public Member getModifier() {
@@ -123,19 +124,19 @@ public class TaskVersion extends Item implements Serializable {
 	}
 
 	public String getDescription() {
-		return this.description;
+		return this.description.value();
 	}
 
 	public String getSummary() {
-		return this.summary;
+		return this.summary.value();
 	}
 
 	public String getPriority() {
-		return this.priority;
+		return this.priority.value();
 	}
 
 	public String getSeverity() {
-		return this.severity;
+		return this.severity.value();
 	}
 
 	public List<String> getTags() {

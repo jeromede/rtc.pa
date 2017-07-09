@@ -428,8 +428,8 @@ public class ReadIt {
 				w.getWorkItemType(), //
 				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), //
 				w.modified(), //
-				((null == description) ? null : description.getXMLText()), //
 				((null == summary) ? null : summary.getXMLText()), //
+				((null == description) ? null : description.getXMLText()), //
 				((null == priority) ? null : priority.getStringIdentifier()), //
 				((null == severity) ? null : severity.getStringIdentifier()), //
 				tags, //
