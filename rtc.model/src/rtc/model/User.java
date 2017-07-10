@@ -22,29 +22,30 @@ public class User extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7116824774676758450L;
 
-	private String name;
 	private String userId;
+	private String name;
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("name", name)//
-				+ Item.SEP + Item.trace("userId", userId);
+				+ Item.SEP + Item.trace("user ID", userId)//
+				+ Item.SEP + Item.trace("name", name);
 	}
 
 	public User(//
 			String sourceUUID, //
-			String name, String userId) {
+			String userId, //
+			String name) {
 		super(sourceUUID);
-		this.name = name;
 		this.userId = userId;
-	}
-
-	public String getName() {
-		return this.name;
+		this.name = name;
 	}
 
 	public String getUserId() {
 		return this.userId;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 }

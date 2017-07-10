@@ -24,9 +24,9 @@ public class Administrator extends User implements Serializable {
 
 	public Administrator(//
 			String sourceUUID, //
-			String name, //
-			String userId) {
-		super(sourceUUID, name, userId);
+			String userId, //
+			String name) {
+		super(sourceUUID, userId, name);
 	}
 
 }

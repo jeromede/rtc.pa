@@ -90,6 +90,10 @@ public class Project extends Item implements Serializable {
 		return members0.get(uid);
 	}
 
+	public Collection<Member> getMembers() {
+		return members.values();
+	}
+
 	public void putAdministrator(Administrator user) {
 		administrators.put(user.getUID(), user);
 		administrators0.put(user.getSourceUUID(), user);
@@ -101,6 +105,10 @@ public class Project extends Item implements Serializable {
 
 	public Administrator getAdministrator(String sourceUUID) {
 		return administrators0.get(sourceUUID);
+	}
+
+	public Collection<Administrator> getAdministrators() {
+		return administrators.values();
 	}
 
 	public void putCategory(Category category) {
@@ -142,7 +150,7 @@ public class Project extends Item implements Serializable {
 		iterations.put(iteration.getUID(), iteration);
 		iterations0.put(iteration.getSourceUUID(), iteration);
 	}
-	
+
 	public void putIteration(Line line, Iteration parent, Iteration iteration) {
 		parent.putIteration(iteration);
 		iterations.put(iteration.getUID(), iteration);

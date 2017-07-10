@@ -18,6 +18,7 @@ package rtc.pa.write.plain;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,8 @@ import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
+import com.ibm.team.repository.common.IContributor;
+import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IAuditableClient;
 import com.ibm.team.workitem.client.IDetailedStatus;
@@ -33,7 +36,6 @@ import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IWorkItem;
@@ -43,6 +45,7 @@ import com.ibm.team.workitem.common.model.IWorkItemType;
 import rtc.model.Category;
 import rtc.model.Iteration;
 import rtc.model.Line;
+import rtc.model.Member;
 import rtc.model.Project;
 import rtc.utils.ProgressMonitor;
 
@@ -63,16 +66,15 @@ public class WriteIt {
 		result = matchMembers(repo, pa, monitor, p, matchingUserIDs);
 		if (null != result)
 			return result;
-//		result = writeCategories(repo, pa, wiCommon, monitor, p);
-//		if (null != result)
-//			return result;
-//		result = writeDevelopmentLines(repo, pa, service, monitor, p);
-//		if (null != result)
-//			return result;
-		 result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier,
-		 monitor, p);
-		 if (null != result)
-		 return result;
+		// result = writeCategories(repo, pa, wiCommon, monitor, p);
+		// if (null != result)
+		// return result;
+		// result = writeDevelopmentLines(repo, pa, service, monitor, p);
+		// if (null != result)
+		// return result;
+		result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+		if (null != result)
+			return result;
 
 		return null;
 	}
@@ -80,8 +82,37 @@ public class WriteIt {
 	private static String matchMembers(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
 			Map<String, String> matchingUserIDs) {
 
+		monitor.out("Matching user IDs:");
 		for (String k : matchingUserIDs.keySet()) {
-			monitor.out(k + ':' + matchingUserIDs.get(k));
+			monitor.out('\t' + k + " -> " + matchingUserIDs.get(k));
+		}
+		Map<String, IContributor> members = new HashMap<String, IContributor>();
+		IContributor member;
+		for (IContributorHandle contribHandle : pa.getMembers()) {
+			try {
+				member = (IContributor) repo.itemManager().fetchCompleteItem(contribHandle, IItemManager.DEFAULT,
+						monitor);
+			} catch (TeamRepositoryException e) {
+				e.printStackTrace();
+				return "error resolving IContributorHandle";
+			}
+			members.put(member.getUserId(), member);
+		}
+		String oldId, newId;
+		for (Member m : p.getMembers()) {
+			oldId = m.getUserId();
+			newId = matchingUserIDs.get(oldId);
+			if (null == newId) {
+				return "userID \"" + m.getUserId()
+						+ "\" was in the source RTC, but it has not been found in the user matching file";
+			}
+			member = members.get(newId);
+			if (null == member) {
+				return "userID\" + newId \"" + m.getUserId() + "\" has not been found in the target project area";
+			}
+			m.setTargetObject(member.getUserId(), member);
+			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""
+					+ member.getName() + "\")");
 		}
 		return null;
 	}
@@ -174,15 +205,16 @@ public class WriteIt {
 			for (IAttributeHandle a : customAttributes) {
 				System.out.println("custom attribute " + a.toString());
 			}
-//			IAttribute tpModified;
-//			try {
-//				tpModified = wiClient.findAttribute(pa, "tp_modified", monitor);
-//			} catch (TeamRepositoryException e) {
-//				e.printStackTrace();
-//				return ("Can't find custom attribute tp_modified.");
-//			}
-//			System.out.println("custom attribute tp_modified " + tpModified.toString());
-//			wi.setValue(tpModified, t);
+			// IAttribute tpModified;
+			// try {
+			// tpModified = wiClient.findAttribute(pa, "tp_modified", monitor);
+			// } catch (TeamRepositoryException e) {
+			// e.printStackTrace();
+			// return ("Can't find custom attribute tp_modified.");
+			// }
+			// System.out.println("custom attribute tp_modified " +
+			// tpModified.toString());
+			// wi.setValue(tpModified, t);
 			s = wc.save(monitor);
 			if (!s.isOK()) {
 				s.getException().printStackTrace();
