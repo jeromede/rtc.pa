@@ -36,6 +36,7 @@ import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IWorkItem;
@@ -47,6 +48,8 @@ import rtc.model.Iteration;
 import rtc.model.Line;
 import rtc.model.Member;
 import rtc.model.Project;
+import rtc.model.Task;
+import rtc.model.TaskType;
 import rtc.utils.ProgressMonitor;
 
 public class WriteIt {
@@ -54,7 +57,7 @@ public class WriteIt {
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
 			Map<String, String> matchingUserIDs) throws TeamRepositoryException, IOException {
 
-		String result;
+		String message;
 
 		IItemManager itemManager = repo.itemManager();
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
@@ -63,18 +66,21 @@ public class WriteIt {
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
 		IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
 
-		result = matchMembers(repo, pa, monitor, p, matchingUserIDs);
-		if (null != result)
-			return result;
-		// result = writeCategories(repo, pa, wiCommon, monitor, p);
-		// if (null != result)
-		// return result;
+		message = matchMembers(repo, pa, monitor, p, matchingUserIDs);
+		if (null != message)
+			return message;
+		message = matchWorkItemTypes(repo, pa, wiClient, wiCommon, monitor, p);
+		if (null != message)
+			return message;
+		message = writeCategories(repo, pa, wiCommon, monitor, p);
+		if (null != message)
+			return message;
 		// result = writeDevelopmentLines(repo, pa, service, monitor, p);
 		// if (null != result)
 		// return result;
-		result = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
-		if (null != result)
-			return result;
+		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+		if (null != message)
+			return message;
 
 		return null;
 	}
@@ -113,6 +119,31 @@ public class WriteIt {
 			m.setTargetObject(member.getUserId(), member);
 			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""
 					+ member.getName() + "\")");
+		}
+		return null;
+	}
+
+	private static String matchWorkItemTypes(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p) {
+
+		monitor.out("The workitem types are:");
+		List<IWorkItemType> allWorkItemTypes;
+		TaskType taskType;
+		String type;
+		try {
+			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
+			for (IWorkItemType t : allWorkItemTypes) {
+				type = t.getIdentifier();
+				taskType = p.getTaskType(type);
+				if (null == taskType) {
+					return "can't find workitem type \"" + type + "\" in target project";
+				}
+				taskType.setTargetObject(t.getIdentifier(), t);
+				monitor.out("\t" + t.getDisplayName() + " (" + type + ')');
+			}
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "problem while getting workitem types";
 		}
 		return null;
 	}
@@ -156,150 +187,13 @@ public class WriteIt {
 	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
 
-		//
-		// Type
-		//
-		List<IWorkItemType> all;
-		IWorkItemType wiType = null;
-		try {
-			wiType = wiClient.findWorkItemType(pa, "com.ibm.team.apt.workItemType.story", monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error while retrieving work item types.");
-		}
-		if (null == wiType) {
-			return ("Error: can't find work item type.");
-		}
-		//
-		// Category
-		//
-		List<ICategory> findCategories;
-		try {
-			findCategories = wiClient.findCategories(pa, ICategory.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error while retrieving categories.");
-		}
-		ICategory category = findCategories.get(0);
-		//
-		// Creation
-		//
-		IWorkItemHandle wiHandle;
-		try {
-			wiHandle = wiCopier.connectNew(wiType, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error while creating work item.");
-		}
-		WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiHandle);
-		IWorkItem wi = wc.getWorkItem();
-		IDetailedStatus s;
-		try {
-			wi.setCategory(category);
-			wi.setCreator(repo.loggedInContributor());
-			wi.setOwner(repo.loggedInContributor());
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10"));
-			Timestamp t = new Timestamp(1098480784979L);
-			wi.setCreationDate(t);
-			List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
-			for (IAttributeHandle a : customAttributes) {
-				System.out.println("custom attribute " + a.toString());
+		String message;
+		for (Task t : p.getTasks()) {
+			message = WriteHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			if (null != message) {
+				return "error creating workitem " + t.getId() + " (id in source): " + message;
 			}
-			// IAttribute tpModified;
-			// try {
-			// tpModified = wiClient.findAttribute(pa, "tp_modified", monitor);
-			// } catch (TeamRepositoryException e) {
-			// e.printStackTrace();
-			// return ("Can't find custom attribute tp_modified.");
-			// }
-			// System.out.println("custom attribute tp_modified " +
-			// tpModified.toString());
-			// wi.setValue(tpModified, t);
-			s = wc.save(monitor);
-			if (!s.isOK()) {
-				s.getException().printStackTrace();
-				return ("Error saving new work item");
-			}
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 updated"));
-			wi.setRequestedModified(t);
-			s = wc.save(monitor);
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 updated"));
-			wi.setRequestedModified(t);
-			s = wc.save(monitor);
-			if (!s.isOK()) {
-				s.getException().printStackTrace();
-				return ("Error updating new work item");
-			}
-		} finally {
-			wiCopier.disconnect(wi);
 		}
-		try {
-			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error fetching new work item.");
-		}
-		int iwId = wi.getId();
-		System.out.println("Created workitem: " + iwId);
-		//
-		// Update
-		//
-		try {
-			wi = wiClient.findWorkItemById(iwId, IWorkItem.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Can't find work item " + iwId);
-		}
-		try {
-			wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error while connecting to work item.");
-		}
-		wc = wiCopier.getWorkingCopy(wi);
-		wi = wc.getWorkItem();
-		try {
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
-			s = wc.save(monitor);
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
-			s = wc.save(monitor);
-			if (!s.isOK()) {
-				s.getException().printStackTrace();
-				return ("Error saving updated work item");
-			}
-		} finally {
-			wiClient.getWorkItemWorkingCopyManager().disconnect(wi);
-		}
-		//
-		// Same Update
-		//
-		try {
-			wi = wiClient.findWorkItemById(iwId, IWorkItem.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Can't find work item " + iwId);
-		}
-		try {
-			wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("Error while connecting to work item.");
-		}
-		wc = wiCopier.getWorkingCopy(wi);
-		wi = wc.getWorkItem();
-		try {
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
-			s = wc.save(monitor);
-			wi.setHTMLSummary(XMLString.createFromPlainText("Example work item 10 modified"));
-			s = wc.save(monitor);
-			if (!s.isOK()) {
-				s.getException().printStackTrace();
-				return ("Error saving updated work item");
-			}
-		} finally {
-			wiClient.getWorkItemWorkingCopyManager().disconnect(wi);
-		}
-
 		return null;
 	}
 

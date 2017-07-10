@@ -26,7 +26,7 @@ public class TaskVersion extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7763110461126796356L;
 
-	private Text type;
+	private TaskType type;
 	private Member modifier;
 	private Date modified;
 	private Text summary;
@@ -45,7 +45,7 @@ public class TaskVersion extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace_simple("type", type.value())//
+				+ Item.SEP + Item.trace("type", type)//
 				+ Item.SEP + Item.trace_simple("modifier", (null == modifier) ? null : modifier.getUserId())//
 				+ Item.SEP + Item.trace("modified", modified)//
 				+ Item.SEP + Item.trace("summary", summary.value())//
@@ -78,13 +78,13 @@ public class TaskVersion extends Item implements Serializable {
 
 	public TaskVersion(//
 			String sourceUUID, //
-			String type, //
+			TaskType type, //
 			Member modifier, //
 			Date modified, //
-			String summary, //
-			String description, //
-			String priority, //
-			String severity, //
+			Text summary, //
+			Text description, //
+			Text priority, //
+			Text severity, //
 			List<String> tags, //
 			Timestamp due, //
 			long duration, //
@@ -94,13 +94,13 @@ public class TaskVersion extends Item implements Serializable {
 			Member resolvedBy, //
 			Date resolution) {
 		super(sourceUUID);
-		this.type = Text.get(type);
+		this.type = type;
 		this.modifier = modifier;
 		this.modified = modified;
-		this.description = Text.get(description);
-		this.summary = Text.get(summary);
-		this.priority = Text.get(priority);
-		this.severity = Text.get(severity);
+		this.description = description;
+		this.summary = summary;
+		this.priority = priority;
+		this.severity = severity;
 		this.tags = tags;
 		this.due = due;
 		this.duration = duration;
@@ -111,8 +111,8 @@ public class TaskVersion extends Item implements Serializable {
 		this.resolution = resolution;
 	}
 
-	public String getType() {
-		return this.type.value();
+	public TaskType getType() {
+		return this.type;
 	}
 
 	public Member getModifier() {
@@ -177,6 +177,10 @@ public class TaskVersion extends Item implements Serializable {
 
 	public List<Link> getLinks() {
 		return links;
+	}
+
+	public boolean isOfType(String typeId) {
+		return this.type.getSourceUUID().equals(typeId);
 	}
 
 }

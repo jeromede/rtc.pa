@@ -1,24 +1,42 @@
 package rtc.pa.write.plain;
 
+import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.List;
+
 import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IIteration;
 import com.ibm.team.process.common.IProcessItem;
 import com.ibm.team.process.common.IProjectArea;
+import com.ibm.team.repository.client.IItemManager;
+import com.ibm.team.repository.client.ITeamRepository;
+import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.TeamRepositoryException;
+import com.ibm.team.workitem.client.IDetailedStatus;
+import com.ibm.team.workitem.client.IWorkItemClient;
+import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
+import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.IAttribute;
+import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IWorkItem;
+import com.ibm.team.workitem.common.model.IWorkItemHandle;
+import com.ibm.team.workitem.common.model.IWorkItemType;
 
 import rtc.model.Category;
 import rtc.model.Iteration;
 import rtc.model.Line;
 import rtc.model.Project;
+import rtc.model.Task;
+import rtc.model.TaskVersion;
 import rtc.utils.ProgressMonitor;
 
 public class WriteHelper {
 
-	public static String createCategory(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p,
+	static String createCategory(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p,
 			Category cat) {
 
 		ICategory category;
@@ -64,7 +82,7 @@ public class WriteHelper {
 		wiCommon.saveCategory(category, monitor);
 	}
 
-	public static String createLine(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
+	static String createLine(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
 			Line line) {
 
 		IDevelopmentLine devLine = service.createDevelopmentLine();
@@ -98,8 +116,8 @@ public class WriteHelper {
 		return null;
 	}
 
-	public static String createIteration(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor,
-			Project p, Line line, Iteration parent, Iteration ite) {
+	static String createIteration(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
+			Line line, Iteration parent, Iteration ite) {
 
 		IIteration iterationC = service.createIteration();
 		iterationC.setId(ite.getAlternateId());
@@ -152,8 +170,7 @@ public class WriteHelper {
 		return null;
 	}
 
-	public static String setLineCurrent(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor,
-			Line line) {
+	static String setLineCurrent(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Line line) {
 
 		Iteration ite = line.getCurrent();
 		if (null == ite) {
@@ -177,6 +194,141 @@ public class WriteHelper {
 		}
 		monitor.out("\tjust set development line \"" + line.getName() + "\" current iteration to \"" + ite.getName()
 				+ "\"");
+		return null;
+	}
+
+	static String createWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			Task task) {
+
+		Collection<TaskVersion> versions = task.getHistory();
+		TaskVersion firstVersion = null;
+		for (TaskVersion v : versions) {
+			firstVersion = v;
+			break;
+		}
+		if (null == firstVersion) {
+			return null;
+		}
+		IContributor creator = (IContributor) task.getCreator().getTargetObject();
+		IWorkItemType type = (IWorkItemType) firstVersion.getType().getTargetObject();
+		IWorkItemHandle wiHandle;
+		try {
+			wiHandle = wiCopier.connectNew(type, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error while creating work item");
+		}
+		WorkItemWorkingCopy wc;
+		IWorkItem wi = null;
+		IDetailedStatus s;
+		IWorkItemType newType;
+		for (TaskVersion v : versions) {
+			if (null == wi) {
+				try {
+					wiHandle = wiCopier.connectNew(type, monitor);
+					wc = wiCopier.getWorkingCopy(wiHandle);
+					wi = wc.getWorkItem();
+					wi.setCreator(creator);
+					wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
+					WriteHelper.updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
+					s = wc.save(monitor);
+					if (!s.isOK()) {
+						s.getException().printStackTrace();
+						return ("error updating new work item");
+					}
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return ("error when creating work item");
+				} finally {
+					wiCopier.disconnect(wi);
+				}
+			} else {
+				newType = (IWorkItemType) v.getTargetObject();
+				if (!v.isOfType(type.getIdentifier())) {
+					try {
+						wiCommon.updateWorkItemType(wi, newType, type, monitor);
+					} catch (TeamRepositoryException e) {
+						e.printStackTrace();
+						return ("error while changing the type of the work item");
+					}
+				}
+				try {
+					wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
+					wc = wiCopier.getWorkingCopy(wi);
+					wi = wc.getWorkItem();
+					WriteHelper.updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
+					s = wc.save(monitor);
+					if (!s.isOK()) {
+						s.getException().printStackTrace();
+						return ("error updating new work item");
+					}
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return ("error while connecting to work item");
+				} finally {
+					wiCopier.disconnect(wi);
+				}
+			}
+			try {
+				wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
+			} catch (TeamRepositoryException e) {
+				e.printStackTrace();
+				return ("error fetching created work item");
+			}
+		}
+		task.setTargetObject(wi.getItemId().getUuidValue(), wi);
+		System.out.println("Created workitem: " + wi.getId());
+		return null;
+
+	}
+
+	static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			IWorkItem wi, TaskVersion version) {
+
+		monitor.out("Create new work item version for (summary): " + version.getSummary());
+		IAttribute modifierInSource = null;
+		IAttribute modifiedInSource = null;
+		List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
+		try {
+			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
+			monitor.out(modifierInSource.getIdentifier() + " : " + modifierInSource.getAttributeType());
+			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
+			monitor.out(modifiedInSource.getIdentifier() + " : " + modifiedInSource.getAttributeType());
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("can't find special attributes to reflect modification in source");
+		}
+		if (null != modifiedInSource) {
+			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
+		}
+		if (null != modifierInSource) {
+			wi.setValue(modifierInSource, (IContributor) version.getModifier().getTargetObject());
+		}
+		if (null == version.getSummary()) {
+			wi.setHTMLSummary(null);
+		} else {
+			wi.setHTMLSummary(XMLString.createFromXMLText(version.getSummary()));
+		}
+		if (null == version.getDescription()) {
+			wi.setHTMLDescription(null);
+		} else {
+			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
+		}
+		Category cat = version.getCategory();
+		ICategory category;
+		if (null == cat) {
+			try {
+				category = wiCommon.findUnassignedCategory(pa, ICategory.FULL_PROFILE, monitor);
+			} catch (TeamRepositoryException e) {
+				e.printStackTrace();
+				return "can't find /unassigned/ category";
+			}
+		} else {
+			category = (ICategory) cat.getTargetObject();
+		}
+		wi.setCategory(category);
 		return null;
 	}
 

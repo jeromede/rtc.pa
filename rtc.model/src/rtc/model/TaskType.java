@@ -14,24 +14,30 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-package tests;
+package rtc.model;
 
-import rtc.model.Text;
+import java.io.Serializable;
 
-public class TextTest {
+public class TaskType extends Item implements Serializable {
 
-	public static void main(String[] args) {
-		Text t1;
-		Text t2;
-		Text t3;
-		t1 = Text.get("abcdefghijklmnopqrstuvwxyz");
-		t2 = Text.get("jerome");
-		t3 = Text.get("abcdefghijklmnopqrstuvwxyz");
-		System.out.println(t1.value());
-		System.out.println(t2.value());
-		System.out.println(t3.value());
-		System.out.println(Text.same(t1, t2));
-		System.out.println(Text.same(t1, t3));
+	private static final long serialVersionUID = 2213957782973299588L;
+
+	private String name;
+
+	public String toString() {
+		return super.toString()//
+				+ Item.SEP + Item.trace("name", name);
+	}
+
+	public TaskType(//
+			String id, //
+			String name) {
+		super(id);
+		this.name = name;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 }

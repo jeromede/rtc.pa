@@ -30,7 +30,7 @@ import java.util.Map;
 public class Project extends Item implements Serializable {
 
 	private static final long serialVersionUID = 6293925306051459254L;
-
+	private TextSaver saver = new TextSaver();
 	private String name;
 	private String uri;
 	private String summary;
@@ -46,6 +46,8 @@ public class Project extends Item implements Serializable {
 	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
 	private Map<Integer, Task> tasks = new HashMap<Integer, Task>();
 	private Map<String, Task> tasks0 = new HashMap<String, Task>();
+	private Map<Integer, TaskType> taskTypes = new HashMap<Integer, TaskType>();
+	private Map<String, TaskType> taskTypes0 = new HashMap<String, TaskType>();
 
 	public String toString() {
 		return super.toString()//
@@ -63,6 +65,10 @@ public class Project extends Item implements Serializable {
 		this.name = name;
 		this.uri = uri;
 		this.summary = summary;
+	}
+
+	public TextSaver saver() {
+		return this.saver;
 	}
 
 	public String getName() {
@@ -86,8 +92,8 @@ public class Project extends Item implements Serializable {
 		return members.get(uid);
 	}
 
-	public Member getMember(String uid) {
-		return members0.get(uid);
+	public Member getMember(String userId) {
+		return members0.get(userId);
 	}
 
 	public Collection<Member> getMembers() {
@@ -99,8 +105,8 @@ public class Project extends Item implements Serializable {
 		administrators0.put(user.getSourceUUID(), user);
 	}
 
-	public Administrator getAdministrator(int uid) {
-		return administrators.get(uid);
+	public Administrator getAdministrator(int userId) {
+		return administrators.get(userId);
 	}
 
 	public Administrator getAdministrator(String sourceUUID) {
@@ -179,6 +185,27 @@ public class Project extends Item implements Serializable {
 		return tasks0.get(sourceUUID);
 	}
 
+	public Collection<Task> getTasks() {
+		return tasks.values();
+	}
+
+	public void putTaskType(TaskType taskType) {
+		taskTypes.put(taskType.getUID(), taskType);
+		taskTypes0.put(taskType.getSourceUUID(), taskType);
+	}
+
+	public TaskType getTaskType(int uid) {
+		return taskTypes.get(uid);
+	}
+
+	public TaskType getTaskType(String id) {
+		return taskTypes0.get(id);
+	}
+
+	public Collection<TaskType> getTaskTypes() {
+		return taskTypes.values();
+	}
+
 	public void serialize(String filename) {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(filename);
@@ -222,46 +249,44 @@ public class Project extends Item implements Serializable {
 		dump_categories(out, this.categories);
 		out.println(SEPARATOR + "PROJECT DEVELOPMENT LINES: ");
 		dump_lines(out, this.lines);
+		out.println(SEPARATOR + "PROJECT TASK TYPES: ");
+		dump_taskTypes(out, this.taskTypes);
 		out.println(SEPARATOR + "PROJECT TASKS: ");
 		dump_tasks(out, this.tasks);
 	}
 
 	private static void dump_users(PrintStream out, Map<Integer, Member> users) {
-		Member user;
-		for (Integer i : users.keySet()) {
-			user = users.get(i);
+		for (Member user : users.values()) {
 			out.println("\n" + user.toString());
 		}
 	}
 
 	private static void dump_administrators(PrintStream out, Map<Integer, Administrator> users) {
-		Administrator user;
-		for (Integer i : users.keySet()) {
-			user = users.get(i);
+		for (Administrator user : users.values()) {
 			out.println("\n" + user.toString());
 		}
 	}
 
 	private static void dump_categories(PrintStream out, Map<Integer, Category> categories) {
-		Category category;
-		for (Integer i : categories.keySet()) {
-			category = categories.get(i);
+		for (Category category : categories.values()) {
 			out.println("\n" + category.toString());
 		}
 	}
 
 	private static void dump_lines(PrintStream out, Map<Integer, Line> lines) {
-		Line line;
-		for (Integer i : lines.keySet()) {
-			line = lines.get(i);
+		for (Line line : lines.values()) {
 			out.println("\n" + line.toString());
 		}
 	}
 
+	private static void dump_taskTypes(PrintStream out, Map<Integer, TaskType> taskTypes) {
+		for (TaskType taskType : taskTypes.values()) {
+			out.println("\n" + taskType.toString());
+		}
+	}
+
 	private static void dump_tasks(PrintStream out, Map<Integer, Task> tasks) {
-		Task task;
-		for (Integer i : tasks.keySet()) {
-			task = tasks.get(i);
+		for (Task task : tasks.values()) {
 			out.println("\n" + task.toString());
 		}
 	}

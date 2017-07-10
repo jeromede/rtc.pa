@@ -17,36 +17,34 @@
 package rtc.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Text implements Serializable {
+public class TextSaver implements Serializable {
 
-	private static final long serialVersionUID = -7594305309006190632L;
+	private static final long serialVersionUID = 552302703535289825L;
 
-	private static int nextInternal = Integer.MIN_VALUE;
-	
-	private int index;
-	private String value;
-	
-	public String toString() {
-		return this.value();
-	}
-	
-	public String value() {
-		return this.value;
-	}
+	private Map<Integer, Text> values = new HashMap<Integer, Text>();
+	private Map<String, Integer> indexes = new HashMap<String, Integer>();
 
-	Text(String value) {
+	public TextSaver() {
 		super();
-		this.index = nextInternal++;
-		this.value = new String(value);
 	}
 
-	int index() {
-		return this.index;
-	}
-
-	public static boolean same(Text t1, Text t2) {
-		return t1.index == t2.index;
+	public Text get(String s) {
+		Integer i = indexes.get(s);
+		if (null == i) {
+			Text txt = new Text(s);
+			i = txt.index();
+			values.put(i, txt);
+			indexes.put(txt.value(), i);
+			System.out.println(values.size() + " values");
+			System.out.println(indexes.size() + " indexes");
+			return txt;
+		}
+		System.out.println(values.size() + " values");
+		System.out.println(indexes.size() + " indexes");
+		return values.get(i);
 	}
 
 }

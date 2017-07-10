@@ -19,6 +19,7 @@ package rtc.pa.write.plain;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
@@ -112,7 +113,7 @@ public class Main {
 		try {
 			List<String> lines;
 			String l;
-			lines = java.nio.file.Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8);
+			lines = Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8);
 			int i;
 			for (String line : lines) {
 				l = line.trim();

@@ -48,7 +48,6 @@ import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.ICategory;
-import com.ibm.team.workitem.common.model.ICategoryHandle;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IWorkItem;
@@ -68,6 +67,7 @@ import rtc.model.Link;
 import rtc.model.Member;
 import rtc.model.Project;
 import rtc.model.Task;
+import rtc.model.TaskType;
 import rtc.model.TaskVersion;
 import rtc.utils.ProgressMonitor;
 
@@ -298,13 +298,13 @@ public class ReadIt {
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
 			for (IWorkItemType t : allWorkItemTypes) {
-				monitor.out('\t' + t.getIdentifier());
+				p.putTaskType(new TaskType(t.getIdentifier(), t.getDisplayName()));
+				monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "error reading work item types";
+			return "problem while getting work item types";
 		}
-		monitor.out("... work item types read.");
 		return null;
 	}
 
@@ -385,8 +385,8 @@ public class ReadIt {
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task) {
 
-		XMLString description = w.getHTMLDescription();
 		XMLString summary = w.getHTMLSummary();
+		XMLString description = w.getHTMLDescription();
 		Identifier<IPriority> priority = w.getPriority();
 		Identifier<ISeverity> severity = w.getSeverity();
 		List<String> tags2 = w.getTags2();
@@ -394,7 +394,13 @@ public class ReadIt {
 		for (String t : tags2) {
 			tags.add(t);
 		}
-		ICategoryHandle category = w.getCategory();
+		ICategory category;
+		try {
+			category = (ICategory) itemManager.fetchCompleteItem(w.getCategory(), IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "can't fetch category from handle";
+		}
 		IIterationHandle target = w.getTarget();
 		IContributor ownedBy;
 		try {
@@ -425,17 +431,17 @@ public class ReadIt {
 		TaskVersion version;
 		version = new TaskVersion(//
 				w.getItemId().getUuidValue(), //
-				w.getWorkItemType(), //
+				p.getTaskType(w.getWorkItemType()), //
 				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), //
 				w.modified(), //
-				((null == summary) ? null : summary.getXMLText()), //
-				((null == description) ? null : description.getXMLText()), //
-				((null == priority) ? null : priority.getStringIdentifier()), //
-				((null == severity) ? null : severity.getStringIdentifier()), //
+				((null == summary) ? null : p.saver().get(summary.getXMLText())), //
+				((null == description) ? null : p.saver().get(description.getXMLText())), //
+				((null == priority) ? null : p.saver().get(priority.getStringIdentifier())), //
+				((null == severity) ? null : p.saver().get(severity.getStringIdentifier())), //
 				tags, //
 				w.getDueDate(), //
 				w.getDuration(), //
-				((null == category) ? null : p.getCategory(category.getItemId().getUuidValue())), //
+				((null == category) ? null : p.getCategory(category.getCategoryId().getInternalRepresentation())), //
 				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())), //
 				p.getMember(ownedBy.getItemId().getUuidValue()), //
 				p.getMember(resolvedBy.getItemId().getUuidValue()), //

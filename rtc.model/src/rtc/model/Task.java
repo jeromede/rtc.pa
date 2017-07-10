@@ -55,7 +55,11 @@ public class Task extends Item implements Serializable {
 		return result;
 	}
 
-	public Task(String sourceUUID, int id, Member creator, Date creation) {
+	public Task(//
+			String sourceUUID, //
+			int id, //
+			Member creator, //
+			Date creation) {
 		super(sourceUUID);
 		this.id = id;
 		this.creator = creator;
