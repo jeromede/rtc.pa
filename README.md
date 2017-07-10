@@ -12,9 +12,10 @@ Programs to copy (read then write) content from a source and to a target [Ration
 
 ## Limitations
 
+- Work item types and workflows must be "compatible".
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
-- The timelines will be re-created in the target projet area, the program doesn't try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
+- The timelines will be re-created in the target project area, the program doesn't try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
 - Some work item properties are not copied:
   - Approvals
   - Subscribers.

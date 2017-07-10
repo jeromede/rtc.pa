@@ -50,6 +50,7 @@ import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.ISeverity;
+import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemReferences;
@@ -58,6 +59,8 @@ import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.model.ItemProfile;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
+import com.ibm.team.workitem.common.workflow.IWorkflowAction;
+import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
 
 import rtc.model.Administrator;
 import rtc.model.Category;
@@ -294,12 +297,25 @@ public class ReadIt {
 			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p) {
 
 		monitor.out("Now reading work item types...");
+		IWorkflowInfo wf;
 		List<IWorkItemType> allWorkItemTypes;
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
 			for (IWorkItemType t : allWorkItemTypes) {
 				p.putTaskType(new TaskType(t.getIdentifier(), t.getDisplayName()));
 				monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
+
+				wf = wiCommon.getWorkflow(t.getIdentifier(), pa, monitor);
+				Identifier<IState>[] states = wf.getAllStateIds();
+				for (Identifier<IState> state : states) {
+					monitor.out("\t\tstate: " + state.getStringIdentifier());
+					Identifier<IWorkflowAction>[] actions = wf.getActionIds(state);
+					for (Identifier<IWorkflowAction> action : actions) {
+						monitor.out("\t\t\taction: " + action.getStringIdentifier());
+						Identifier<IState> result = wf.getActionResultState(action);
+						monitor.out("\t\t\t\t to state: " + result.getStringIdentifier());						
+					}
+				}
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -428,10 +444,11 @@ public class ReadIt {
 		//
 		// TaskVersion
 		//
-		TaskVersion version;
-		version = new TaskVersion(//
+		w.getState2().getStringIdentifier();
+		TaskVersion version = new TaskVersion(//
 				w.getItemId().getUuidValue(), //
 				p.getTaskType(w.getWorkItemType()), //
+				w.getState2().getStringIdentifier(), //
 				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), //
 				w.modified(), //
 				((null == summary) ? null : p.saver().get(summary.getXMLText())), //
