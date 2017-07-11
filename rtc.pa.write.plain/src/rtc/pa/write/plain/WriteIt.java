@@ -109,12 +109,12 @@ public class WriteIt {
 			oldId = m.getUserId();
 			newId = matchingUserIDs.get(oldId);
 			if (null == newId) {
-				return "userID \"" + m.getUserId()
-						+ "\" was in the source RTC, but it has not been found in the user matching file";
+				return "user ID \"" + oldId
+						+ "\" was in the source RTC project area (or has been at some point), but it has not been found in the user matching file";
 			}
 			member = members.get(newId);
 			if (null == member) {
-				return "userID\" + newId \"" + m.getUserId() + "\" has not been found in the target project area";
+				return "user ID \"" + newId + "\" (before: \"" + oldId + "\") has not been found in the target project area";
 			}
 			m.setTargetObject(member.getUserId(), member);
 			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""

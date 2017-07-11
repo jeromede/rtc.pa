@@ -119,6 +119,10 @@ public class TaskVersion extends Item implements Serializable {
 		return this.type;
 	}
 
+	public String getState() {
+		return this.state;
+	}
+
 	public Member getModifier() {
 		return this.modifier;
 	}

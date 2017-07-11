@@ -65,12 +65,14 @@ public class StateHelper {
 			IWorkItemCommon wiCommon, ProgressMonitor monitor, IWorkItemType type, String state0, String state1)
 			throws TeamRepositoryException {
 
-		monitor.out("Reading work item types...");
+		//
+		// Expansive shortcut
+		// TODO: refactor workitem state change
+		//
 		IWorkflowInfo wf;
 		wf = wiCommon.getWorkflow(type.getIdentifier(), pa, monitor);
 		Identifier<IState>[] states = wf.getAllStateIds();
 		Identifier<IState> begin = null;
-		Identifier<IState> end = null;
 		Identifier<IWorkflowAction> foundAction = null;
 		for (Identifier<IState> state : states) {
 			if (state.getStringIdentifier().equals(state0)) {

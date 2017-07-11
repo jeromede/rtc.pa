@@ -313,7 +313,7 @@ public class ReadIt {
 					for (Identifier<IWorkflowAction> action : actions) {
 						monitor.out("\t\t\taction: " + action.getStringIdentifier());
 						Identifier<IState> result = wf.getActionResultState(action);
-						monitor.out("\t\t\t\t to state: " + result.getStringIdentifier());						
+						monitor.out("\t\t\t\t to state: " + result.getStringIdentifier());
 					}
 				}
 			}
@@ -438,7 +438,6 @@ public class ReadIt {
 		// w.getApprovals();
 		// w.getComments();
 		// w.getCustomAttributes();
-		// w.getState2();
 		// w.getValue(null);
 
 		//
@@ -460,8 +459,8 @@ public class ReadIt {
 				w.getDuration(), //
 				((null == category) ? null : p.getCategory(category.getCategoryId().getInternalRepresentation())), //
 				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())), //
-				p.getMember(ownedBy.getItemId().getUuidValue()), //
-				p.getMember(resolvedBy.getItemId().getUuidValue()), //
+				getM(p, ownedBy), //
+				getM(p, resolvedBy), //
 				w.getResolutionDate());
 		task.putTaskVersion(version);
 		monitor.out("\tjust added work item version " + task.getId() + trace(w));
@@ -496,6 +495,15 @@ public class ReadIt {
 			}
 		}
 		return null;
+	}
+
+	private static Member getM(Project p, IContributor c) {
+		Member m = p.getMember(c.getItemId().getUuidValue());
+		if (null == m) {
+			m = new Member(c.getItemId().getUuidValue(), c.getUserId(), c.getName());
+			p.putMember(m);
+		}
+		return m;
 	}
 
 }

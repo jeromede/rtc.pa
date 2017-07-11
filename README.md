@@ -19,6 +19,8 @@ Programs to copy (read then write) content from a source and to a target [Ration
 - Some work item properties are not copied:
   - Approvals
   - Subscribers.
+- Links and attachments are added to the last (most recent) version of the work item (not updated for each version in the history).
+- If a user is not part of the source project area anymore, and can't be found in the input matching file, it will be replaced by the user running the program.
 
 # Build
 

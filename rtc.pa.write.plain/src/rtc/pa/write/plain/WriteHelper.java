@@ -2,7 +2,6 @@ package rtc.pa.write.plain;
 
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.List;
 
 import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.client.IProcessItemService;
@@ -20,15 +19,17 @@ import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
-import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
+import com.ibm.team.workitem.common.model.Identifier;
+import com.ibm.team.workitem.common.workflow.IWorkflowAction;
 
 import rtc.model.Category;
 import rtc.model.Iteration;
 import rtc.model.Line;
+import rtc.model.Member;
 import rtc.model.Project;
 import rtc.model.Task;
 import rtc.model.TaskVersion;
@@ -42,7 +43,7 @@ public class WriteHelper {
 		ICategory category;
 		if (null != cat.getTargetObject()) {
 			category = (ICategory) cat.getTargetObject();
-			monitor.out("\tcategory already exists " + category.getCategoryId().getInternalRepresentation());
+			monitor.out("Category already exists " + category.getCategoryId().getInternalRepresentation());
 			return null;
 		}
 		if (null == cat.getParentId()) {
@@ -65,7 +66,7 @@ public class WriteHelper {
 				category = wiCommon.createSubcategory((ICategory) par.getTargetObject(), cat.getName(), monitor);
 				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
 				monitor.out(
-						"\tjust created subcategory \"" + category.getCategoryId().getInternalRepresentation() + "\"");
+						"Just created subcategory \"" + category.getCategoryId().getInternalRepresentation() + "\"");
 				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
@@ -112,7 +113,7 @@ public class WriteHelper {
 			e.printStackTrace();
 			return "error while adding development line \"" + line.getName() + "\" to project area";
 		}
-		monitor.out("\tjust created development line \"" + line.getName() + "\"");
+		monitor.out("Just created development line \"" + line.getName() + "\"");
 		return null;
 	}
 
@@ -163,7 +164,7 @@ public class WriteHelper {
 			e.printStackTrace();
 			return "error while adding iteration \"" + ite.getName() + "\"";
 		}
-		monitor.out("\tjust created iteration \"" + ite.getName() + "\"");
+		monitor.out("Just created iteration \"" + ite.getName() + "\"");
 		for (Iteration children : ite.getIterations()) {
 			createIteration(pa, service, monitor, p, line, ite, children);
 		}
@@ -174,7 +175,7 @@ public class WriteHelper {
 
 		Iteration ite = line.getCurrent();
 		if (null == ite) {
-			monitor.out("\tno current iteration has been set for development line " + line.getName() + "\"");
+			monitor.out("No current iteration has been set for development line " + line.getName() + "\"");
 			return null;
 		}
 		IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
@@ -192,8 +193,8 @@ public class WriteHelper {
 			e.printStackTrace();
 			return "error while setting current iteration \"" + ite.getName() + "\" in line\"" + line.getName() + "\"";
 		}
-		monitor.out("\tjust set development line \"" + line.getName() + "\" current iteration to \"" + ite.getName()
-				+ "\"");
+		monitor.out(
+				"Just set development line \"" + line.getName() + "\" current iteration to \"" + ite.getName() + "\"");
 		return null;
 	}
 
@@ -201,6 +202,7 @@ public class WriteHelper {
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
 			Task task) {
 
+		monitor.out("About to create work item (source ID): " + task.getId());
 		Collection<TaskVersion> versions = task.getHistory();
 		TaskVersion firstVersion = null;
 		for (TaskVersion v : versions) {
@@ -210,92 +212,83 @@ public class WriteHelper {
 		if (null == firstVersion) {
 			return null;
 		}
-		IContributor creator = (IContributor) task.getCreator().getTargetObject();
 		IWorkItemType type = (IWorkItemType) firstVersion.getType().getTargetObject();
 		IWorkItemHandle wiHandle;
-		try {
-			wiHandle = wiCopier.connectNew(type, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("error while creating work item");
-		}
 		WorkItemWorkingCopy wc;
 		IWorkItem wi = null;
 		IDetailedStatus s;
-		IWorkItemType newType;
-		for (TaskVersion v : versions) {
-			if (null == wi) {
-				try {
-					wiHandle = wiCopier.connectNew(type, monitor);
-					wc = wiCopier.getWorkingCopy(wiHandle);
-					wi = wc.getWorkItem();
-					wi.setCreator(creator);
-					wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
-					WriteHelper.updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
-					s = wc.save(monitor);
-					if (!s.isOK()) {
-						s.getException().printStackTrace();
-						return ("error updating new work item");
-					}
-				} catch (TeamRepositoryException e) {
-					e.printStackTrace();
-					return ("error when creating work item");
-				} finally {
-					wiCopier.disconnect(wi);
+		IWorkItemType previousType = type;
+		String previousState = null;
+		try {
+			wiHandle = wiCopier.connectNew(type, monitor);
+			wc = wiCopier.getWorkingCopy(wiHandle);
+			wi = wc.getWorkItem();
+			wi.setCreator(getC(repo, task.getCreator()));
+			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
+			for (TaskVersion v : versions) {
+				if (!v.isOfType(previousType.getIdentifier())) {
+					wiCommon.updateWorkItemType(wi, type, previousType, monitor);
+					previousType = type;
 				}
-			} else {
-				newType = (IWorkItemType) v.getTargetObject();
-				if (!v.isOfType(type.getIdentifier())) {
-					try {
-						wiCommon.updateWorkItemType(wi, newType, type, monitor);
-					} catch (TeamRepositoryException e) {
-						e.printStackTrace();
-						return ("error while changing the type of the work item");
-					}
-				}
-				try {
-					wiCopier.connect(wi, IWorkItem.FULL_PROFILE, monitor);
-					wc = wiCopier.getWorkingCopy(wi);
-					wi = wc.getWorkItem();
-					WriteHelper.updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
-					s = wc.save(monitor);
-					if (!s.isOK()) {
-						s.getException().printStackTrace();
-						return ("error updating new work item");
-					}
-				} catch (TeamRepositoryException e) {
-					e.printStackTrace();
-					return ("error while connecting to work item");
-				} finally {
-					wiCopier.disconnect(wi);
+				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, previousState, wc,
+						wi, v);
+				previousState = v.getState();
+				s = wc.save(monitor);
+				if (!s.isOK()) {
+					s.getException().printStackTrace();
+					return ("error updating new work item");
 				}
 			}
-			try {
-				wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
-			} catch (TeamRepositoryException e) {
-				e.printStackTrace();
-				return ("error fetching created work item");
-			}
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error when creating work item");
+		} finally {
+			wiCopier.disconnect(wi);
 		}
-		task.setTargetObject(wi.getItemId().getUuidValue(), wi);
-		System.out.println("Created workitem: " + wi.getId());
-		return null;
+		try {
+			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error fetching created work item");
+		}
+		previousState = wi.getState2().getStringIdentifier();
 
+		task.setTargetObject(wi.getItemId().getUuidValue(), wi);
+		System.out.println("Just created workitem: " + wi.getId());
+		return null;
 	}
 
-	static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	private static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			IWorkItem wi, TaskVersion version) {
+			String state0, WorkItemWorkingCopy wc, IWorkItem wi, TaskVersion version) {
 
 		monitor.out("Create new work item version for (summary): " + version.getSummary());
+		if (null != state0) {
+			String state1 = version.getState();
+			monitor.out("\tfrom state: " + state0);
+			monitor.out("\t  to state: " + state1);
+			Identifier<IWorkflowAction> action = null;
+			if (!state1.equals(state0)) {
+				try {
+					action = StateHelper.action(pa, wiClient, wiCommon, monitor,
+							(IWorkItemType) version.getType().getTargetObject(), state0, state1);
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return "problem while searching action to trigger";
+				}
+			}
+			if (null == action) {
+				return "couldn't find action to trigger";
+			}
+			monitor.out("\t    action: " + action.getStringIdentifier());
+			wc.setWorkflowAction(action.getStringIdentifier());
+		}
 		IAttribute modifierInSource = null;
 		IAttribute modifiedInSource = null;
-		List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
+		// List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
 		try {
 			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
-			monitor.out(modifierInSource.getIdentifier() + " : " + modifierInSource.getAttributeType());
 			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
-			monitor.out(modifiedInSource.getIdentifier() + " : " + modifiedInSource.getAttributeType());
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			return ("can't find special attributes to reflect modification in source");
@@ -304,7 +297,7 @@ public class WriteHelper {
 			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
 		}
 		if (null != modifierInSource) {
-			wi.setValue(modifierInSource, (IContributor) version.getModifier().getTargetObject());
+			wi.setValue(modifierInSource, getC(repo, version.getModifier()));
 		}
 		if (null == version.getSummary()) {
 			wi.setHTMLSummary(null);
@@ -330,6 +323,17 @@ public class WriteHelper {
 		}
 		wi.setCategory(category);
 		return null;
+	}
+
+	static IContributor getC(ITeamRepository repo, Member m) {
+		IContributor c = null;
+		if (null != m) {
+			c = (IContributor) m.getTargetObject();
+		}
+		if (null == c) {
+			c = repo.loggedInContributor();
+		}
+		return c;
 	}
 
 }
