@@ -87,3 +87,8 @@ You need the real project area URL. For that:
   - `https://hub.jazz.net/ccmXX` is the CCM server URL
   - `UUU | PPP` is the project name.
   
+# Design
+
+A read program reads the source PA and creates a model instance in memory, and then serializes it in a local file.
+
+A write program reads the above local file, a file matching the user IDs before to the one after, and then writes to the target PA.
