@@ -17,12 +17,10 @@
 package rtc.pa.write.plain;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
@@ -31,16 +29,9 @@ import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IAuditableClient;
-import com.ibm.team.workitem.client.IDetailedStatus;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
-import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.model.IAttribute;
-import com.ibm.team.workitem.common.model.IAttributeHandle;
-import com.ibm.team.workitem.common.model.ICategory;
-import com.ibm.team.workitem.common.model.IWorkItem;
-import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
 
 import rtc.model.Category;
@@ -145,6 +136,7 @@ public class WriteIt {
 			e.printStackTrace();
 			return "problem while getting workitem types";
 		}
+		StateHelper.readWorkItemTypes(pa, wiClient, wiCommon, monitor);
 		return null;
 	}
 

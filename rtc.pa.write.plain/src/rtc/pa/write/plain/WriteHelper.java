@@ -20,11 +20,11 @@ import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
-import com.ibm.team.workitem.common.workflow.IWorkflowAction;
 
 import rtc.model.Category;
 import rtc.model.Iteration;
@@ -213,31 +213,84 @@ public class WriteHelper {
 			return null;
 		}
 		IWorkItemType type = (IWorkItemType) firstVersion.getType().getTargetObject();
+		IWorkItemType previousType = null;
+		String state;
+		String previousState = null;
 		IWorkItemHandle wiHandle;
 		WorkItemWorkingCopy wc;
 		IWorkItem wi = null;
+		String action;
 		IDetailedStatus s;
-		IWorkItemType previousType = type;
-		String previousState = null;
+		Identifier<IState> stateId;
 		try {
 			wiHandle = wiCopier.connectNew(type, monitor);
-			wc = wiCopier.getWorkingCopy(wiHandle);
-			wi = wc.getWorkItem();
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "impossible to initialize a new work item";
+		}
+		wc = wiCopier.getWorkingCopy(wiHandle);
+		wi = wc.getWorkItem();
+		try {
 			wi.setCreator(getC(repo, task.getCreator()));
 			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
 			for (TaskVersion v : versions) {
-				if (!v.isOfType(previousType.getIdentifier())) {
-					wiCommon.updateWorkItemType(wi, type, previousType, monitor);
-					previousType = type;
+				type = (IWorkItemType) v.getType().getTargetObject();
+				state = v.getState();
+				CHANGE_TYPE: {
+					if (null != previousType) {
+						if (!type.getIdentifier().equals(previousType.getIdentifier())) {
+							monitor.out("Changing work item type");
+							wiCommon.updateWorkItemType(wi, type, previousType, monitor);
+							s = wc.save(monitor);
+							if (!s.isOK()) {
+								s.getException().printStackTrace();
+								return ("error changing work item type");
+							}
+						}
+					}
 				}
-				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, previousState, wc,
-						wi, v);
-				previousState = v.getState();
-				s = wc.save(monitor);
-				if (!s.isOK()) {
-					s.getException().printStackTrace();
-					return ("error updating new work item");
+				UPDATE: {
+					updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
+					s = wc.save(monitor);
+					if (!s.isOK()) {
+						s.getException().printStackTrace();
+						return ("error updating work item");
+					}
 				}
+				CHANGE_STATE: {
+					if (null != previousState) {
+						if (!state.equals(previousState)) {
+							monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
+							monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
+							action = null;
+							try {
+								action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
+										state);
+							} catch (TeamRepositoryException e) {
+								e.printStackTrace();
+								return "problem while searching action to trigger";
+							}
+							if (null == action) {
+								stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
+								if (null == stateId) {
+									return "couldn't find state " + state + " for type " + type.getIdentifier();
+								}
+								wi.setState2(stateId); // TOO BAD (probably a
+														// side effect of a
+														// change of type)
+							}
+							monitor.out("\t    action: " + action);
+							wc.setWorkflowAction(action);
+							s = wc.save(monitor);
+							if (!s.isOK()) {
+								s.getException().printStackTrace();
+								return ("error changing work item state");
+							}
+						}
+					}
+				}
+				previousState = state;
+				previousType = type;
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
@@ -251,8 +304,6 @@ public class WriteHelper {
 			e.printStackTrace();
 			return ("error fetching created work item");
 		}
-		previousState = wi.getState2().getStringIdentifier();
-
 		task.setTargetObject(wi.getItemId().getUuidValue(), wi);
 		System.out.println("Just created workitem: " + wi.getId());
 		return null;
@@ -260,29 +311,9 @@ public class WriteHelper {
 
 	private static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			String state0, WorkItemWorkingCopy wc, IWorkItem wi, TaskVersion version) {
+			IWorkItem wi, TaskVersion version) {
 
 		monitor.out("Create new work item version for (summary): " + version.getSummary());
-		if (null != state0) {
-			String state1 = version.getState();
-			monitor.out("\tfrom state: " + state0);
-			monitor.out("\t  to state: " + state1);
-			Identifier<IWorkflowAction> action = null;
-			if (!state1.equals(state0)) {
-				try {
-					action = StateHelper.action(pa, wiClient, wiCommon, monitor,
-							(IWorkItemType) version.getType().getTargetObject(), state0, state1);
-				} catch (TeamRepositoryException e) {
-					e.printStackTrace();
-					return "problem while searching action to trigger";
-				}
-			}
-			if (null == action) {
-				return "couldn't find action to trigger";
-			}
-			monitor.out("\t    action: " + action.getStringIdentifier());
-			wc.setWorkflowAction(action.getStringIdentifier());
-		}
 		IAttribute modifierInSource = null;
 		IAttribute modifiedInSource = null;
 		// List<IAttributeHandle> customAttributes = wi.getCustomAttributes();

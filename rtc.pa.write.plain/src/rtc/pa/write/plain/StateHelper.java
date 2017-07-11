@@ -35,7 +35,7 @@ public class StateHelper {
 	public static String readWorkItemTypes(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
 			ProgressMonitor monitor) {
 
-		monitor.out("Reading work item types...");
+		monitor.out("Reading workflows...");
 		IWorkflowInfo wf;
 		List<IWorkItemType> allWorkItemTypes;
 		try {
@@ -56,41 +56,88 @@ public class StateHelper {
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "problem while getting work item types";
+			return "problem while getting workflows";
 		}
 		return null;
 	}
 
-	public static Identifier<IWorkflowAction> action(IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, ProgressMonitor monitor, IWorkItemType type, String state0, String state1)
-			throws TeamRepositoryException {
+	public static String action(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, String type,
+			String state0, String state1) throws TeamRepositoryException {
 
 		//
 		// Expansive shortcut
 		// TODO: refactor workitem state change
 		//
-		IWorkflowInfo wf;
-		wf = wiCommon.getWorkflow(type.getIdentifier(), pa, monitor);
+
+		monitor.out("\t\tlooking for action");
+
+		//
+		// State matching: hack for JazzHub -> RTC 6.0.x (some state ids have
+		// changed)
+		//
+		String begin = state0;
+		String end = state1;
+		if (1 == state0.length() || 1 == state1.length()) {
+			if (type.equals("defect")) {
+				begin = "com.ibm.team.workitem.defectWorkflow.state.s" + state0;
+				end = "com.ibm.team.workitem.defectWorkflow.state.s" + state1;
+			} else if (type.equals("task")) {
+				begin = "com.ibm.team.workitem.taskWorkflow.state.s" + state0;
+				end = "com.ibm.team.workitem.taskWorkflow.state.s" + state1;
+			}
+		}
+		//
+		// Search workflow
+		//
+		IWorkflowInfo wf = wiCommon.getWorkflow(type, pa, monitor);
 		Identifier<IState>[] states = wf.getAllStateIds();
-		Identifier<IState> begin = null;
-		Identifier<IWorkflowAction> foundAction = null;
-		for (Identifier<IState> state : states) {
-			if (state.getStringIdentifier().equals(state0)) {
-				begin = state;
-				break;
+		for (Identifier<IState> s : states) {
+			if (s.getStringIdentifier().equals(begin)) {
+				Identifier<IWorkflowAction>[] actions = wf.getActionIds(s);
+				for (Identifier<IWorkflowAction> a : actions) {
+					if (wf.getActionResultState(a).getStringIdentifier().equals(end)) {
+						return a.getStringIdentifier();
+					}
+				}
 			}
 		}
-		if (null == begin) {
-			return null;
-		}
-		Identifier<IWorkflowAction>[] actions = wf.getActionIds(begin);
-		for (Identifier<IWorkflowAction> action : actions) {
-			Identifier<IState> result = wf.getActionResultState(action);
-			if (result.getStringIdentifier().equals(state1)) {
-				foundAction = action;
-				break;
-			}
-		}
-		return foundAction;
+		return null;
 	}
+
+	public static Identifier<IState> stateId(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor,
+			String type, String state) throws TeamRepositoryException {
+
+		//
+		// Expansive shortcut
+		// TODO: refactor workitem state change
+		//
+
+		monitor.out("\t\tlooking for state");
+
+		//
+		// State matching: hack for JazzHub -> RTC 6.0.x (some state ids have
+		// changed)
+		//
+		String begin = state;
+		if (1 == state.length()) {
+			if (type.equals("defect")) {
+				begin = "com.ibm.team.workitem.defectWorkflow.state.s" + state;
+			} else if (type.equals("task")) {
+				begin = "com.ibm.team.workitem.taskWorkflow.state.s" + state;
+			}
+		}
+		//
+		// Search workflow
+		//
+		IWorkflowInfo wf = wiCommon.getWorkflow(type, pa, monitor);
+		Identifier<IState>[] states = wf.getAllStateIds();
+		for (Identifier<IState> s : states) {
+			monitor.out("\t\tstate? " + s.getStringIdentifier());
+			if (s.getStringIdentifier().equals(begin)) {
+				return s;
+			}
+		}
+		return null;
+	}
+
 }

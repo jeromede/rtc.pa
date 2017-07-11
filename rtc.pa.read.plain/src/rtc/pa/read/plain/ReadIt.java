@@ -116,13 +116,13 @@ public class ReadIt {
 		result = readMembers(repo, pa, monitor, p);
 		if (null != result)
 			return result;
+		result = readWorkItemTypes(repo, pa, wiClient, wiCommon, monitor, p);
+		if (null != result)
+			return result;
 		result = readCategories(repo, pa, wiClient, wiCommon, monitor, p);
 		if (null != result)
 			return result;
 		result = readDevelopmentLines(repo, pa, auditableClient, itemManager, monitor, p);
-		if (null != result)
-			return result;
-		result = readWorkItemTypes(repo, pa, wiClient, wiCommon, monitor, p);
 		if (null != result)
 			return result;
 		result = readWorkItems(repo, pa, wiClient, wiCommon, itemManager, monitor, p);
