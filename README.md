@@ -40,7 +40,11 @@ For each Eclipse project needing the API:
   - `rtc.pa.read.plain` connects to an RTC 5.0.2, hence needs the 5.0.2 version of the API
   - `rtc.pa.write.plain` connects to an RTC 6.0.4, hence needs the 6.0.4 version of the API.
   
-Don't try to use a version of the API different from the version of RTC you want to connect to, this won't work.  
+Don't try to use a version of the API different from the version of RTC you want to connect to, this won't work.
+
+The version of the API declared in the class paths in this repository is for the latest version of RTC, unziped in `/opt/IBM/RTC-6.0.4/api/`
+
+You will have to change your Eclipse project properties if this doesn't match your local installation.
 
 # Usage
 
@@ -70,7 +74,7 @@ As a workaround, the target PA process can be customized to add the following tw
 - ID: `rtc.pa.modified`, Type: `Timestamp`
 - ID: `rtc.pa.modifier`, Type: `Contributor`
 
-If these attributes exist, they will be added to the history to reflect in the target PA what took place when and by whom in the source PA.
+If these custom attributes exist in the target PA, they will be used and set in the work item histories to reflect what took place when and by whom in the source PA.
 
 # Special
 
