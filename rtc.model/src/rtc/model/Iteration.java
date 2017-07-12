@@ -35,7 +35,7 @@ public class Iteration extends Item implements Serializable {
 	private String description;
 	private Date starts;
 	private Date ends;
-	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
+	private Map<String, Iteration> iterations = new HashMap<String, Iteration>();
 
 	public String toString() {
 		return super.toString()//
@@ -51,10 +51,8 @@ public class Iteration extends Item implements Serializable {
 
 	private String iterationsToString() {
 		String result = new String();
-		Iteration i;
 		int n = 0;
-		for (Integer k : iterations.keySet()) {
-			i = iterations.get(k);
+		for (Iteration i : iterations.values()) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, i);
 			} else {
@@ -65,14 +63,14 @@ public class Iteration extends Item implements Serializable {
 	}
 
 	public Iteration(//
-			String sourceUUID, //
+			String sourceId, //
 			String name, //
 			String id, //
 			String label, //
 			String description, //
 			Date starts, //
 			Date ends) {
-		super(sourceUUID);
+		super(sourceId);
 		this.id = id;
 		this.alternateId = id + " {" + nextInternal + '}';
 		this.name = name + " {" + nextInternal++ + '}';
@@ -111,7 +109,7 @@ public class Iteration extends Item implements Serializable {
 	}
 
 	void putIteration(Iteration iteration) {
-		iterations.put(iteration.getUID(), iteration);
+		iterations.put(iteration.getId(), iteration);
 	}
 
 	public Collection<Iteration> getIterations() {

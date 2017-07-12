@@ -22,26 +22,26 @@ public class Link extends Item implements Serializable {
 
 	private static final long serialVersionUID = 4250604954024032992L;
 
-	private String targetUUID;
+	private String targetId;
 	private String type;
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("target UUID", targetUUID)//
+				+ Item.SEP + Item.trace("target UUID", targetId)//
 				+ Item.SEP + Item.trace("type", type);
 	}
 
 	public Link(//
-			String sourceUUID, //
-			String targetUUID, //
+			String sourceId, //
+			String targetId, //
 			String type) {
-		super(sourceUUID);
-		this.targetUUID = targetUUID;
+		super(sourceId);
+		this.targetId = targetId;
 		this.type = type;
 	}
 
-	public String getTargetUUID() {
-		return this.targetUUID;
+	public String getTargetId() {
+		return this.targetId;
 	}
 
 	public String getType() {

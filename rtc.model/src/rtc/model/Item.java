@@ -25,38 +25,29 @@ public abstract class Item implements java.io.Serializable {
 
 	private static final long serialVersionUID = 8450163754687832796L;
 
-	private static int nextInternal = Integer.MIN_VALUE;
-
-	private Integer uid;
-	private String sourceUUID = null;
-	private transient String targetUUID = null;
+	private String sourceId;
+	private transient String targetId = null;
 	private transient Object targetObject = null;
 
 	public String toString() {
-		return trace("internal", uid) + SEP + trace("sourceUUID", sourceUUID);
+		return trace("source id", sourceId);
 	}
 
-	public Item(String sourceUUID) {
-		this.uid = nextInternal++;
-		if (null != sourceUUID)
-			this.sourceUUID = sourceUUID;
+	public Item(String id) {
+		this.sourceId = id;
 	}
 
-	public int getUID() {
-		return this.uid;
+	public String getSourceId() {
+		return this.sourceId;
 	}
 
-	public String getSourceUUID() {
-		return this.sourceUUID;
-	}
-
-	public void setTargetObject(String uuid, Object o) {
-		this.targetUUID = uuid;
+	public void setTargetObject(String id, Object o) {
+		this.targetId = id;
 		this.targetObject = o;
 	}
 
-	public String getTargetUUID() {
-		return this.targetUUID;
+	public String getTargetId() {
+		return this.targetId;
 	}
 
 	public Object getTargetObject() {
@@ -66,6 +57,7 @@ public abstract class Item implements java.io.Serializable {
 	public static String trace(String t, boolean b) {
 		return '\n' + t + ": ?" + b + '?';
 	}
+
 	public static String trace(String t, int i) {
 		return '\n' + t + ": \"" + i + '\"';
 	}

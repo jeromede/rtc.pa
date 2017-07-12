@@ -26,6 +26,7 @@ public class TaskVersion extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7763110461126796356L;
 
+	private Task task;
 	private TaskType type;
 	private String state;
 	private Member modifier;
@@ -42,7 +43,18 @@ public class TaskVersion extends Item implements Serializable {
 	private Member ownedBy;
 	private Member resolvedBy;
 	private Date resolution;
+	private String resolution2;
 	private List<Link> links = new ArrayList<Link>();
+
+	/*
+	 * correctedEstimate (Corrected Estimate) : duration
+	 * internalApprovalDescriptors (Approval Descriptors) : approvalDescriptors
+	 * internalApprovals (Approvals) : approvals internalComments (Comments) :
+	 * comments internalResolution (Resolution) : smallString
+	 * internalSequenceValue (Sequence Value) : smallString
+	 * internalSubscriptions (Subscribed By) : subscriptions internalTags (Tags)
+	 * : tags timeSpent (Time Spent) : duration
+	 */
 
 	public String toString() {
 		return super.toString()//
@@ -62,6 +74,7 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace_simple("owned by", (null == ownedBy) ? null : ownedBy.getUserId())//
 				+ Item.SEP + Item.trace_simple("resolved by", (null == resolvedBy) ? null : resolvedBy.getUserId())//
 				+ Item.SEP + Item.trace("resolution", resolution)//
+				+ Item.SEP + Item.trace("resolution2", resolution2)//
 				+ Item.trace_list("\nLINKS", linksToString());
 	}
 
@@ -79,7 +92,8 @@ public class TaskVersion extends Item implements Serializable {
 	}
 
 	public TaskVersion(//
-			String sourceUUID, //
+			String sourceId, //
+			Task task, //
 			TaskType type, //
 			String state, //
 			Member modifier, //
@@ -95,8 +109,10 @@ public class TaskVersion extends Item implements Serializable {
 			Iteration target, //
 			Member ownedBy, //
 			Member resolvedBy, //
-			Date resolution) {
-		super(sourceUUID);
+			Date resolution, //
+			String resolution2) {
+		super(sourceId);
+		this.task = task;
 		this.type = type;
 		this.state = state;
 		this.modifier = modifier;
@@ -113,6 +129,11 @@ public class TaskVersion extends Item implements Serializable {
 		this.ownedBy = ownedBy;
 		this.resolvedBy = resolvedBy;
 		this.resolution = resolution;
+		this.resolution2 = resolution2;
+	}
+
+	public Task getTask() {
+		return this.task;
 	}
 
 	public TaskType getType() {
@@ -188,7 +209,7 @@ public class TaskVersion extends Item implements Serializable {
 	}
 
 	public boolean isOfType(String typeId) {
-		return this.type.getSourceUUID().equals(typeId);
+		return this.type.getSourceId().equals(typeId);
 	}
 
 }

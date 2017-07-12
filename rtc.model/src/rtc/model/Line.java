@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class /*Development*/Line extends Item implements Serializable {
+public class /* Development */ Line extends Item implements Serializable {
 
 	//
 	// Timeline constraints:
@@ -47,8 +47,7 @@ public class /*Development*/Line extends Item implements Serializable {
 	private Date starts;
 	private Date ends;
 	private boolean projectLine;
-	private Map<Integer, Iteration> iterations = new HashMap<Integer, Iteration>();
-	private Map<String, Iteration> iterations0 = new HashMap<String, Iteration>();
+	private Map<String, Iteration> iterations = new HashMap<String, Iteration>();
 	private Iteration current = null;
 
 	public String toString() {
@@ -65,10 +64,8 @@ public class /*Development*/Line extends Item implements Serializable {
 
 	private String iterationsToString() {
 		String result = new String();
-		Iteration i;
 		int n = 0;
-		for (Integer k : iterations.keySet()) {
-			i = iterations.get(k);
+		for (Iteration i : iterations.values()) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, i);
 			} else {
@@ -79,13 +76,13 @@ public class /*Development*/Line extends Item implements Serializable {
 	}
 
 	public Line(//
-			String sourceUUID, //
+			String sourceId, //
 			String id, //
 			String name, //
 			Date starts, //
 			Date ends, //
 			boolean projectLine) {
-		super(sourceUUID);
+		super(sourceId);
 		this.id = id;
 		this.alternateId = id + " {" + nextInternal + '}';
 		this.name = name + " {" + nextInternal++ + '}';
@@ -119,16 +116,11 @@ public class /*Development*/Line extends Item implements Serializable {
 	}
 
 	void putIteration(Iteration iteration) {
-		iterations.put(iteration.getUID(), iteration);
-		iterations0.put(iteration.getSourceUUID(), iteration);
+		iterations.put(iteration.getSourceId(), iteration);
 	}
 
-	public Iteration getIteration(int uid) {
-		return iterations.get(uid);
-	}
-
-	public Iteration getIteration(String sourceUUID) {
-		return iterations0.get(sourceUUID);
+	public Iteration getIteration(String sourceId) {
+		return iterations.get(sourceId);
 	}
 
 	public Collection<Iteration> getIterations() {

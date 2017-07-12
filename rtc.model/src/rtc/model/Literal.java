@@ -18,30 +18,22 @@ package rtc.model;
 
 import java.io.Serializable;
 
-public class User extends Item implements Serializable {
+public class Literal extends Item implements Serializable {
 
-	private static final long serialVersionUID = -7116824774676758450L;
+	private static final long serialVersionUID = -2028921989852439607L;
 
-	private String userId;
 	private String name;
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("user ID", getUserId())//
-				+ Item.SEP + Item.trace("name", getName());
+				+ Item.SEP + Item.trace("name", name);
 	}
 
-	public User(//
+	public Literal(//
 			String sourceId, //
-			String userId, //
 			String name) {
 		super(sourceId);
-		this.userId = userId;
 		this.name = name;
-	}
-
-	public String getUserId() {
-		return this.userId;
 	}
 
 	public String getName() {

@@ -30,9 +30,9 @@ public class TaskType extends Item implements Serializable {
 	}
 
 	public TaskType(//
-			String id, //
+			String sourceId, //
 			String name) {
-		super(id);
+		super(sourceId);
 		this.name = name;
 	}
 

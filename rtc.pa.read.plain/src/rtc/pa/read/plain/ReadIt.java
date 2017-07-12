@@ -49,6 +49,7 @@ import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.CategoryId;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IPriority;
+import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -418,17 +419,22 @@ public class ReadIt {
 			e.printStackTrace();
 			return "problem retrieving resolver for workitem " + task.getId();
 		}
+		Identifier<IResolution> resolution2Id = w.getResolution2();
+		String resolution2 = null;
+		if (null != resolution2Id) {
+			resolution2 = resolution2Id.getStringIdentifier();
+		}
 		// TODO: use generic attributes instead (for builtin and custom)
 		// w.getApprovals();
 		// w.getComments();
 		// w.getCustomAttributes();
 		// w.getValue(null);
-
 		//
 		// TaskVersion
 		//
 		TaskVersion version = new TaskVersion(//
 				w.getItemId().getUuidValue(), //
+				task, //
 				p.getTaskType(w.getWorkItemType()), //
 				w.getState2().getStringIdentifier(), //
 				p.getMember(w.getModifiedBy().getItemId().getUuidValue()), //
@@ -444,8 +450,9 @@ public class ReadIt {
 				((null == target) ? null : p.getIteration(target.getItemId().getUuidValue())), //
 				getM(p, ownedBy), //
 				getM(p, resolvedBy), //
-				w.getResolutionDate());
-		task.putTaskVersion(version);
+				w.getResolutionDate(), //
+				resolution2);
+		p.putTaskVersion(version);
 		monitor.out("\tjust added work item version " + task.getId() + trace(w));
 		//
 		// Links

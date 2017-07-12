@@ -145,7 +145,7 @@ public class WriteIt {
 
 		String message;
 		for (Category cat : p.getCategories()) {
-			message = WriteHelper.createCategory(pa, wiCommon, monitor, p, cat);
+			message = CategoryHelper.createCategory(pa, wiCommon, monitor, p, cat);
 			if (null != message) {
 				return "error creating category: " + message;
 			}
@@ -158,17 +158,17 @@ public class WriteIt {
 
 		String message;
 		for (Line line : p.getLines()) {
-			message = WriteHelper.createLine(pa, service, monitor, p, line);
+			message = TimelineHelper.createLine(pa, service, monitor, p, line);
 			if (null != message) {
 				return "error creating line: " + message;
 			}
 			for (Iteration ite : line.getIterations()) {
-				message = WriteHelper.createIteration(pa, service, monitor, p, line, null, ite);
+				message = TimelineHelper.createIteration(pa, service, monitor, p, line, null, ite);
 				if (null != message) {
 					return "error creating iteration: " + message;
 				}
 			}
-			message = WriteHelper.setLineCurrent(pa, service, monitor, line);
+			message = TimelineHelper.setLineCurrent(pa, service, monitor, line);
 			if (null != message) {
 				return "error setting current iteration in line: " + message;
 			}
@@ -181,7 +181,7 @@ public class WriteIt {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = WriteHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			message = WorkItemHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
 			if (null != message) {
 				return "error creating workitem " + t.getId() + " (id in source): " + message;
 			}

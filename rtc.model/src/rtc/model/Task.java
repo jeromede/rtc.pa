@@ -19,8 +19,6 @@ package rtc.model;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -31,7 +29,6 @@ public class Task extends Item implements Serializable {
 	private int id;
 	private Member creator;
 	private Date creation;
-	private Map<Integer, TaskVersion> versions = new HashMap<Integer, TaskVersion>();
 	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
 
 	public String toString() {
@@ -56,11 +53,11 @@ public class Task extends Item implements Serializable {
 	}
 
 	public Task(//
-			String sourceUUID, //
+			String sourceId, //
 			int id, //
 			Member creator, //
 			Date creation) {
-		super(sourceUUID);
+		super(sourceId);
 		this.id = id;
 		this.creator = creator;
 		this.creation = creation;
@@ -78,13 +75,8 @@ public class Task extends Item implements Serializable {
 		return this.creation;
 	}
 
-	public void putTaskVersion(TaskVersion version) {
-		versions.put(version.getUID(), version);
+	void putTaskVersion(TaskVersion version) {
 		history.put(version.getModified(), version);
-	}
-
-	public TaskVersion getTaskVersion(int uid) {
-		return versions.get(uid);
 	}
 
 	public Collection<TaskVersion> getHistory() {
