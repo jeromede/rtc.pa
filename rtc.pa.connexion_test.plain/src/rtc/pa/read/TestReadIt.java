@@ -24,10 +24,20 @@ import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
+import com.ibm.team.repository.common.IFetchResult;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.AttributeTypes;
+import com.ibm.team.workitem.common.model.IAttribute;
+import com.ibm.team.workitem.common.model.IAttributeHandle;
+import com.ibm.team.workitem.common.model.IEnumeration;
+import com.ibm.team.workitem.common.model.ILiteral;
+import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItemType;
+import com.ibm.team.workitem.common.model.Identifier;
+import com.ibm.team.workitem.common.workflow.IWorkflowAction;
+import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
 
 import rtc.utils.ProgressMonitor;
 
@@ -60,7 +70,7 @@ public class TestReadIt {
 						monitor);
 			} catch (TeamRepositoryException e) {
 				e.printStackTrace();
-				return "Error resolving IContributorHandle";
+				return "error resolving IContributorHandle";
 			}
 			monitor.out("- " + contrib.getName() + " (" + contrib.getUserId() + ")");
 		}
@@ -70,30 +80,102 @@ public class TestReadIt {
 	private static String readMembers(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor) {
 
 		String result;
-		monitor.out("Its administrators are:");
+		monitor.out("Its current administrators are:");
 		result = readContributors(pa.getAdministrators(), repo, pa, monitor);
 		if (null != result)
 			return result;
-		monitor.out("Its members are:");
+		monitor.out("Its current members are (could have changed other time):");
 		result = readContributors(pa.getMembers(), repo, pa, monitor);
 		if (null != result)
 			return result;
 		return null;
 	}
 
-	private static String readWorkItemTypes(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	public static String readWorkItemTypes(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, ProgressMonitor monitor) {
 
-		monitor.out("Its work item types are:");
+		String message = null;
+		monitor.out("Reading workflows...");
+		IWorkflowInfo wf;
 		List<IWorkItemType> allWorkItemTypes;
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "problem while getting work item types";
+		}
+		for (IWorkItemType t : allWorkItemTypes) {
+			monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
+			try {
+				wf = wiCommon.getWorkflow(t.getIdentifier(), pa, monitor);
+			} catch (TeamRepositoryException e) {
+				e.printStackTrace();
+				return "problem while getting workflow";
+			}
+			Identifier<IState>[] states = wf.getAllStateIds();
+			for (Identifier<IState> state : states) {
+				monitor.out("\t\tstate: " + state.getStringIdentifier());
+				Identifier<IWorkflowAction>[] actions = wf.getActionIds(state);
+				for (Identifier<IWorkflowAction> action : actions) {
+					monitor.out("\t\t\taction: " + action.getStringIdentifier());
+					Identifier<IState> result = wf.getActionResultState(action);
+					monitor.out("\t\t\t\tto state: " + result.getStringIdentifier() + state.getStringIdentifier());
+				}
+			}
+		}
+		try {
 			for (IWorkItemType t : allWorkItemTypes) {
-				monitor.out("- " + t.getDisplayName() + " (" + t.getIdentifier() + ')');
+				monitor.out("Built in attributes for " + t.getDisplayName() + " (" + t.getIdentifier() + "):");
+				List<IAttributeHandle> builtInAttributeHandles = wiCommon.findBuiltInAttributes(pa, monitor);
+				IFetchResult builtIn = repo.itemManager().fetchCompleteItemsPermissionAware(builtInAttributeHandles,
+						IItemManager.REFRESH, monitor);
+				for (Object o : builtIn.getRetrievedItems()) {
+					if (o instanceof IAttribute) {
+						message = readAttribute(wiClient, monitor, (IAttribute) o);
+						if (null != message) {
+							return message;
+						}
+					}
+				}
+				List<IAttributeHandle> custAttributeHandles = t.getCustomAttributes();
+				IFetchResult custom = repo.itemManager().fetchCompleteItemsPermissionAware(custAttributeHandles,
+						IItemManager.REFRESH, monitor);
+				monitor.out("Custom attributes for " + t.getDisplayName() + " (" + t.getIdentifier() + "):");
+				for (Object o : custom.getRetrievedItems()) {
+					if (o instanceof IAttribute) {
+						message = readAttribute(wiClient, monitor, (IAttribute) o);
+						if (null != message) {
+							return message;
+						}
+					}
+				}
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "Problem while getting its work item types";
+			return "problem while getting work item type attributes";
+		}
+		return null;
+	}
+
+	private static String readAttribute(IWorkItemClient wiClient, ProgressMonitor monitor, IAttribute a) {
+		monitor.out("\t" + a.getDisplayName() + " (" + a.getIdentifier() + ") : " + a.getAttributeType());
+		ILiteral lit;
+		ILiteral nullLit;
+		if (AttributeTypes.isEnumerationAttributeType(a.getAttributeType())) {
+			try {
+				IEnumeration<? extends ILiteral> enumeration = wiClient.resolveEnumeration(a, monitor);
+				nullLit = enumeration.findNullEnumerationLiteral();
+				monitor.out("\t\tnull literal: " + ((null == nullLit) ? null : '"' + nullLit.getName() + '"'));
+				for (Object o : enumeration.getEnumerationLiterals()) {
+					if (o instanceof ILiteral) {
+						lit = (ILiteral) o;
+						monitor.out("\t\tliteral: " + lit.getName());
+					}
+				}
+			} catch (TeamRepositoryException e) {
+				e.printStackTrace();
+				return "error while reading enumeration";
+			}
 		}
 		return null;
 	}
