@@ -20,6 +20,7 @@ import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -241,21 +242,21 @@ public class WriteHelper {
 						if (!type.getIdentifier().equals(previousType.getIdentifier())) {
 							monitor.out("Changing work item type");
 							wiCommon.updateWorkItemType(wi, type, previousType, monitor);
-							s = wc.save(monitor);
-							if (!s.isOK()) {
-								s.getException().printStackTrace();
-								return ("error changing work item type");
-							}
+//							s = wc.save(monitor);
+//							if (!s.isOK()) {
+//								s.getException().printStackTrace();
+//								return ("error changing work item type");
+//							}
 						}
 					}
 				}
 				UPDATE: {
 					updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
-					s = wc.save(monitor);
-					if (!s.isOK()) {
-						s.getException().printStackTrace();
-						return ("error updating work item");
-					}
+//					s = wc.save(monitor);
+//					if (!s.isOK()) {
+//						s.getException().printStackTrace();
+//						return ("error updating work item");
+//					}
 				}
 				CHANGE_STATE: {
 					if (null != previousState) {
@@ -281,13 +282,19 @@ public class WriteHelper {
 							}
 							monitor.out("\t    action: " + action);
 							wc.setWorkflowAction(action);
-							s = wc.save(monitor);
-							if (!s.isOK()) {
-								s.getException().printStackTrace();
-								return ("error changing work item state");
-							}
+//							s = wc.save(monitor);
+//							if (!s.isOK()) {
+//								s.getException().printStackTrace();
+//								return ("error changing work item state");
+//							}
 						}
 					}
+				}
+				// Save once instead:
+				s = wc.save(monitor);
+				if (!s.isOK()) {
+					s.getException().printStackTrace();
+					return ("error adding new work item version");
 				}
 				previousState = state;
 				previousType = type;
@@ -340,6 +347,9 @@ public class WriteHelper {
 		} else {
 			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
 		}
+		// TODO
+		// Identifier<IPriority> priority;
+		// wi.setPriority(priority);
 		Category cat = version.getCategory();
 		ICategory category;
 		if (null == cat) {

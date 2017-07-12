@@ -443,7 +443,6 @@ public class ReadIt {
 		//
 		// TaskVersion
 		//
-		w.getState2().getStringIdentifier();
 		TaskVersion version = new TaskVersion(//
 				w.getItemId().getUuidValue(), //
 				p.getTaskType(w.getWorkItemType()), //

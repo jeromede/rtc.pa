@@ -69,8 +69,6 @@ public class StateHelper {
 		// TODO: refactor workitem state change
 		//
 
-		monitor.out("\t\tlooking for action");
-
 		//
 		// State matching: hack for JazzHub -> RTC 6.0.x (some state ids have
 		// changed)
@@ -106,11 +104,6 @@ public class StateHelper {
 
 	public static Identifier<IState> stateId(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor,
 			String type, String state) throws TeamRepositoryException {
-
-		//
-		// Expansive shortcut
-		// TODO: refactor workitem state change
-		//
 
 		monitor.out("\t\tlooking for state");
 
