@@ -28,7 +28,6 @@ import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
-import com.ibm.team.workitem.client.IAuditableClient;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.common.IWorkItemCommon;
@@ -50,12 +49,12 @@ public class WriteIt {
 
 		String message;
 
-		IItemManager itemManager = repo.itemManager();
+		// IItemManager itemManager = repo.itemManager();
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
-		IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
+		// IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
 
 		message = matchMembers(repo, pa, monitor, p, matchingUserIDs);
 		if (null != message)
@@ -66,9 +65,9 @@ public class WriteIt {
 		message = writeCategories(repo, pa, wiCommon, monitor, p);
 		if (null != message)
 			return message;
-		// result = writeDevelopmentLines(repo, pa, service, monitor, p);
-		// if (null != result)
-		// return result;
+		message = writeDevelopmentLines(repo, pa, service, monitor, p);
+		if (null != message)
+			return message;
 		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
 		if (null != message)
 			return message;
@@ -105,7 +104,8 @@ public class WriteIt {
 			}
 			member = members.get(newId);
 			if (null == member) {
-				return "user ID \"" + newId + "\" (before: \"" + oldId + "\") has not been found in the target project area";
+				return "user ID \"" + newId + "\" (before: \"" + oldId
+						+ "\") has not been found in the target project area";
 			}
 			m.setTargetObject(member.getUserId(), member);
 			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""
