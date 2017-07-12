@@ -18,6 +18,8 @@ package rtc.pa.read;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
@@ -94,6 +96,7 @@ public class TestReadIt {
 	public static String readWorkItemTypes(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, ProgressMonitor monitor) {
 
+		SortedMap<String, IWorkItemType> types = new TreeMap<String, IWorkItemType>();
 		String message = null;
 		monitor.out("Reading workflows...");
 		IWorkflowInfo wf;
@@ -105,6 +108,9 @@ public class TestReadIt {
 			return "problem while getting work item types";
 		}
 		for (IWorkItemType t : allWorkItemTypes) {
+			types.put(t.getIdentifier(), t);
+		}
+		for (IWorkItemType t : types.values()) {
 			monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
 			try {
 				wf = wiCommon.getWorkflow(t.getIdentifier(), pa, monitor);
@@ -123,30 +129,39 @@ public class TestReadIt {
 				}
 			}
 		}
+		SortedMap<String, IAttribute> attributes;
 		try {
-			for (IWorkItemType t : allWorkItemTypes) {
-				monitor.out("Built in attributes for " + t.getDisplayName() + " (" + t.getIdentifier() + "):");
+			for (IWorkItemType t : types.values()) {
+				monitor.out("Built in attributes for " + t.getIdentifier() + " (" + t.getDisplayName() + "):");
 				List<IAttributeHandle> builtInAttributeHandles = wiCommon.findBuiltInAttributes(pa, monitor);
 				IFetchResult builtIn = repo.itemManager().fetchCompleteItemsPermissionAware(builtInAttributeHandles,
 						IItemManager.REFRESH, monitor);
+				attributes = new TreeMap<String, IAttribute>();
 				for (Object o : builtIn.getRetrievedItems()) {
-					if (o instanceof IAttribute) {
-						message = readAttribute(wiClient, monitor, (IAttribute) o);
-						if (null != message) {
-							return message;
-						}
+					IAttribute a = (IAttribute) o;
+					attributes.put(a.getIdentifier(), a);
+				}
+				for (IAttribute a : attributes.values()) {
+					message = readAttribute(wiClient, monitor, a);
+					if (null != message) {
+						return message;
 					}
 				}
+				monitor.out("Custom attributes for " + t.getIdentifier() + " (" + t.getDisplayName() + "):");
 				List<IAttributeHandle> custAttributeHandles = t.getCustomAttributes();
 				IFetchResult custom = repo.itemManager().fetchCompleteItemsPermissionAware(custAttributeHandles,
 						IItemManager.REFRESH, monitor);
-				monitor.out("Custom attributes for " + t.getDisplayName() + " (" + t.getIdentifier() + "):");
+				attributes = new TreeMap<String, IAttribute>();
 				for (Object o : custom.getRetrievedItems()) {
 					if (o instanceof IAttribute) {
-						message = readAttribute(wiClient, monitor, (IAttribute) o);
-						if (null != message) {
-							return message;
-						}
+						IAttribute a = (IAttribute) o;
+						attributes.put(a.getIdentifier(), a);
+					}
+				}
+				for (IAttribute a : attributes.values()) {
+					message = readAttribute(wiClient, monitor, a);
+					if (null != message) {
+						return message;
 					}
 				}
 			}
@@ -158,7 +173,7 @@ public class TestReadIt {
 	}
 
 	private static String readAttribute(IWorkItemClient wiClient, ProgressMonitor monitor, IAttribute a) {
-		monitor.out("\t" + a.getDisplayName() + " (" + a.getIdentifier() + ") : " + a.getAttributeType());
+		monitor.out("\t" + a.getIdentifier() + " (" + a.getDisplayName() + ") : " + a.getAttributeType());
 		ILiteral lit;
 		ILiteral nullLit;
 		if (AttributeTypes.isEnumerationAttributeType(a.getAttributeType())) {
