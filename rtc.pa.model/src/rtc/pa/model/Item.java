@@ -26,7 +26,7 @@ public abstract class Item implements java.io.Serializable {
 	private static final long serialVersionUID = 8450163754687832796L;
 
 	private String sourceId;
-	private transient String targetId = null;
+	private transient String externalId = null;
 	private transient Object externalObject = null;
 
 	public String toString() {
@@ -42,15 +42,15 @@ public abstract class Item implements java.io.Serializable {
 	}
 
 	public void setExternalObject(String id, Object o) {
-		this.targetId = id;
+		this.externalId = id;
 		this.externalObject = o;
 	}
 
-	public String getTargetId() {
-		return this.targetId;
+	public String getExternalId() {
+		return this.externalId;
 	}
 
-	public Object getTargetObject() {
+	public Object getExternalObject() {
 		return this.externalObject;
 	}
 

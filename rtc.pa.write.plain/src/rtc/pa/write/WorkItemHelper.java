@@ -45,7 +45,7 @@ public class WorkItemHelper {
 		if (null == firstVersion) {
 			return null;
 		}
-		IWorkItemType type = (IWorkItemType) firstVersion.getType().getTargetObject();
+		IWorkItemType type = (IWorkItemType) firstVersion.getType().getExternalObject();
 		IWorkItemType previousType = null;
 		String state;
 		String previousState = null;
@@ -67,7 +67,7 @@ public class WorkItemHelper {
 			wi.setCreator(getC(repo, task.getCreator()));
 			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
 			for (TaskVersion v : versions) {
-				type = (IWorkItemType) v.getType().getTargetObject();
+				type = (IWorkItemType) v.getType().getExternalObject();
 				state = v.getState();
 				CHANGE_TYPE: {
 					if (null != previousType) {
@@ -192,7 +192,7 @@ public class WorkItemHelper {
 				return "can't find /unassigned/ category";
 			}
 		} else {
-			category = (ICategory) cat.getTargetObject();
+			category = (ICategory) cat.getExternalObject();
 		}
 		wi.setCategory(category);
 		return null;
@@ -201,7 +201,7 @@ public class WorkItemHelper {
 	static IContributor getC(ITeamRepository repo, Member m) {
 		IContributor c = null;
 		if (null != m) {
-			c = (IContributor) m.getTargetObject();
+			c = (IContributor) m.getExternalObject();
 		}
 		if (null == c) {
 			c = repo.loggedInContributor();

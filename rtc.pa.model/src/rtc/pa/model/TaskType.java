@@ -17,12 +17,16 @@
 package rtc.pa.model;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TaskType extends Item implements Serializable {
 
 	private static final long serialVersionUID = 2213957782973299588L;
 
 	private String name;
+	private Map<String, Attribute> attributes = new HashMap<String, Attribute>();
 
 	public String toString() {
 		return super.toString()//
@@ -38,6 +42,14 @@ public class TaskType extends Item implements Serializable {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public void putAttribute(Attribute a) {
+		attributes.put(a.getName(), a);
+	}
+
+	public Collection<Attribute> getAttributes() {
+		return attributes.values();
 	}
 
 }

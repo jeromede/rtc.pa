@@ -25,6 +25,7 @@ import com.ibm.team.workitem.common.expression.Expression;
 import com.ibm.team.workitem.common.expression.IQueryableAttribute;
 import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
+import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
@@ -36,6 +37,7 @@ import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
+import rtc.pa.model.Attribute;
 import rtc.pa.model.Link;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -117,9 +119,11 @@ public class WorkItemHelper {
 		return null;
 	}
 
-	static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, Task task) {
+	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
+			Project p, Task task) {
 
+		String result;
 		XMLString summary = w.getHTMLSummary();
 		XMLString description = w.getHTMLDescription();
 		Identifier<IPriority> priority = w.getPriority();
@@ -163,7 +167,6 @@ public class WorkItemHelper {
 		// w.getApprovals();
 		// w.getComments();
 		// w.getCustomAttributes();
-		// w.getValue(null);
 		//
 		// TaskVersion
 		//
@@ -187,23 +190,54 @@ public class WorkItemHelper {
 				UserHelper.getM(p, resolvedBy), //
 				w.getResolutionDate(), //
 				resolution2);
-		p.putTaskVersion(version);
-		monitor.out("\tjust added work item version " + task.getId() + '\n' + w);
 		//
 		// Links
 		//
+		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
+		if (null != result)
+			return result;
+		//
+		// Attributes
+		//
+		result = readAttributes(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
+		if (null != result)
+			return result;
+		//
+		// Save
+		//
+		p.putTaskVersion(version);
+		monitor.out("\tjust added work item version " + task.getId() + '\n' + w);
+
+		return null;
+	}
+
+	private static String readAttributes(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
+			TaskVersion version) {
+
+		IAttribute attribute = null;
+		w.getValue(attribute);
+		for (Attribute a : version.getType().getAttributes()) {
+			w.getValue((IAttribute) a.getExternalObject());
+		}
+		return null;
+	}
+
+	private static String readLinks(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
+			TaskVersion version) {
 		IWorkItemReferences references;
 		ILink link;
 		try {
 			references = wiCommon.resolveWorkItemReferences(w, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "problem resolving references for workitem " + task.getId();
+			return "problem resolving references for workitem " + version.getTask().getId();
 		}
 		IItemHandle referencedItem;
 		for (IEndPointDescriptor iEndPointDescriptor : references.getTypes()) {
-			monitor.out("END POINT (" + task.getId() + "): " + iEndPointDescriptor.getDisplayName() + " ID: "
-					+ iEndPointDescriptor.getLinkType().getLinkTypeId() + " - " + iEndPointDescriptor);
+			monitor.out("END POINT (" + version.getTask().getId() + "): " + iEndPointDescriptor.getDisplayName()
+					+ " ID: " + iEndPointDescriptor.getLinkType().getLinkTypeId() + " - " + iEndPointDescriptor);
 			List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
 			for (IReference ref : typedReferences) {
 				if (ref.isItemReference()) {
@@ -214,7 +248,7 @@ public class WorkItemHelper {
 								w.getItemId().getUuidValue(), //
 								referencedItem.getItemId().getUuidValue(), //
 								link.getLinkType().getLinkTypeId()));
-						monitor.out("\t\tjust added link for " + task.getId());
+						monitor.out("\t\tjust added link for " + version.getTask().getId());
 					}
 				}
 			}

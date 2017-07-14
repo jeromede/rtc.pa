@@ -28,7 +28,7 @@ public class TimelineHelper {
 			devLine.setStartDate(line.getStarts());
 		}
 		if (null != line.getCurrent()) {
-			devLine.setCurrentIteration((IIteration) line.getCurrent().getTargetObject());
+			devLine.setCurrentIteration((IIteration) line.getCurrent().getExternalObject());
 		}
 		try {
 			IProjectArea pac = (IProjectArea) pa.getWorkingCopy();
@@ -63,7 +63,7 @@ public class TimelineHelper {
 		}
 		try {
 			IIteration iteration = null;
-			IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
+			IDevelopmentLine devLine = (IDevelopmentLine) line.getExternalObject();
 			IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
 			iterationC.setDevelopmentLine(devLineC);
 			if (null == parent) {
@@ -76,7 +76,7 @@ public class TimelineHelper {
 				monitor.out("\titeration \"" + ite.getName() + "\" in line \"" + line.getName() + "\"" + '\n' + devLine
 						+ '\n' + iteration);
 			} else {
-				IIteration parentIteration = (IIteration) parent.getTargetObject();
+				IIteration parentIteration = (IIteration) parent.getExternalObject();
 				IIteration parentIterationC = (IIteration) service.getMutableCopy(parentIteration);
 				iterationC.setParent(parentIterationC);
 				parentIterationC.addChild(iterationC);
@@ -108,8 +108,8 @@ public class TimelineHelper {
 			monitor.out("No current iteration has been set for development line " + line.getName() + "\"");
 			return null;
 		}
-		IDevelopmentLine devLine = (IDevelopmentLine) line.getTargetObject();
-		IIteration iteration = (IIteration) line.getCurrent().getTargetObject();
+		IDevelopmentLine devLine = (IDevelopmentLine) line.getExternalObject();
+		IIteration iteration = (IIteration) line.getCurrent().getExternalObject();
 		try {
 			IDevelopmentLine devLineC = (IDevelopmentLine) service.getMutableCopy(devLine);
 			IIteration iterationC = (IIteration) service.getMutableCopy(iteration);

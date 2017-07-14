@@ -15,8 +15,8 @@ public class CategoryHelper {
 			Category cat) {
 
 		ICategory category;
-		if (null != cat.getTargetObject()) {
-			category = (ICategory) cat.getTargetObject();
+		if (null != cat.getExternalObject()) {
+			category = (ICategory) cat.getExternalObject();
 			monitor.out("Category already exists " + category.getCategoryId().getInternalRepresentation());
 			return null;
 		}
@@ -37,7 +37,7 @@ public class CategoryHelper {
 				return message;
 			}
 			try {
-				category = wiCommon.createSubcategory((ICategory) par.getTargetObject(), cat.getName(), monitor);
+				category = wiCommon.createSubcategory((ICategory) par.getExternalObject(), cat.getName(), monitor);
 				cat.setExternalObject(category.getCategoryId().getInternalRepresentation(), category);
 				monitor.out(
 						"Just created subcategory \"" + category.getCategoryId().getInternalRepresentation() + "\"");
@@ -52,7 +52,7 @@ public class CategoryHelper {
 
 	private static void finaliseCategory(IWorkItemCommon wiCommon, ProgressMonitor monitor, Category cat)
 			throws TeamRepositoryException {
-		ICategory category = (ICategory) cat.getTargetObject();
+		ICategory category = (ICategory) cat.getExternalObject();
 		category.setHTMLDescription(XMLString.createFromXMLText(cat.getDescription()));
 		wiCommon.saveCategory(category, monitor);
 	}
