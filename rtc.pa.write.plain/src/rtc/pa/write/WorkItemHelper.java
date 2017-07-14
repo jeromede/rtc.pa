@@ -69,60 +69,40 @@ public class WorkItemHelper {
 			for (TaskVersion v : versions) {
 				type = (IWorkItemType) v.getType().getExternalObject();
 				state = v.getState();
-				CHANGE_TYPE: {
-					if (null != previousType) {
-						if (!type.getIdentifier().equals(previousType.getIdentifier())) {
-							monitor.out("Changing work item type");
-							wiCommon.updateWorkItemType(wi, type, previousType, monitor);
-							// s = wc.save(monitor);
-							// if (!s.isOK()) {
-							// s.getException().printStackTrace();
-							// return ("error changing work item type");
-							// }
-						}
+
+				if (null != previousType) {
+					if (!type.getIdentifier().equals(previousType.getIdentifier())) {
+						monitor.out("Changing work item type");
+						wiCommon.updateWorkItemType(wi, type, previousType, monitor);
 					}
 				}
-				UPDATE: {
-					updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
-					// s = wc.save(monitor);
-					// if (!s.isOK()) {
-					// s.getException().printStackTrace();
-					// return ("error updating work item");
-					// }
-				}
-				CHANGE_STATE: {
-					if (null != previousState) {
-						if (!state.equals(previousState)) {
-							monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
-							monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
-							action = null;
-							try {
-								action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
-										state);
-							} catch (TeamRepositoryException e) {
-								e.printStackTrace();
-								return "problem while searching action to trigger";
-							}
-							if (null == action) {
-								stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
-								if (null == stateId) {
-									return "couldn't find state " + state + " for type " + type.getIdentifier();
-								}
-								wi.setState2(stateId); // TOO BAD (probably a
-														// side effect of a
-														// change of type)
-							}
-							monitor.out("\t    action: " + action);
-							wc.setWorkflowAction(action);
-							// s = wc.save(monitor);
-							// if (!s.isOK()) {
-							// s.getException().printStackTrace();
-							// return ("error changing work item state");
-							// }
+
+				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
+
+				if (null != previousState) {
+					if (!state.equals(previousState)) {
+						monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
+						monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
+						action = null;
+						try {
+							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
+									state);
+						} catch (TeamRepositoryException e) {
+							e.printStackTrace();
+							return "problem while searching action to trigger";
 						}
+						if (null == action) {
+							stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
+							if (null == stateId) {
+								return "couldn't find state " + state + " for type " + type.getIdentifier();
+							}
+							forceState(wi, stateId);
+						}
+						monitor.out("\t    action: " + action);
+						wc.setWorkflowAction(action);
 					}
 				}
-				// Save once instead:
+
 				s = wc.save(monitor);
 				if (!s.isOK()) {
 					s.getException().printStackTrace();
@@ -207,6 +187,11 @@ public class WorkItemHelper {
 			c = repo.loggedInContributor();
 		}
 		return c;
+	}
+
+	@SuppressWarnings("deprecation")
+	static void forceState(IWorkItem wi, Identifier<IState> stateId) {
+		wi.setState2(stateId); // TOO BAD
 	}
 
 }
