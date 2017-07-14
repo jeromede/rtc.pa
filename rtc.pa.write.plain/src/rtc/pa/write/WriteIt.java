@@ -107,7 +107,7 @@ public class WriteIt {
 				return "user ID \"" + newId + "\" (before: \"" + oldId
 						+ "\") has not been found in the target project area";
 			}
-			m.setTargetObject(member.getUserId(), member);
+			m.setExternalObject(member.getUserId(), member);
 			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""
 					+ member.getName() + "\")");
 		}
@@ -129,7 +129,7 @@ public class WriteIt {
 				if (null == taskType) {
 					return "can't find workitem type \"" + type + "\" in target project";
 				}
-				taskType.setTargetObject(t.getIdentifier(), t);
+				taskType.setExternalObject(t.getIdentifier(), t);
 				monitor.out("\t" + t.getDisplayName() + " (" + type + ')');
 			}
 		} catch (TeamRepositoryException e) {

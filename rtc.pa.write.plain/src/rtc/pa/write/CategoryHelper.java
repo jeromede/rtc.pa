@@ -23,7 +23,7 @@ public class CategoryHelper {
 		if (null == cat.getParentId()) {
 			try {
 				category = wiCommon.createCategory(pa, cat.getName(), monitor);
-				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
+				cat.setExternalObject(category.getCategoryId().getInternalRepresentation(), category);
 				monitor.out("\tjust created category \"" + category.getCategoryId().getInternalRepresentation() + "\"");
 				finaliseCategory(wiCommon, monitor, cat);
 			} catch (TeamRepositoryException e) {
@@ -38,7 +38,7 @@ public class CategoryHelper {
 			}
 			try {
 				category = wiCommon.createSubcategory((ICategory) par.getTargetObject(), cat.getName(), monitor);
-				cat.setTargetObject(category.getCategoryId().getInternalRepresentation(), category);
+				cat.setExternalObject(category.getCategoryId().getInternalRepresentation(), category);
 				monitor.out(
 						"Just created subcategory \"" + category.getCategoryId().getInternalRepresentation() + "\"");
 				finaliseCategory(wiCommon, monitor, cat);

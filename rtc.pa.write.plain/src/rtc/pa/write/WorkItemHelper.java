@@ -143,7 +143,7 @@ public class WorkItemHelper {
 			e.printStackTrace();
 			return ("error fetching created work item");
 		}
-		task.setTargetObject(wi.getItemId().getUuidValue(), wi);
+		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
 		System.out.println("Just created workitem: " + wi.getId());
 		return null;
 	}

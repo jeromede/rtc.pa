@@ -38,7 +38,7 @@ public class TimelineHelper {
 				pac.setProjectDevelopmentLine(devLine);
 			}
 			IProcessItem[] savedItems = service.save(new IProcessItem[] { devLine, pac }, monitor);
-			line.setTargetObject(devLine.getId(), savedItems[0]);
+			line.setExternalObject(devLine.getId(), savedItems[0]);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "error while adding development line \"" + line.getName() + "\" to project area";
@@ -71,8 +71,8 @@ public class TimelineHelper {
 				IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, iterationC }, monitor);
 				devLine = (IDevelopmentLine) savedItems[0];
 				iteration = (IIteration) savedItems[1];
-				line.setTargetObject(devLine.getId(), devLine);
-				ite.setTargetObject(iteration.getId(), iteration);
+				line.setExternalObject(devLine.getId(), devLine);
+				ite.setExternalObject(iteration.getId(), iteration);
 				monitor.out("\titeration \"" + ite.getName() + "\" in line \"" + line.getName() + "\"" + '\n' + devLine
 						+ '\n' + iteration);
 			} else {
@@ -85,9 +85,9 @@ public class TimelineHelper {
 				devLine = (IDevelopmentLine) savedItems[0];
 				parentIteration = (IIteration) savedItems[1];
 				iteration = (IIteration) savedItems[2];
-				line.setTargetObject(devLine.getId(), devLine);
-				parent.setTargetObject(parentIteration.getId(), parentIteration);
-				ite.setTargetObject(iteration.getId(), iteration);
+				line.setExternalObject(devLine.getId(), devLine);
+				parent.setExternalObject(parentIteration.getId(), parentIteration);
+				ite.setExternalObject(iteration.getId(), iteration);
 				monitor.out("\titeration \"" + ite.getName() + "\" in parent iteration \"" + parent.getName() + "\"");
 			}
 		} catch (Exception e) {
@@ -117,8 +117,8 @@ public class TimelineHelper {
 			IProcessItem[] savedItems = service.save(new IProcessItem[] { devLineC, iterationC }, monitor);
 			devLine = (IDevelopmentLine) savedItems[0];
 			iteration = (IIteration) savedItems[1];
-			line.setTargetObject(devLine.getId(), devLine);
-			ite.setTargetObject(iteration.getId(), iteration);
+			line.setExternalObject(devLine.getId(), devLine);
+			ite.setExternalObject(iteration.getId(), iteration);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			return "error while setting current iteration \"" + ite.getName() + "\" in line\"" + line.getName() + "\"";

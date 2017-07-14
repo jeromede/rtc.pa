@@ -27,7 +27,7 @@ public abstract class Item implements java.io.Serializable {
 
 	private String sourceId;
 	private transient String targetId = null;
-	private transient Object targetObject = null;
+	private transient Object externalObject = null;
 
 	public String toString() {
 		return trace("source id", sourceId);
@@ -41,9 +41,9 @@ public abstract class Item implements java.io.Serializable {
 		return this.sourceId;
 	}
 
-	public void setTargetObject(String id, Object o) {
+	public void setExternalObject(String id, Object o) {
 		this.targetId = id;
-		this.targetObject = o;
+		this.externalObject = o;
 	}
 
 	public String getTargetId() {
@@ -51,7 +51,7 @@ public abstract class Item implements java.io.Serializable {
 	}
 
 	public Object getTargetObject() {
-		return this.targetObject;
+		return this.externalObject;
 	}
 
 	public static String trace(String t, boolean b) {
