@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="/rtc.pa.model"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/opt/IBM/RTC-6.0.4/api/apache-mime4j-0.6.jar"/>
 	<classpathentry kind="lib" path="/opt/IBM/RTC-6.0.4/api/com.ibm.icu_4.2.1.v20100412.jar"/>

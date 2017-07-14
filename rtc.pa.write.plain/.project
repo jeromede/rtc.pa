@@ -3,6 +3,8 @@
 	<name>rtc.pa.write.plain</name>
 	<comment></comment>
 	<projects>
+		<project>rtc.pa.model</project>
+		<project>rtc.pa.utils</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

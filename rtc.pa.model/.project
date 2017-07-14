@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>rtc.pa.read.plain</name>
+	<name>rtc.pa.model</name>
 	<comment></comment>
 	<projects>
-		<project>rtc.pa.model</project>
-		<project>rtc.pa.utils</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
