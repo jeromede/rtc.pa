@@ -47,6 +47,7 @@ public class Project extends Item implements Serializable {
 	private Map<String, Iteration> iterations = new HashMap<String, Iteration>();
 	private Map<String, Task> tasks = new HashMap<String, Task>();
 	private Map<String, TaskType> taskTypes = new HashMap<String, TaskType>();
+	private Map<String, Attribute> attributes = new HashMap<String, Attribute>();
 	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
 
 	public String toString() {
@@ -167,6 +168,19 @@ public class Project extends Item implements Serializable {
 
 	public Collection<TaskType> getTaskTypes() {
 		return taskTypes.values();
+	}
+
+	public void putAttribute(TaskType taskType, Attribute attribute) {
+		taskType.putAttribute(attribute);
+		attributes.put(attribute.getSourceId(), attribute);
+	}
+
+	public Attribute getAttribute(String id) {
+		return attributes.get(id);
+	}
+
+	public Collection<Attribute> getAttributes() {
+		return attributes.values();
 	}
 
 	public void putTaskVersion(TaskVersion version) {

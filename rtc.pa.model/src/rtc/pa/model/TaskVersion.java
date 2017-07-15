@@ -19,6 +19,7 @@ package rtc.pa.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class TaskVersion extends Item implements Serializable {
 	private Text description;
 	private Text priority;
 	private Text severity;
-	private List<String> tags;
+	private Collection<String> tags;
 	private Timestamp due;
 	private long duration; // -1 means null
 	private Category category;
@@ -46,7 +47,8 @@ public class TaskVersion extends Item implements Serializable {
 	private Member resolvedBy;
 	private Date resolution;
 	private String resolution2;
-	private List<Link> links = new ArrayList<Link>();
+	private Collection<Value> values = new ArrayList<Value>();
+	private Collection<Link> links = new ArrayList<Link>();
 
 	/*
 	 * correctedEstimate (Corrected Estimate) : duration
@@ -77,7 +79,21 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace_simple("resolved by", (null == resolvedBy) ? null : resolvedBy.getUserId())//
 				+ Item.SEP + Item.trace("resolution", resolution)//
 				+ Item.SEP + Item.trace("resolution2", resolution2)//
+				+ Item.trace_list("\nVALUES", valuesToString())//
 				+ Item.trace_list("\nLINKS", linksToString());
+	}
+
+	private String valuesToString() {
+		String result = new String();
+		int n = 0;
+		for (Value l : values) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, l);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, l);
+			}
+		}
+		return result;
 	}
 
 	private String linksToString() {
@@ -170,7 +186,7 @@ public class TaskVersion extends Item implements Serializable {
 		return this.severity.value();
 	}
 
-	public List<String> getTags() {
+	public Collection<String> getTags() {
 		return this.tags;
 	}
 
@@ -202,11 +218,19 @@ public class TaskVersion extends Item implements Serializable {
 		return this.resolution;
 	}
 
+	public void addValue(Value value) {
+		values.add(value);
+	}
+
+	public Collection<Value> getValues() {
+		return values;
+	}
+
 	public void addLink(Link link) {
 		links.add(link);
 	}
 
-	public List<Link> getLinks() {
+	public Collection<Link> getLinks() {
 		return links;
 	}
 

@@ -16,8 +16,8 @@
 
 package rtc.pa.model;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 public abstract class Item implements java.io.Serializable {
 
@@ -73,18 +73,18 @@ public abstract class Item implements java.io.Serializable {
 		return '\n' + t + ": \"" + s + '\"';
 	}
 
-	private static String trace(List<String> l) {
+	private static String trace(Collection<String> c) {
 		String result = new String();
-		for (String t : l) {
+		for (String s : c) {
 			if (!result.isEmpty()) {
 				result += ", ";
 			}
-			result += '\"' + t + '\"';
+			result += '\"' + s + '\"';
 		}
 		return result;
 	}
 
-	public static String trace(String t, List<String> l) {
+	public static String trace(String t, Collection<String> l) {
 		if (null == l) {
 			return '\n' + t + ": null";
 		}
@@ -125,4 +125,12 @@ public abstract class Item implements java.io.Serializable {
 		}
 		return '\n' + t + ": [" + o + ']' + '\n';
 	}
+
+	public static String trace_object(String t, Object o) {
+		if (null == o) {
+			return '\n' + t + ": null";
+		}
+		return '\n' + t + ": {{{" + o + "}}}";
+	}
+
 }

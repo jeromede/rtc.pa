@@ -25,19 +25,14 @@ public class Literal extends Item implements Serializable {
 	private String name;
 
 	public String toString() {
-		return super.toString()//
-				+ Item.SEP + Item.trace("name", name);
+		return super.toString() + //
+				Item.SEP + Item.trace("name", name);
 	}
 
 	public Literal(//
-			String sourceId, //
-			String name) {
-		super(sourceId);
+			String id, String name) {
+		super(id);
 		this.name = name;
-	}
-
-	public String getName() {
-		return this.name;
 	}
 
 }

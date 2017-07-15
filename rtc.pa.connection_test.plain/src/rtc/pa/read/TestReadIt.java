@@ -97,7 +97,7 @@ public class TestReadIt {
 			IWorkItemCommon wiCommon, ProgressMonitor monitor) {
 
 		SortedMap<String, IWorkItemType> types = new TreeMap<String, IWorkItemType>();
-		String message = null;
+		String result;
 		monitor.out("Reading workflows...");
 		IWorkflowInfo wf;
 		List<IWorkItemType> allWorkItemTypes;
@@ -124,8 +124,8 @@ public class TestReadIt {
 				Identifier<IWorkflowAction>[] actions = wf.getActionIds(state);
 				for (Identifier<IWorkflowAction> action : actions) {
 					monitor.out("\t\t\taction: " + action.getStringIdentifier());
-					Identifier<IState> result = wf.getActionResultState(action);
-					monitor.out("\t\t\t\tto state: " + result.getStringIdentifier() + state.getStringIdentifier());
+					Identifier<IState> resultState = wf.getActionResultState(action);
+					monitor.out("\t\t\t\tto state: " + resultState.getStringIdentifier() + state.getStringIdentifier());
 				}
 			}
 		}
@@ -142,9 +142,9 @@ public class TestReadIt {
 					attributes.put(a.getIdentifier(), a);
 				}
 				for (IAttribute a : attributes.values()) {
-					message = readAttribute(wiClient, monitor, a);
-					if (null != message) {
-						return message;
+					result = readAttribute(wiClient, monitor, a);
+					if (null != result) {
+						return result;
 					}
 				}
 				monitor.out("Custom attributes for " + t.getIdentifier() + " (" + t.getDisplayName() + "):");
@@ -159,9 +159,9 @@ public class TestReadIt {
 					}
 				}
 				for (IAttribute a : attributes.values()) {
-					message = readAttribute(wiClient, monitor, a);
-					if (null != message) {
-						return message;
+					result = readAttribute(wiClient, monitor, a);
+					if (null != result) {
+						return result;
 					}
 				}
 			}

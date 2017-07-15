@@ -14,33 +14,37 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-package rtc.pa.text;
+package rtc.pa.model;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
-public class TextSaver implements Serializable {
+public class Value extends Item implements Serializable {
 
-	private static final long serialVersionUID = 552302703535289825L;
+	private static final long serialVersionUID = -1014295341454233792L;
 
-	private Map<Integer, Text> values = new HashMap<Integer, Text>();
-	private Map<String, Integer> indexes = new HashMap<String, Integer>();
+	private Attribute attribute;
+	private Object value;
 
-	public TextSaver() {
-		super();
+	public String toString() {
+		return super.toString()//
+				+ Item.SEP + Item.trace_object("value", value);
 	}
 
-	public Text get(String s) {
-		Integer i = indexes.get(s);
-		if (null == i) {
-			Text txt = new Text(s);
-			i = txt.index();
-			values.put(i, txt);
-			indexes.put(txt.value(), i);
-			return txt;
-		}
-		return values.get(i);
+	public Value(//
+			String id, //
+			Attribute attribute, //
+			Object value) {
+		super(id);
+		this.attribute = attribute;
+		this.value = value;
+	}
+
+	public Attribute getAttribute() {
+		return this.attribute;
+	}
+
+	public Object getValue() {
+		return this.value;
 	}
 
 }

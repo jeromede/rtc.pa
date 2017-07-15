@@ -14,6 +14,7 @@ import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IContributorHandle;
+import com.ibm.team.repository.common.IFetchResult;
 import com.ibm.team.repository.common.IItemHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IAuditableClient;
@@ -26,7 +27,9 @@ import com.ibm.team.workitem.common.expression.IQueryableAttribute;
 import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.IAttribute;
+import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.ISeverity;
@@ -39,9 +42,11 @@ import com.ibm.team.workitem.common.query.IResolvedResult;
 
 import rtc.pa.model.Attribute;
 import rtc.pa.model.Link;
+import rtc.pa.model.Literal;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
 import rtc.pa.model.TaskVersion;
+import rtc.pa.model.Value;
 import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemHelper {
@@ -93,7 +98,7 @@ public class WorkItemHelper {
 				p.getMember(wi.getCreator().getItemId().getUuidValue()), //
 				wi.getCreationDate());
 		p.putTask(task);
-		monitor.out("\tjust added work item " + task.getId() + '\n' + wi);
+		monitor.out("\tjust added work item " + task.getId());
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
 		return null;
 	}
@@ -191,22 +196,34 @@ public class WorkItemHelper {
 				w.getResolutionDate(), //
 				resolution2);
 		//
-		// Links
-		//
-		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
-		if (null != result)
-			return result;
-		//
 		// Attributes
 		//
 		result = readAttributes(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
 		if (null != result)
 			return result;
 		//
+		// Links
+		//
+		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
+		if (null != result)
+			return result;
+		//
+		// TODO: Comments
+		//
+
+		//
+		// TODO: Tags
+		//
+
+		//
+		// TODO: ...
+		//
+
+		//
 		// Save
 		//
 		p.putTaskVersion(version);
-		monitor.out("\tjust added work item version " + task.getId() + '\n' + w);
+		monitor.out("\tjust added work item version " + task.getId());
 
 		return null;
 	}
@@ -215,10 +232,44 @@ public class WorkItemHelper {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
 			TaskVersion version) {
 
-		IAttribute attribute = null;
-		w.getValue(attribute);
-		for (Attribute a : version.getType().getAttributes()) {
-			w.getValue((IAttribute) a.getExternalObject());
+		IAttribute attribute;
+		Attribute a;
+		Literal l;
+		List<IAttributeHandle> customAttributeHandles = w.getCustomAttributes();
+		IFetchResult custom = null;
+		try {
+			custom = repo.itemManager().fetchCompleteItemsPermissionAware(customAttributeHandles, IItemManager.REFRESH,
+					monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "error finding custom attributes for work item version";
+		}
+		for (Object o : custom.getRetrievedItems()) {
+			if (o instanceof IAttribute) {
+				attribute = (IAttribute) o;
+				a = p.getAttribute(attribute.getIdentifier());
+				if (null == a) {
+					return "error finding custom attribute " + attribute.getIdentifier();
+				}
+				if (a.isEnum()) {
+					@SuppressWarnings("unchecked")
+					Identifier<? extends ILiteral> id = (Identifier<? extends ILiteral>) w.getValue(attribute);
+					l = a.getLiteral(id.getStringIdentifier());
+					monitor.out("value (" + a.getSourceId() + ":" + a.getType() + "): " + id.getStringIdentifier());
+					version.addValue(new Value(//
+							attribute.getIdentifier(), //
+							a, //
+							l//
+					));
+				} else {
+					monitor.out("value (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
+					version.addValue(new Value(//
+							attribute.getIdentifier(), //
+							a, //
+							w.getValue((IAttribute) a.getExternalObject())//
+					));
+				}
+			}
 		}
 		return null;
 	}
@@ -236,8 +287,6 @@ public class WorkItemHelper {
 		}
 		IItemHandle referencedItem;
 		for (IEndPointDescriptor iEndPointDescriptor : references.getTypes()) {
-			monitor.out("END POINT (" + version.getTask().getId() + "): " + iEndPointDescriptor.getDisplayName()
-					+ " ID: " + iEndPointDescriptor.getLinkType().getLinkTypeId() + " - " + iEndPointDescriptor);
 			List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
 			for (IReference ref : typedReferences) {
 				if (ref.isItemReference()) {
@@ -248,7 +297,8 @@ public class WorkItemHelper {
 								w.getItemId().getUuidValue(), //
 								referencedItem.getItemId().getUuidValue(), //
 								link.getLinkType().getLinkTypeId()));
-						monitor.out("\t\tjust added link for " + version.getTask().getId());
+						monitor.out("\t\tjust added link for " + version.getTask().getId() + " to "
+								+ referencedItem.getItemId().getUuidValue());
 					}
 				}
 			}

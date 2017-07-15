@@ -32,42 +32,40 @@ public class Attribute extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("name", this.getName())//
 				+ Item.SEP + Item.trace("type", this.getType())//
-				+ Item.SEP + Item.trace("enum?", this.isEnum());
+				+ Item.SEP + Item.trace("enum", this.isEnum());
 	}
 
 	public Attribute(//
-			String sourceId, //
+			String id, //
 			String name, //
 			String type) {
-		super(sourceId);
+		super(id);
 		this.name = name;
 		this.type = type;
 	}
 
 	public Attribute(//
-			String sourceUUID, //
+			String id, //
 			String name, //
 			String type, //
 			Collection<Literal> literals, //
 			Literal nullLiteral) {
-		super(sourceUUID);
-		this.name = name;
+		super(id);
 		this.type = type;
 		this.literals = new HashMap<String, Literal>();
 		for (Literal l : literals) {
-			this.literals.put(l.getName(), l);
+			this.literals.put(l.getSourceId(), l);
 		}
 		this.nullLiteral = nullLiteral;
 	}
 
-	public String getName() {
-		return this.name;
-	}
-
 	public String getType() {
 		return this.type;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	public boolean isEnum() {
