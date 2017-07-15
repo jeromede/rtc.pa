@@ -49,6 +49,7 @@ public class TaskVersion extends Item implements Serializable {
 	private String resolution2;
 	private Collection<Value> values = new ArrayList<Value>();
 	private Collection<Link> links = new ArrayList<Link>();
+	private Collection<Comment> comments = new ArrayList<Comment>();
 
 	/*
 	 * correctedEstimate (Corrected Estimate) : duration
@@ -80,7 +81,8 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace("resolution", resolution)//
 				+ Item.SEP + Item.trace("resolution2", resolution2)//
 				+ Item.trace_list("\nVALUES", valuesToString())//
-				+ Item.trace_list("\nLINKS", linksToString());
+				+ Item.trace_list("\nLINKS", linksToString())//
+				+ Item.trace_list("\nCOMMENTS", commentsToString());
 	}
 
 	private String valuesToString() {
@@ -100,6 +102,19 @@ public class TaskVersion extends Item implements Serializable {
 		String result = new String();
 		int n = 0;
 		for (Link l : links) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, l);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, l);
+			}
+		}
+		return result;
+	}
+
+	private String commentsToString() {
+		String result = new String();
+		int n = 0;
+		for (Comment l : comments) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, l);
 			} else {
@@ -232,6 +247,14 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Collection<Link> getLinks() {
 		return links;
+	}
+
+	public void addComment(Comment comment) {
+		comments.add(comment);
+	}
+
+	public Collection<Comment> getComments() {
+		return comments;
 	}
 
 	public boolean isOfType(String typeId) {

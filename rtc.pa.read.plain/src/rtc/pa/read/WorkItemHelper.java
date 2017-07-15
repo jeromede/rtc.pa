@@ -29,6 +29,7 @@ import com.ibm.team.workitem.common.model.AttributeOperation;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IComment;
 import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
@@ -41,6 +42,7 @@ import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
 import rtc.pa.model.Attribute;
+import rtc.pa.model.Comment;
 import rtc.pa.model.Link;
 import rtc.pa.model.Literal;
 import rtc.pa.model.Project;
@@ -194,7 +196,8 @@ public class WorkItemHelper {
 				UserHelper.getM(p, ownedBy), //
 				UserHelper.getM(p, resolvedBy), //
 				w.getResolutionDate(), //
-				resolution2);
+				resolution2//
+		);
 		//
 		// Attributes
 		//
@@ -210,7 +213,14 @@ public class WorkItemHelper {
 		//
 		// TODO: Comments
 		//
-
+		for (IComment comment : w.getComments().getContents()) {
+			version.addComment(new Comment(//
+					w.getContextId().getUuidValue(), //
+					p.getMember(comment.getCreator().getItemId().getUuidValue()), //
+					comment.getCreationDate(), //
+					(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
+			));
+		}
 		//
 		// TODO: Tags
 		//
