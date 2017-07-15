@@ -74,7 +74,7 @@ public class TestReadIt {
 				e.printStackTrace();
 				return "error resolving IContributorHandle";
 			}
-			monitor.out("- " + contrib.getName() + " (" + contrib.getUserId() + ")");
+			monitor.out("- " + contrib.getUserId() + " (" + contrib.getName() + ")");
 		}
 		return null;
 	}
@@ -86,7 +86,7 @@ public class TestReadIt {
 		result = readContributors(pa.getAdministrators(), repo, pa, monitor);
 		if (null != result)
 			return result;
-		monitor.out("Its current members are (could have changed other time):");
+		monitor.out("Its current members are (could have changed over time):");
 		result = readContributors(pa.getMembers(), repo, pa, monitor);
 		if (null != result)
 			return result;
@@ -111,7 +111,7 @@ public class TestReadIt {
 			types.put(t.getIdentifier(), t);
 		}
 		for (IWorkItemType t : types.values()) {
-			monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
+			monitor.out("\t" + t.getIdentifier() + " (" + t.getDisplayName() + ')');
 			try {
 				wf = wiCommon.getWorkflow(t.getIdentifier(), pa, monitor);
 			} catch (TeamRepositoryException e) {
