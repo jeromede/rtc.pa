@@ -50,6 +50,8 @@ public class TaskVersion extends Item implements Serializable {
 	private Collection<Value> values = new ArrayList<Value>();
 	private Collection<Link> links = new ArrayList<Link>();
 	private Collection<Comment> comments = new ArrayList<Comment>();
+	private Collection<Attachment> attachments = new ArrayList<Attachment>();
+	private Collection<Approval> approvals = new ArrayList<Approval>();
 
 	/*
 	 * correctedEstimate (Corrected Estimate) : duration
@@ -255,6 +257,22 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Collection<Comment> getComments() {
 		return comments;
+	}
+
+	public void addApproval(Approval approval) {
+		approvals.add(approval);
+	}
+
+	public Collection<Approval> getApproval() {
+		return approvals;
+	}
+
+	public void addAttachment(Attachment attachment) {
+		attachments.add(attachment);
+	}
+
+	public Collection<Attachment> getAttachment() {
+		return attachments;
 	}
 
 	public boolean isOfType(String typeId) {

@@ -26,6 +26,11 @@ import com.ibm.team.workitem.common.expression.Expression;
 import com.ibm.team.workitem.common.expression.IQueryableAttribute;
 import com.ibm.team.workitem.common.expression.QueryableAttributes;
 import com.ibm.team.workitem.common.model.AttributeOperation;
+import com.ibm.team.workitem.common.model.IApproval;
+import com.ibm.team.workitem.common.model.IApprovalDescriptor;
+import com.ibm.team.workitem.common.model.IApprovals;
+import com.ibm.team.workitem.common.model.IAttachment;
+import com.ibm.team.workitem.common.model.IAttachmentHandle;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.ICategory;
@@ -34,10 +39,12 @@ import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.ISeverity;
+import com.ibm.team.workitem.common.model.ISubscriptions;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemReferences;
 import com.ibm.team.workitem.common.model.Identifier;
+import com.ibm.team.workitem.common.model.WorkItemEndPoints;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
@@ -54,7 +61,7 @@ import rtc.pa.utils.ProgressMonitor;
 public class WorkItemHelper {
 
 	static String readWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
 		monitor.out("Now reading work items...");
 		IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
@@ -75,7 +82,7 @@ public class WorkItemHelper {
 		try {
 			while (results.hasNext(monitor)) {
 				result = readWorkItem(results.next(monitor).getItem(), repo, pa, wiClient, wiCommon, itemManager,
-						monitor, p);
+						monitor, p, dir);
 				if (null != result)
 					return result;
 			}
@@ -88,7 +95,7 @@ public class WorkItemHelper {
 	}
 
 	static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
 		Task task;
 		//
@@ -101,14 +108,14 @@ public class WorkItemHelper {
 				wi.getCreationDate());
 		p.putTask(task);
 		monitor.out("\tjust added work item " + task.getId());
-		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
+		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 		return null;
 	}
 
 	@SuppressWarnings("unchecked")
 	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
-			Project p, Task task) {
+			Project p, Task task, String dir) {
 
 		List<IWorkItem> workItems;
 		try {
@@ -119,7 +126,7 @@ public class WorkItemHelper {
 		}
 		String result;
 		for (IWorkItem w : workItems) {
-			result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task);
+			result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 			if (null != result)
 				return result;
 		}
@@ -128,7 +135,7 @@ public class WorkItemHelper {
 
 	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
-			Project p, Task task) {
+			Project p, Task task, String dir) {
 
 		String result;
 		XMLString summary = w.getHTMLSummary();
@@ -169,11 +176,6 @@ public class WorkItemHelper {
 		if (null != resolution2Id) {
 			resolution2 = resolution2Id.getStringIdentifier();
 		}
-		// TODO: use generic attributes instead (for builtin and custom) --
-		// w.getValue(IAttribute)
-		// w.getApprovals();
-		// w.getComments();
-		// w.getCustomAttributes();
 		//
 		// TaskVersion
 		//
@@ -222,13 +224,32 @@ public class WorkItemHelper {
 			));
 		}
 		//
-		// TODO: Tags
+		// TODO: Approvals
 		//
-
+		IApprovals approvals = w.getApprovals();
+		for (IApproval approval : approvals.getContents()) {
+			approval.getApprover();
+			IApprovalDescriptor descriptor = approval.getDescriptor();
+			descriptor.getDueDate();
+			descriptor.setDueDate(null);
+			descriptor.getName();
+			descriptor.setName(null);
+			descriptor.getTypeIdentifier();
+			descriptor.setTypeIdentifier(null);
+			approval.getStateIdentifier();
+			approval.setStateIdentifier(null);
+		}
 		//
-		// TODO: ...
+		// TODO: Attachments
 		//
-
+		result = readAttachments(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version, dir);
+		if (null != result)
+			return result;
+		//
+		// TODO: Subscribers
+		//
+		ISubscriptions subscriptions = w.getSubscriptions();
+		IContributorHandle[] subscribers = subscriptions.getContents();
 		//
 		// Save
 		//
@@ -287,6 +308,7 @@ public class WorkItemHelper {
 	private static String readLinks(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
 			TaskVersion version) {
+
 		IWorkItemReferences references;
 		ILink link;
 		try {
@@ -311,6 +333,44 @@ public class WorkItemHelper {
 								+ referencedItem.getItemId().getUuidValue());
 					}
 				}
+			}
+		}
+		return null;
+	}
+
+	private static String readAttachments(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
+			TaskVersion version, String dir) {
+
+		IWorkItemReferences wiReferences;
+		try {
+			wiReferences = wiCommon.resolveWorkItemReferences(w, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "problem resolving references for workitem " + version.getTask().getId();
+		}
+		IItemHandle referencedItem;
+		List<IReference> references = wiReferences.getReferences(WorkItemEndPoints.ATTACHMENT);
+		for (IReference ref : references) {
+			Object resolved = ref.resolve();
+			referencedItem = ((IItemReference) ref).getReferencedItem();
+			if (referencedItem instanceof IAttachmentHandle) {
+				IAttachmentHandle handle = (IAttachmentHandle) resolved;
+				IAttachment attachment;
+				try {
+					attachment = wiCommon.getAuditableCommon().resolveAuditable(handle, IAttachment.DEFAULT_PROFILE,
+							monitor);
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return "can't resolve attachment handle";
+				}
+				attachment.getOrigin();// = repo
+				attachment.getCreationDate();
+				attachment.getCreator();
+				attachment.getDescription();
+				attachment.getId();
+				attachment.getName();
+				monitor.out("\t\tjust added attachment for " + version.getTask().getId());
 			}
 		}
 		return null;

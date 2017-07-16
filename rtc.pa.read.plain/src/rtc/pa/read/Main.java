@@ -38,17 +38,18 @@ public class Main {
 		ProgressMonitor monitor = new ProgressMonitor();
 		Project p = null;
 
-		String url, proj, user, password;
-		String ser;
+		String url, proj, user, password, ser, dir;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
 			ser = new String(args[4]);
+			dir = new String(args[5]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password serialization_file");
-			monitor.err("example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou UU_PP.ser");
+			monitor.err("arguments: url user password serialization_file attachment_dir");
+			monitor.err(
+					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here");
 			System.err.print("Bad arguments:");
 			for (String arg : args) {
 				monitor.err(arg);
@@ -70,7 +71,7 @@ public class Main {
 				pa = (IProjectArea) pa0;
 				p = new Project(pa.getItemId().getUuidValue(), pa.getName(), pa.getProcessName(),
 						repo.getRepositoryURI(), pa.getDescription().getSummary());
-				message = ReadIt.execute(repo, pa, monitor, p);
+				message = ReadIt.execute(repo, pa, monitor, p, dir);
 			} else {
 				message = new String(uri + " is not a project area");
 			}

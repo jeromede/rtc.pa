@@ -31,7 +31,7 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class ReadIt {
 
-	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p)
+	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p, String dir)
 			throws TeamRepositoryException, IOException {
 
 		IItemManager itemManager = repo.itemManager();
@@ -52,7 +52,7 @@ public class ReadIt {
 		result = TimelineHelper.readDevelopmentLines(repo, pa, auditableClient, itemManager, monitor, p);
 		if (null != result)
 			return result;
-		result = WorkItemHelper.readWorkItems(repo, pa, wiClient, wiCommon, itemManager, monitor, p);
+		result = WorkItemHelper.readWorkItems(repo, pa, wiClient, wiCommon, itemManager, monitor, p, dir);
 		if (null != result)
 			return result;
 
