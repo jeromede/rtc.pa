@@ -1,5 +1,7 @@
 package rtc.pa.read;
 
+import java.net.URI;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +9,7 @@ import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.links.common.IItemReference;
 import com.ibm.team.links.common.ILink;
 import com.ibm.team.links.common.IReference;
+import com.ibm.team.links.common.IURIReference;
 import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IIterationHandle;
 import com.ibm.team.process.common.IProjectArea;
@@ -48,6 +51,8 @@ import com.ibm.team.workitem.common.model.WorkItemEndPoints;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
+import rtc.pa.model.Artifact;
+import rtc.pa.model.Attachment;
 import rtc.pa.model.Attribute;
 import rtc.pa.model.Comment;
 import rtc.pa.model.Link;
@@ -231,20 +236,17 @@ public class WorkItemHelper {
 			approval.getApprover();
 			IApprovalDescriptor descriptor = approval.getDescriptor();
 			descriptor.getDueDate();
-			descriptor.setDueDate(null);
 			descriptor.getName();
-			descriptor.setName(null);
 			descriptor.getTypeIdentifier();
-			descriptor.setTypeIdentifier(null);
 			approval.getStateIdentifier();
-			approval.setStateIdentifier(null);
 		}
 		//
 		// TODO: Attachments
 		//
-		result = readAttachments(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version, dir);
-		if (null != result)
-			return result;
+		// result = readAttachments(w, repo, pa, wiClient, wiCommon,
+		// itemManager, monitor, p, version, dir);
+		// if (null != result)
+		// return result;
 		//
 		// TODO: Subscribers
 		//
@@ -275,6 +277,7 @@ public class WorkItemHelper {
 			e.printStackTrace();
 			return "error finding custom attributes for work item version";
 		}
+		Object vObj;
 		for (Object o : custom.getRetrievedItems()) {
 			if (o instanceof IAttribute) {
 				attribute = (IAttribute) o;
@@ -286,19 +289,36 @@ public class WorkItemHelper {
 					@SuppressWarnings("unchecked")
 					Identifier<? extends ILiteral> id = (Identifier<? extends ILiteral>) w.getValue(attribute);
 					l = a.getLiteral(id.getStringIdentifier());
-					monitor.out("value (" + a.getSourceId() + ":" + a.getType() + "): " + id.getStringIdentifier());
+					monitor.out("\t\tvalue (" + a.getSourceId() + ":" + a.getType() + "): " + id.getStringIdentifier());
 					version.addValue(new Value(//
 							attribute.getIdentifier(), //
 							a, //
 							l//
 					));
 				} else {
-					monitor.out("value (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
-					version.addValue(new Value(//
-							attribute.getIdentifier(), //
-							a, //
-							w.getValue((IAttribute) a.getExternalObject())//
-					));
+					monitor.out("\t\tvalue (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
+					vObj = w.getValue((IAttribute) a.getExternalObject());
+					if (vObj instanceof String) {
+						version.addValue(new Value(//
+								attribute.getIdentifier(), //
+								a, //
+								(String) vObj//
+						));
+					} else if (vObj instanceof Timestamp) {
+						version.addValue(new Value(//
+								attribute.getIdentifier(), //
+								a, //
+								(Timestamp) vObj//
+						));
+					} else if (vObj instanceof Boolean) {
+						version.addValue(new Value(//
+								attribute.getIdentifier(), //
+								a, //
+								(Boolean) vObj//
+						));
+					} else {
+						monitor.out("\tvalue not taken into account: " + vObj);
+					}
 				}
 			}
 		}
@@ -318,19 +338,57 @@ public class WorkItemHelper {
 			return "problem resolving references for workitem " + version.getTask().getId();
 		}
 		IItemHandle referencedItem;
+		IWorkItemHandle referencedWorkItem;
+		IAttachmentHandle attachmentHandle;
+		IAttachment attachment;
+		IURIReference referencedURI;
 		for (IEndPointDescriptor iEndPointDescriptor : references.getTypes()) {
-			List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
-			for (IReference ref : typedReferences) {
-				if (ref.isItemReference()) {
-					referencedItem = ((IItemReference) ref).getReferencedItem();
-					if (referencedItem instanceof IWorkItemHandle) {
-						link = ref.getLink();
-						version.addLink(new Link(//
-								w.getItemId().getUuidValue(), //
-								referencedItem.getItemId().getUuidValue(), //
-								link.getLinkType().getLinkTypeId()));
-						monitor.out("\t\tjust added link for " + version.getTask().getId() + " to "
-								+ referencedItem.getItemId().getUuidValue());
+			if (iEndPointDescriptor.isTarget()) {
+				List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
+				for (IReference ref : typedReferences) {
+					link = ref.getLink();
+					if (ref.isItemReference()) {
+						referencedItem = ((IItemReference) ref).getReferencedItem();
+						if (referencedItem instanceof IWorkItemHandle) {
+							referencedWorkItem = (IWorkItemHandle) referencedItem;
+							version.addLink(new Link(//
+									link.getItemId().getUuidValue(), //
+									referencedWorkItem.getItemId().getUuidValue(), //
+									link.getLinkType().getLinkTypeId(), //
+									ref.getComment()));
+							monitor.out("\t\tjust added link (type: " + link.getLinkType().getLinkTypeId() + ") for "
+									+ version.getSourceId() + " (" + version.getTask().getId() + ") to "
+									+ referencedWorkItem.getItemId().getUuidValue());
+						} else if (referencedItem instanceof IAttachmentHandle) {
+							attachmentHandle = (IAttachmentHandle) ref.resolve();
+							try {
+								attachment = wiCommon.getAuditableCommon().resolveAuditable(attachmentHandle,
+										IAttachment.DEFAULT_PROFILE, monitor);
+							} catch (TeamRepositoryException e) {
+								e.printStackTrace();
+								return "can't resolve attachment handle";
+							}
+							version.addAttachment(new Attachment(//
+									"" + attachment.getId(), //
+									attachment.getName(), //
+									attachment.getDescription(), //
+									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
+									attachment.getCreationDate()//
+							));
+							monitor.out("\t\tjust added attachment for " + version.getTask().getId());
+						}
+					} else if (ref.isURIReference()) {
+						referencedURI = ((IURIReference) ref);
+						if (!referencedURI.getURI().toString()
+								.contains("http://www.ibm.com/support/knowledgecenter/")) {
+							version.addArtifact(new Artifact(//
+									link.getItemId().getUuidValue(), //
+									referencedURI.getURI(), referencedURI.getComment()//
+							));
+							monitor.out("\t\tjust added artifact" + " for " + version.getSourceId() + " ("
+									+ version.getTask().getId() + ") to " + referencedURI.getURI().toString() + "("
+									+ referencedURI.getComment() + ')');
+						}
 					}
 				}
 			}
@@ -339,8 +397,8 @@ public class WorkItemHelper {
 	}
 
 	private static String readAttachments(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
-			TaskVersion version, String dir) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, TaskVersion version,
+			String dir) {
 
 		IWorkItemReferences wiReferences;
 		try {

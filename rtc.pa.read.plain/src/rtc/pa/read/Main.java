@@ -72,6 +72,7 @@ public class Main {
 				p = new Project(pa.getItemId().getUuidValue(), pa.getName(), pa.getProcessName(),
 						repo.getRepositoryURI(), pa.getDescription().getSummary());
 				message = ReadIt.execute(repo, pa, monitor, p, dir);
+				p.resolve();
 			} else {
 				message = new String(uri + " is not a project area");
 			}

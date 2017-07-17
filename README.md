@@ -16,11 +16,8 @@ Programs to copy (read then write) content from a source and to a target [Ration
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
 - The timelines will be re-created in the target project area, the program doesn't try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
-- Some work item properties are not copied:
-  - Approvals
-  - Subscribers.
-- Links and attachments are added to the last (most recent) version of the work item (not updated for each version in the history).
-- If a user is not part of the source project area anymore, and can't be found in the input matching file, it will be replaced by the user running the program.
+- Links inside the PA are the only one taken into account.
+- If a user is not part of the source project area anymore, and can't be found in the input matching file, s·he will be replaced by the user running the program.
 
 # Build
 

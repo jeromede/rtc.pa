@@ -49,6 +49,7 @@ public class TaskVersion extends Item implements Serializable {
 	private String resolution2;
 	private Collection<Value> values = new ArrayList<Value>();
 	private Collection<Link> links = new ArrayList<Link>();
+	private Collection<Artifact> artifacts = new ArrayList<Artifact>();
 	private Collection<Comment> comments = new ArrayList<Comment>();
 	private Collection<Attachment> attachments = new ArrayList<Attachment>();
 	private Collection<Approval> approvals = new ArrayList<Approval>();
@@ -84,6 +85,8 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace("resolution2", resolution2)//
 				+ Item.trace_list("\nVALUES", valuesToString())//
 				+ Item.trace_list("\nLINKS", linksToString())//
+				+ Item.trace_list("\nATTACHMENTS", attachmentsToString())//
+				+ Item.trace_list("\nARTIFACTS", artifactsToString())//
 				+ Item.trace_list("\nCOMMENTS", commentsToString());
 	}
 
@@ -104,6 +107,32 @@ public class TaskVersion extends Item implements Serializable {
 		String result = new String();
 		int n = 0;
 		for (Link l : links) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, l);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, l);
+			}
+		}
+		return result;
+	}
+	
+	private String attachmentsToString() {
+		String result = new String();
+		int n = 0;
+		for (Attachment l : attachments) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, l);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, l);
+			}
+		}
+		return result;
+	}
+
+	private String artifactsToString() {
+		String result = new String();
+		int n = 0;
+		for (Artifact l : artifacts) {
 			if (result.isEmpty()) {
 				result = Item.trace(n++, l);
 			} else {
@@ -249,6 +278,14 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Collection<Link> getLinks() {
 		return links;
+	}
+
+	public void addArtifact(Artifact artifact) {
+		artifacts.add(artifact);
+	}
+
+	public Collection<Artifact> getArtifacts() {
+		return artifacts;
 	}
 
 	public void addComment(Comment comment) {

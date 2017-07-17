@@ -17,53 +17,36 @@
 package rtc.pa.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.net.URI;
 
-public class Attachment extends Item implements Serializable {
+public class Artifact extends Item implements Serializable {
 
-	private static final long serialVersionUID = 8551811459594967567L;
+	private static final long serialVersionUID = 8496326752581544728L;
 
-	private String name;
-	private String description;
-	private Member creator;
-	private Timestamp creation;
-	//
-	// TODO: other properties
-	//
+	private URI uri;
+	private String comment;
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("creator", creator)//
-				+ Item.SEP + Item.trace("creation date", creation);
+				+ Item.SEP + Item.trace("uri", uri.toString())//
+				+ Item.SEP + Item.trace("comment", comment);
 	}
 
-	public Attachment(//
-			String id, //
-			String name, //
-			String description, //
-			Member creator, //
-			Timestamp creation) {
-		super(id);
-		this.name = name;
-		this.description = description;
-		this.creator = creator;
-		this.creation = creation;
+	public Artifact(//
+			String sourceId, //
+			URI uri, //
+			String comment) {
+		super(sourceId);
+		this.uri = uri;
+		this.comment = comment;
 	}
 
-	public String getName() {
-		return this.name;
+	public URI getURI() {
+		return this.uri;
 	}
 
-	public String getDescription() {
-		return this.description;
-	}
-
-	public Member getCreator() {
-		return this.creator;
-	}
-
-	public Timestamp getCreation() {
-		return this.creation;
+	public String getComment() {
+		return this.comment;
 	}
 
 }

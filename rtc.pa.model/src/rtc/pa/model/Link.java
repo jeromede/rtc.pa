@@ -22,19 +22,30 @@ public class Link extends Item implements Serializable {
 
 	private static final long serialVersionUID = 4250604954024032992L;
 
-	private String targetId;
+	private transient String targetId;
+	private Task target = null;
 	private String type;
+	private String comment;
 
 	public String toString() {
-		return super.toString()//
-				+ Item.SEP + Item.trace("target UUID", targetId)//
-				+ Item.SEP + Item.trace("type", type);
+		if (null != this.targetId) {
+			return super.toString()//
+					+ Item.SEP + Item.trace("target id", targetId)//
+					+ Item.SEP + Item.trace("type", type)//
+					+ Item.SEP + Item.trace("comment", comment);
+		} else {
+			return super.toString()//
+					+ Item.SEP + Item.trace("target", target.getId())//
+					+ Item.SEP + Item.trace("type", type)//
+					+ Item.SEP + Item.trace("comment", comment);
+		}
 	}
 
 	public Link(//
 			String sourceId, //
 			String targetId, //
-			String type) {
+			String type, //
+			String comment) {
 		super(sourceId);
 		this.targetId = targetId;
 		this.type = type;
@@ -46,6 +57,19 @@ public class Link extends Item implements Serializable {
 
 	public String getType() {
 		return this.type;
+	}
+
+	public String getComment() {
+		return this.comment;
+	}
+
+	public void resolve(Task target) {
+		this.target = target;
+		this.targetId = null;
+	}
+
+	public Task getTarget() {
+		return target;
 	}
 
 }
