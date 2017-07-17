@@ -376,7 +376,7 @@ public class WorkItemHelper {
 									attachment.getName(), //
 									attachment.getDescription(), //
 									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
-									attachment.getCreationDate()//
+									attachment.getCreationDate() //
 							));
 							monitor.out("\t\tjust added attachment for " + task.getId());
 						}

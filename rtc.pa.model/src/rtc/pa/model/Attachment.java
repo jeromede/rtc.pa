@@ -27,9 +27,6 @@ public class Attachment extends Item implements Serializable {
 	private String description;
 	private Member creator;
 	private Timestamp creation;
-	//
-	// TODO: other properties
-	//
 
 	public String toString() {
 		return super.toString()//
