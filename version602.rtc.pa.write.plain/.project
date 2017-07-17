@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>version602.rtc.pa.write.plain</name>
+	<comment></comment>
+	<projects>
+		<project>rtc.model</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>src/rtc/pa/utils</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/rtc.pa.utils.plain/src/rtc/pa/utils</locationURI>
+		</link>
+		<link>
+			<name>src/rtc/pa/write</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/rtc.pa.write.plain/src/rtc/pa/write</locationURI>
+		</link>
+	</linkedResources>
+</projectDescription>
