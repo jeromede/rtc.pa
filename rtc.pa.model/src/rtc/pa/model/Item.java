@@ -33,6 +33,19 @@ public abstract class Item implements java.io.Serializable {
 		return trace("source id", sourceId);
 	}
 
+	public static String itemsToString(Collection<? extends Item> items) {
+		String result = new String();
+		int n = 0;
+		for (Item i : items) {
+			if (result.isEmpty()) {
+				result = Item.trace(n++, i);
+			} else {
+				result = result + Item.SEP + Item.trace(n++, i);
+			}
+		}
+		return result;
+	}
+
 	public Item(String id) {
 		this.sourceId = id;
 	}

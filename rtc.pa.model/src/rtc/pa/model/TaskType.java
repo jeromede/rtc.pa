@@ -31,21 +31,8 @@ public class TaskType extends Item implements Serializable {
 	public String toString() {
 		return super.toString()//
 				+ Item.SEP + Item.trace("name", name)//
-				+ Item.trace_list("\nATTRIBUTES", attributesToString());
+				+ Item.trace_list("\nATTRIBUTES", Item.itemsToString(attributes.values()));
 
-	}
-
-	private String attributesToString() {
-		String result = new String();
-		int n = 0;
-		for (Attribute a : attributes.values()) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, a);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, a);
-			}
-		}
-		return result;
 	}
 
 	public TaskType(//

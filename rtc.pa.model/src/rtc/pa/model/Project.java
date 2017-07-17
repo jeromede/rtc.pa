@@ -72,10 +72,10 @@ public class Project extends Item implements Serializable {
 	}
 
 	public void resolve() {
-		for (TaskVersion version : history.values()) {
-			for (Link link : version.getLinks()) {
+		for (Task task : tasks.values()) {
+			for (Link link : task.getLinks()) {
 				System.out.println("resolve link (type: " + link.getType() + ") " + link.getTargetId() + " from "
-						+ version.getTask().getId() + " to " + this.getTask(link.getTargetId()).getId());
+						+ task.getId() + " to " + this.getTask(link.getTargetId()).getId());
 				link.resolve(this.getTask(link.getTargetId()));
 			}
 		}

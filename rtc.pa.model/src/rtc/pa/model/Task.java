@@ -17,6 +17,7 @@
 package rtc.pa.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.SortedMap;
@@ -31,25 +32,24 @@ public class Task extends Item implements Serializable {
 	private Date creation;
 	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
 
+	private Collection<Link> links = new ArrayList<Link>();
+
+	private Collection<Artifact> artifacts = new ArrayList<Artifact>();
+
+	private Collection<Attachment> attachments = new ArrayList<Attachment>();
+
+	private Collection<Approval> approvals = new ArrayList<Approval>();
+
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("id", id)//
-				+ Item.SEP + Item.trace("creator", creator)//
-				+ Item.SEP + Item.trace("creation date", creation)//
-				+ Item.SEP + Item.trace_list("\nVERSIONS", historyToString());
-	}
-
-	private String historyToString() {
-		String result = new String();
-		int n = 0;
-		for (TaskVersion v : history.values()) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, v);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, v);
-			}
-		}
-		return result;
+				+ Item.trace("id", id)//
+				+ Item.trace("creator", creator)//
+				+ Item.trace("creation date", creation)//
+				+ Item.trace_list("\nLINKS", itemsToString(links))//
+				+ Item.trace_list("\nATTACHMENTS", Item.itemsToString(attachments))//
+				+ Item.trace_list("\nARTIFACTS", Item.itemsToString(artifacts))//
+				+ Item.trace_list("\nAPPROVALS", Item.itemsToString(approvals))//
+				+ Item.trace_list("\nVERSIONS", Item.itemsToString(history.values()));
 	}
 
 	public Task(//
@@ -81,6 +81,38 @@ public class Task extends Item implements Serializable {
 
 	public Collection<TaskVersion> getHistory() {
 		return history.values();
+	}
+
+	public void addLink(Link link) {
+		links.add(link);
+	}
+
+	public Collection<Link> getLinks() {
+		return links;
+	}
+
+	public void addArtifact(Artifact artifact) {
+		artifacts.add(artifact);
+	}
+
+	public Collection<Artifact> getArtifacts() {
+		return artifacts;
+	}
+
+	public void addApproval(Approval approval) {
+		approvals.add(approval);
+	}
+
+	public Collection<Approval> getApproval() {
+		return approvals;
+	}
+
+	public void addAttachment(Attachment attachment) {
+		attachments.add(attachment);
+	}
+
+	public Collection<Attachment> getAttachment() {
+		return attachments;
 	}
 
 }

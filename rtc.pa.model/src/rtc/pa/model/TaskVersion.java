@@ -48,22 +48,8 @@ public class TaskVersion extends Item implements Serializable {
 	private Date resolution;
 	private String resolution2;
 	private Collection<Value> values = new ArrayList<Value>();
-	private Collection<Link> links = new ArrayList<Link>();
-	private Collection<Artifact> artifacts = new ArrayList<Artifact>();
 	private Collection<Comment> comments = new ArrayList<Comment>();
-	private Collection<Attachment> attachments = new ArrayList<Attachment>();
 	private Collection<Member> subscribers = new ArrayList<Member>();
-	private Collection<Approval> approvals = new ArrayList<Approval>();
-
-	/*
-	 * correctedEstimate (Corrected Estimate) : duration
-	 * internalApprovalDescriptors (Approval Descriptors) : approvalDescriptors
-	 * internalApprovals (Approvals) : approvals internalComments (Comments) :
-	 * comments internalResolution (Resolution) : smallString
-	 * internalSequenceValue (Sequence Value) : smallString
-	 * internalSubscriptions (Subscribed By) : subscriptions internalTags (Tags)
-	 * : tags timeSpent (Time Spent) : duration
-	 */
 
 	public String toString() {
 		return super.toString()//
@@ -84,26 +70,9 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace_simple("resolved by", (null == resolvedBy) ? null : resolvedBy.getUserId())//
 				+ Item.SEP + Item.trace("resolution", resolution)//
 				+ Item.SEP + Item.trace("resolution2", resolution2)//
-				+ Item.trace_list("\nVALUES", itemsToString(values))//
-				+ Item.trace_list("\nLINKS", itemsToString(links))//
-				+ Item.trace_list("\nATTACHMENTS", itemsToString(attachments))//
-				+ Item.trace_list("\nSUBSCRIBERS", itemsToString(subscribers))//
-				+ Item.trace_list("\nARTIFACTS", itemsToString(artifacts))//
-				+ Item.trace_list("\nAPPROVALS", itemsToString(approvals))//
-				+ Item.trace_list("\nCOMMENTS", itemsToString(comments));
-	}
-
-	private String itemsToString(Collection<? extends Item> items) {
-		String result = new String();
-		int n = 0;
-		for (Item i : items) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, i);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, i);
-			}
-		}
-		return result;
+				+ Item.trace_list("\nVALUES", Item.itemsToString(values))//
+				+ Item.trace_list("\nSUBSCRIBERS", Item.itemsToString(subscribers))//
+				+ Item.trace_list("\nCOMMENTS", Item.itemsToString(comments));
 	}
 
 	public TaskVersion(//
@@ -223,22 +192,6 @@ public class TaskVersion extends Item implements Serializable {
 		return values;
 	}
 
-	public void addLink(Link link) {
-		links.add(link);
-	}
-
-	public Collection<Link> getLinks() {
-		return links;
-	}
-
-	public void addArtifact(Artifact artifact) {
-		artifacts.add(artifact);
-	}
-
-	public Collection<Artifact> getArtifacts() {
-		return artifacts;
-	}
-
 	public void addSubscriber(Member subscriber) {
 		subscribers.add(subscriber);
 	}
@@ -253,22 +206,6 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Collection<Comment> getComments() {
 		return comments;
-	}
-
-	public void addApproval(Approval approval) {
-		approvals.add(approval);
-	}
-
-	public Collection<Approval> getApproval() {
-		return approvals;
-	}
-
-	public void addAttachment(Attachment attachment) {
-		attachments.add(attachment);
-	}
-
-	public Collection<Attachment> getAttachment() {
-		return attachments;
 	}
 
 	public boolean isOfType(String typeId) {

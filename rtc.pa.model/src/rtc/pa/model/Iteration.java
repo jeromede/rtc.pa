@@ -46,20 +46,7 @@ public class Iteration extends Item implements Serializable {
 				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("starts", starts)//
 				+ Item.SEP + Item.trace("ends", ends)//
-				+ Item.SEP + Item.trace_list("\nSUBITERATIONS", iterationsToString());
-	}
-
-	private String iterationsToString() {
-		String result = new String();
-		int n = 0;
-		for (Iteration i : iterations.values()) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, i);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, i);
-			}
-		}
-		return result;
+				+ Item.SEP + Item.trace_list("\nSUBITERATIONS", Item.itemsToString(iterations.values()));
 	}
 
 	public Iteration(//

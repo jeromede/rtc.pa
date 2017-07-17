@@ -101,6 +101,7 @@ public class WorkItemHelper {
 	static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
+		String result;
 		Task task;
 		//
 		// Task
@@ -113,6 +114,26 @@ public class WorkItemHelper {
 		p.putTask(task);
 		monitor.out("\tjust added work item " + task.getId());
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		//
+		// Links (includes attachments and artifacts (aka URIs)
+		//
+		result = readLinks(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		if (null != result)
+			return result;
+		//
+		// Approvals
+		//
+		IApprovals approvals = wi.getApprovals();
+		IApprovalDescriptor descriptor;
+		for (IApproval approval : approvals.getContents()) {
+			descriptor = approval.getDescriptor();
+			task.addApproval(new Approval(//
+					descriptor.getName(), //
+					descriptor.getTypeIdentifier(), //
+					descriptor.getDueDate(), //
+					p.getMember(approval.getApprover().getItemId().getUuidValue())//
+			));
+		}
 		return null;
 	}
 
@@ -211,12 +232,6 @@ public class WorkItemHelper {
 		if (null != result)
 			return result;
 		//
-		// Links (includes attachments and artifacts (aka URIs)
-		//
-		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version, dir);
-		if (null != result)
-			return result;
-		//
 		// Comments
 		//
 		for (IComment comment : w.getComments().getContents()) {
@@ -225,20 +240,6 @@ public class WorkItemHelper {
 					p.getMember(comment.getCreator().getItemId().getUuidValue()), //
 					comment.getCreationDate(), //
 					(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
-			));
-		}
-		//
-		// Approvals
-		//
-		IApprovals approvals = w.getApprovals();
-		IApprovalDescriptor descriptor;
-		for (IApproval approval : approvals.getContents()) {
-			descriptor = approval.getDescriptor();
-			version.addApproval(new Approval(//
-					descriptor.getName(), //
-					descriptor.getTypeIdentifier(), //
-					descriptor.getDueDate(), //
-					p.getMember(approval.getApprover().getItemId().getUuidValue())//
 			));
 		}
 		//
@@ -323,7 +324,7 @@ public class WorkItemHelper {
 	}
 
 	private static String readLinks(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, TaskVersion version,
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, Task task,
 			String dir) {
 
 		String result;
@@ -333,7 +334,7 @@ public class WorkItemHelper {
 			references = wiCommon.resolveWorkItemReferences(w, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "problem resolving references for workitem " + version.getTask().getId();
+			return "problem resolving references for workitem " + task.getId();
 		}
 		IItemHandle referencedItem;
 		IWorkItemHandle referencedWorkItem;
@@ -349,13 +350,13 @@ public class WorkItemHelper {
 						referencedItem = ((IItemReference) ref).getReferencedItem();
 						if (referencedItem instanceof IWorkItemHandle) {
 							referencedWorkItem = (IWorkItemHandle) referencedItem;
-							version.addLink(new Link(//
+							task.addLink(new Link(//
 									link.getItemId().getUuidValue(), //
 									referencedWorkItem.getItemId().getUuidValue(), //
 									link.getLinkType().getLinkTypeId(), //
 									ref.getComment()));
 							monitor.out("\t\tjust added link (type: " + link.getLinkType().getLinkTypeId() + ") for "
-									+ version.getSourceId() + " (" + version.getTask().getId() + ") to "
+									+ task.getSourceId() + " (" + task.getId() + ") to "
 									+ referencedWorkItem.getItemId().getUuidValue());
 						} else if (referencedItem instanceof IAttachmentHandle) {
 							attachmentHandle = (IAttachmentHandle) ref.resolve();
@@ -370,26 +371,26 @@ public class WorkItemHelper {
 							if (null != result) {
 								return "error saving attachment: " + result;
 							}
-							version.addAttachment(new Attachment(//
+							task.addAttachment(new Attachment(//
 									"" + attachment.getId(), //
 									attachment.getName(), //
 									attachment.getDescription(), //
 									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
 									attachment.getCreationDate()//
 							));
-							monitor.out("\t\tjust added attachment for " + version.getTask().getId());
+							monitor.out("\t\tjust added attachment for " + task.getId());
 						}
 					} else if (ref.isURIReference()) {
 						referencedURI = ((IURIReference) ref);
 						if (!referencedURI.getURI().toString()
 								.contains("http://www.ibm.com/support/knowledgecenter/")) {
-							version.addArtifact(new Artifact(//
+							task.addArtifact(new Artifact(//
 									link.getItemId().getUuidValue(), //
 									referencedURI.getURI(), referencedURI.getComment()//
 							));
-							monitor.out("\t\tjust added artifact" + " for " + version.getSourceId() + " ("
-									+ version.getTask().getId() + ") to " + referencedURI.getURI().toString() + "("
-									+ referencedURI.getComment() + ')');
+							monitor.out("\t\tjust added artifact" + " for " + task.getSourceId() + " (" + task.getId()
+									+ ") to " + referencedURI.getURI().toString() + "(" + referencedURI.getComment()
+									+ ')');
 						}
 					}
 				}
