@@ -1,6 +1,8 @@
 # Status
 
-In development. Not usable yet.
+Read to serialized file (and directory for attachments) works.
+
+Write in development (barely usable yet).
 
 # What
 
