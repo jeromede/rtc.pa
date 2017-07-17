@@ -52,6 +52,7 @@ public class TaskVersion extends Item implements Serializable {
 	private Collection<Artifact> artifacts = new ArrayList<Artifact>();
 	private Collection<Comment> comments = new ArrayList<Comment>();
 	private Collection<Attachment> attachments = new ArrayList<Attachment>();
+	private Collection<Member> subscribers = new ArrayList<Member>();
 	private Collection<Approval> approvals = new ArrayList<Approval>();
 
 	/*
@@ -83,73 +84,23 @@ public class TaskVersion extends Item implements Serializable {
 				+ Item.SEP + Item.trace_simple("resolved by", (null == resolvedBy) ? null : resolvedBy.getUserId())//
 				+ Item.SEP + Item.trace("resolution", resolution)//
 				+ Item.SEP + Item.trace("resolution2", resolution2)//
-				+ Item.trace_list("\nVALUES", valuesToString())//
-				+ Item.trace_list("\nLINKS", linksToString())//
-				+ Item.trace_list("\nATTACHMENTS", attachmentsToString())//
-				+ Item.trace_list("\nARTIFACTS", artifactsToString())//
-				+ Item.trace_list("\nCOMMENTS", commentsToString());
+				+ Item.trace_list("\nVALUES", itemsToString(values))//
+				+ Item.trace_list("\nLINKS", itemsToString(links))//
+				+ Item.trace_list("\nATTACHMENTS", itemsToString(attachments))//
+				+ Item.trace_list("\nSUBSCRIBERS", itemsToString(subscribers))//
+				+ Item.trace_list("\nARTIFACTS", itemsToString(artifacts))//
+				+ Item.trace_list("\nAPPROVALS", itemsToString(approvals))//
+				+ Item.trace_list("\nCOMMENTS", itemsToString(comments));
 	}
 
-	private String valuesToString() {
+	private String itemsToString(Collection<? extends Item> items) {
 		String result = new String();
 		int n = 0;
-		for (Value l : values) {
+		for (Item i : items) {
 			if (result.isEmpty()) {
-				result = Item.trace(n++, l);
+				result = Item.trace(n++, i);
 			} else {
-				result = result + Item.SEP + Item.trace(n++, l);
-			}
-		}
-		return result;
-	}
-
-	private String linksToString() {
-		String result = new String();
-		int n = 0;
-		for (Link l : links) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, l);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, l);
-			}
-		}
-		return result;
-	}
-	
-	private String attachmentsToString() {
-		String result = new String();
-		int n = 0;
-		for (Attachment l : attachments) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, l);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, l);
-			}
-		}
-		return result;
-	}
-
-	private String artifactsToString() {
-		String result = new String();
-		int n = 0;
-		for (Artifact l : artifacts) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, l);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, l);
-			}
-		}
-		return result;
-	}
-
-	private String commentsToString() {
-		String result = new String();
-		int n = 0;
-		for (Comment l : comments) {
-			if (result.isEmpty()) {
-				result = Item.trace(n++, l);
-			} else {
-				result = result + Item.SEP + Item.trace(n++, l);
+				result = result + Item.SEP + Item.trace(n++, i);
 			}
 		}
 		return result;
@@ -286,6 +237,14 @@ public class TaskVersion extends Item implements Serializable {
 
 	public Collection<Artifact> getArtifacts() {
 		return artifacts;
+	}
+
+	public void addSubscriber(Member subscriber) {
+		subscribers.add(subscriber);
+	}
+
+	public Collection<Member> getSubscribers() {
+		return subscribers;
 	}
 
 	public void addComment(Comment comment) {

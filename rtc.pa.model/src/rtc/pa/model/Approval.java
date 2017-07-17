@@ -17,36 +17,46 @@
 package rtc.pa.model;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 public class Approval extends Item implements Serializable {
 
 	private static final long serialVersionUID = -7116824774676758450L;
 
+	private String type;
+	private String state;
+	private Timestamp due;
 	private Member approver;
-	private String name;
-	// TODO: rest of properties
 
 	public String toString() {
 		return super.toString()//
-				+ Item.SEP + Item.trace("approver", approver)//
-				+ Item.SEP + Item.trace("name", name);
+				+ Item.SEP + Item.trace("type", type)//
+				+ Item.SEP + Item.trace("state", state)//
+				+ Item.SEP + Item.trace("due date", due)//
+				+ Item.SEP + Item.trace("approver", approver);
 	}
 
 	public Approval(//
-			String sourceId, //
-			Member approver, //
-			String name) {
+			String sourceId, // ,
+			String type, //
+			Timestamp due, //
+			Member approver) {
 		super(sourceId);
+		this.type = type;
+		this.due = due;
 		this.approver = approver;
-		this.name = name;
+	}
+
+	public String getType() {
+		return this.type;
+	}
+
+	public Timestamp getDue() {
+		return this.due;
 	}
 
 	public Member getApprover() {
 		return this.approver;
-	}
-
-	public String getName() {
-		return this.name;
 	}
 
 }

@@ -1,6 +1,5 @@
 package rtc.pa.read;
 
-import java.net.URI;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,10 +46,10 @@ import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemReferences;
 import com.ibm.team.workitem.common.model.Identifier;
-import com.ibm.team.workitem.common.model.WorkItemEndPoints;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
+import rtc.pa.model.Approval;
 import rtc.pa.model.Artifact;
 import rtc.pa.model.Attachment;
 import rtc.pa.model.Attribute;
@@ -212,13 +211,13 @@ public class WorkItemHelper {
 		if (null != result)
 			return result;
 		//
-		// Links
+		// Links (includes attachments and artifacts (aka URIs)
 		//
-		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
+		result = readLinks(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version, dir);
 		if (null != result)
 			return result;
 		//
-		// TODO: Comments
+		// Comments
 		//
 		for (IComment comment : w.getComments().getContents()) {
 			version.addComment(new Comment(//
@@ -229,29 +228,27 @@ public class WorkItemHelper {
 			));
 		}
 		//
-		// TODO: Approvals
+		// Approvals
 		//
 		IApprovals approvals = w.getApprovals();
+		IApprovalDescriptor descriptor;
 		for (IApproval approval : approvals.getContents()) {
-			approval.getApprover();
-			IApprovalDescriptor descriptor = approval.getDescriptor();
-			descriptor.getDueDate();
-			descriptor.getName();
-			descriptor.getTypeIdentifier();
-			approval.getStateIdentifier();
+			descriptor = approval.getDescriptor();
+			version.addApproval(new Approval(//
+					descriptor.getName(), //
+					descriptor.getTypeIdentifier(), //
+					descriptor.getDueDate(), //
+					p.getMember(approval.getApprover().getItemId().getUuidValue())//
+			));
 		}
 		//
-		// TODO: Attachments
-		//
-		// result = readAttachments(w, repo, pa, wiClient, wiCommon,
-		// itemManager, monitor, p, version, dir);
-		// if (null != result)
-		// return result;
-		//
-		// TODO: Subscribers
+		// Subscribers
 		//
 		ISubscriptions subscriptions = w.getSubscriptions();
 		IContributorHandle[] subscribers = subscriptions.getContents();
+		for (IContributorHandle subscriber : subscribers) {
+			version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
+		}
 		//
 		// Save
 		//
@@ -326,9 +323,10 @@ public class WorkItemHelper {
 	}
 
 	private static String readLinks(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
-			TaskVersion version) {
+			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, TaskVersion version,
+			String dir) {
 
+		String result;
 		IWorkItemReferences references;
 		ILink link;
 		try {
@@ -368,6 +366,10 @@ public class WorkItemHelper {
 								e.printStackTrace();
 								return "can't resolve attachment handle";
 							}
+							result = AttachmentHelper.saveAttachment(attachment, dir, monitor);
+							if (null != result) {
+								return "error saving attachment: " + result;
+							}
 							version.addAttachment(new Attachment(//
 									"" + attachment.getId(), //
 									attachment.getName(), //
@@ -391,44 +393,6 @@ public class WorkItemHelper {
 						}
 					}
 				}
-			}
-		}
-		return null;
-	}
-
-	private static String readAttachments(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, TaskVersion version,
-			String dir) {
-
-		IWorkItemReferences wiReferences;
-		try {
-			wiReferences = wiCommon.resolveWorkItemReferences(w, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "problem resolving references for workitem " + version.getTask().getId();
-		}
-		IItemHandle referencedItem;
-		List<IReference> references = wiReferences.getReferences(WorkItemEndPoints.ATTACHMENT);
-		for (IReference ref : references) {
-			Object resolved = ref.resolve();
-			referencedItem = ((IItemReference) ref).getReferencedItem();
-			if (referencedItem instanceof IAttachmentHandle) {
-				IAttachmentHandle handle = (IAttachmentHandle) resolved;
-				IAttachment attachment;
-				try {
-					attachment = wiCommon.getAuditableCommon().resolveAuditable(handle, IAttachment.DEFAULT_PROFILE,
-							monitor);
-				} catch (TeamRepositoryException e) {
-					e.printStackTrace();
-					return "can't resolve attachment handle";
-				}
-				attachment.getOrigin();// = repo
-				attachment.getCreationDate();
-				attachment.getCreator();
-				attachment.getDescription();
-				attachment.getId();
-				attachment.getName();
-				monitor.out("\t\tjust added attachment for " + version.getTask().getId());
 			}
 		}
 		return null;

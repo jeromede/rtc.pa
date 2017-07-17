@@ -33,6 +33,8 @@ public class Attachment extends Item implements Serializable {
 
 	public String toString() {
 		return super.toString()//
+				+ Item.SEP + Item.trace("name", name)//
+				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("creator", creator)//
 				+ Item.SEP + Item.trace("creation date", creation);
 	}
