@@ -137,6 +137,9 @@ public class WriteIt {
 			return "problem while getting workitem types";
 		}
 		StateHelper.readWorkItemTypes(pa, wiClient, wiCommon, monitor);
+		//
+		// TODO: match attributes
+		//
 		return null;
 	}
 

@@ -65,8 +65,9 @@ public class StateHelper {
 			String state0, String state1) throws TeamRepositoryException {
 
 		//
-		// Expansive shortcut
-		// TODO: refactor workitem state change
+		// This is an expansive shortcut
+		// TODO: refactor workitem state change (create a model, read matching
+		// file... still some design to think about)
 		//
 
 		//

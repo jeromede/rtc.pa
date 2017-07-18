@@ -34,6 +34,7 @@ import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
 import rtc.pa.model.TaskVersion;
+import rtc.pa.model.Value;
 import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemHelper {
@@ -131,6 +132,18 @@ public class WorkItemHelper {
 			return ("error fetching created work item");
 		}
 		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
+		//
+		// TODO: links
+		//
+		//
+		// TODO: attachments
+		//
+		//
+		// TODO: artifacts
+		//
+		//
+		// TODO: approvals
+		//
 		System.out.println("Just created workitem: " + wi.getId());
 		return null;
 	}
@@ -243,6 +256,16 @@ public class WorkItemHelper {
 		//
 		// TODO: values (custom attributes)
 		//
+		for (Value val : version.getValues()) {
+			IAttribute attribute = (IAttribute) val.getAttribute().getExternalObject();
+			monitor.out(attribute.getIdentifier() + " : " + attribute.getAttributeType());
+			if (wi.hasAttribute(attribute)) {
+				wi.setValue(attribute, val.getValue());
+				monitor.out("\t\t= " + val.getValue());
+			} else {
+				monitor.out("\t\t... no!");
+			}
+		}
 		//
 		// TODO: comments
 		//
