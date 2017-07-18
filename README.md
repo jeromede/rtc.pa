@@ -1,8 +1,8 @@
 # Status
 
-Read to serialized file (and directory for attachments) works.
+Reading a project area to a file (and directory for attachments) works.
 
-Write in development (barely usable yet).
+Writing is still in development (barely usable yet).
 
 # What
 
@@ -93,6 +93,6 @@ You need the real project area URL. For that:
   
 # Design
 
-A read program reads the source PA and creates a model instance in memory, and then serializes it in a local file.
+A read program reads the source PA and creates a model instance in memory, and then serializes it to a local file. The attachments to the projects are saved to a directory.
 
-A write program reads the above local file, a file matching the user IDs before to the one after, and then writes to the target PA.
+A write program reads the above local files, and, given a file matching each user ID before (source PA) and after (target PA), writes to the target PA.
