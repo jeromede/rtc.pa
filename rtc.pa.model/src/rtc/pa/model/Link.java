@@ -22,7 +22,7 @@ public class Link extends Item implements Serializable {
 
 	private static final long serialVersionUID = 4250604954024032992L;
 
-	private transient String targetId;
+	private String targetId;
 	private Task target = null;
 	private String type;
 	private String comment;
@@ -65,7 +65,6 @@ public class Link extends Item implements Serializable {
 
 	public void resolve(Task target) {
 		this.target = target;
-		this.targetId = null;
 	}
 
 	public Task getTarget() {

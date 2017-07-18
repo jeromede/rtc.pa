@@ -74,9 +74,18 @@ public class Project extends Item implements Serializable {
 	public void resolve() {
 		for (Task task : tasks.values()) {
 			for (Link link : task.getLinks()) {
-				System.out.println("resolve link (type: " + link.getType() + ") " + link.getTargetId() + " from "
-						+ task.getId() + " to " + this.getTask(link.getTargetId()).getId());
+				System.out.println("resolve link (type: " //
+						+ link.getType() //
+						+ ") " //
+						+ link.getTargetId() //
+						+ " from " + task.getId() //
+				);
 				link.resolve(this.getTask(link.getTargetId()));
+				if (null == link.getTarget()) {
+					System.out.println("\tto unknown target work item (" + link.getTargetId() + ')');
+				} else {
+					System.out.println("\tto " + link.getTarget().getId());
+				}
 			}
 		}
 	}

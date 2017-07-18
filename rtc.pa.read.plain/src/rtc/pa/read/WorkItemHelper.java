@@ -112,7 +112,7 @@ public class WorkItemHelper {
 				p.getMember(wi.getCreator().getItemId().getUuidValue()), //
 				wi.getCreationDate());
 		p.putTask(task);
-		monitor.out("\tjust added work item " + task.getId());
+		monitor.out("\tjust added work item " + task.getSourceId() + "(" + task.getId() + ')');
 		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 		//
 		// Links (includes attachments and artifacts (aka URIs)
@@ -254,7 +254,8 @@ public class WorkItemHelper {
 		// Save
 		//
 		p.putTaskVersion(version);
-		monitor.out("\tjust added work item version " + task.getId());
+		monitor.out("\tjust added work item " + version.getSourceId() + "(" + version.getType() + " - "
+				+ version.getTask().getId() + ')');
 
 		return null;
 	}
