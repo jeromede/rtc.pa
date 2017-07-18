@@ -46,19 +46,19 @@ public class Main {
 		Map<String, String> matchingUserIDs = new HashMap<String, String>();
 		String message;
 
-		String url, proj, user, password;
-		String ser, match;
+		String url, proj, user, password, ser, dir, match;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
 			ser = new String(args[4]);
-			match = new String(args[5]);
+			dir = new String(args[5]);
+			match = new String(args[6]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password serialization_file members_file");
+			monitor.err("arguments: url user password serialization_file attachments_dir members_file");
 			monitor.err(
-					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser members.txt");
+					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt");
 			monitor.err(
 					"note: the last argument has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
 			monitor.err("bad args:");
@@ -89,7 +89,7 @@ public class Main {
 			IProjectArea pa = null;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs);
+				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs, dir);
 			} else {
 				message = uri + " is not a project area";
 			}

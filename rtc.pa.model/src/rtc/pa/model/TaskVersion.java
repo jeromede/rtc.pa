@@ -184,6 +184,10 @@ public class TaskVersion extends Item implements Serializable {
 		return this.resolution;
 	}
 
+	public String getResolution2() {
+		return this.resolution2;
+	}
+
 	public void addValue(Value value) {
 		values.add(value);
 	}

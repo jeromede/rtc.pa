@@ -1,5 +1,7 @@
 package rtc.pa.write;
 
+import java.time.Instant;
+
 import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IDevelopmentLine;
 import com.ibm.team.process.common.IIteration;
@@ -17,9 +19,9 @@ public class TimelineHelper {
 			Line line) {
 
 		IDevelopmentLine devLine = service.createDevelopmentLine();
-		devLine.setId(line.getAlternateId());
+		devLine.setId(line.getAlternateId() + " " + Instant.now());
 		if (null != line.getName()) {
-			devLine.setName(line.getName());
+			devLine.setName(line.getName() + " " + Instant.now());
 		}
 		if (null != line.getEnds()) {
 			devLine.setEndDate(line.getEnds());
@@ -51,9 +53,9 @@ public class TimelineHelper {
 			Line line, Iteration parent, Iteration ite) {
 
 		IIteration iterationC = service.createIteration();
-		iterationC.setId(ite.getAlternateId());
+		iterationC.setId(ite.getAlternateId() + " " + Instant.now());
 		if (null != ite.getName()) {
-			iterationC.setName(ite.getName());
+			iterationC.setName(ite.getName() + " " + Instant.now());
 		}
 		if (null != ite.getStarts()) {
 			iterationC.setStartDate(ite.getStarts());

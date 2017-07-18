@@ -1,9 +1,12 @@
 package rtc.pa.write;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.ibm.team.foundation.common.text.XMLString;
+import com.ibm.team.process.common.IIteration;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
@@ -16,6 +19,9 @@ import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IPriority;
+import com.ibm.team.workitem.common.model.IResolution;
+import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -23,6 +29,7 @@ import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
 
 import rtc.pa.model.Category;
+import rtc.pa.model.Iteration;
 import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -133,15 +140,18 @@ public class WorkItemHelper {
 			IWorkItem wi, TaskVersion version) {
 
 		monitor.out("Create new work item version for (summary): " + version.getSummary());
+		//
+		// migration specifics
+		//
 		IAttribute modifierInSource = null;
 		IAttribute modifiedInSource = null;
-		// List<IAttributeHandle> customAttributes = wi.getCustomAttributes();
 		try {
 			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
 			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return ("can't find special attributes to reflect modification in source");
+			return ("can't find special custom attributes <rtc.pa.modifier> and <rtc.pa.modified>"
+					+ " that shoud exist in target to reflect history dates from source");
 		}
 		if (null != modifiedInSource) {
 			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
@@ -149,21 +159,51 @@ public class WorkItemHelper {
 		if (null != modifierInSource) {
 			wi.setValue(modifierInSource, getC(repo, version.getModifier()));
 		}
+		//
+		// summary
+		//
 		if (null == version.getSummary()) {
 			wi.setHTMLSummary(null);
 		} else {
 			wi.setHTMLSummary(XMLString.createFromXMLText(version.getSummary()));
 		}
+		//
+		// description
+		//
 		if (null == version.getDescription()) {
 			wi.setHTMLDescription(null);
 		} else {
 			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
 		}
-		// TODO
-		// Identifier<IPriority> priority;
-		// wi.setPriority(priority);
-		Category cat = version.getCategory();
+		//
+		// priority
+		//
+		Identifier<IPriority> priorityId = Identifier.create(IPriority.class, version.getPriority());
+		wi.setPriority(priorityId);
+		//
+		// severity
+		//
+		Identifier<ISeverity> severityId = Identifier.create(ISeverity.class, version.getSeverity());
+		wi.setSeverity(severityId);
+		//
+		// tags
+		//
+		List<String> tags = new ArrayList<String>(version.getTags().size());
+		tags.addAll(version.getTags());
+		wi.setTags2(tags);
+		//
+		// due date
+		//
+		wi.setDueDate(version.getDue());
+		//
+		// duration
+		//
+		wi.setDuration(version.getDuration());
+		//
+		// category
+		//
 		ICategory category;
+		Category cat = version.getCategory();
 		if (null == cat) {
 			try {
 				category = wiCommon.findUnassignedCategory(pa, ICategory.FULL_PROFILE, monitor);
@@ -175,6 +215,40 @@ public class WorkItemHelper {
 			category = (ICategory) cat.getExternalObject();
 		}
 		wi.setCategory(category);
+		//
+		// target
+		//
+		IIteration iteration;
+		Iteration target = version.getTarget();
+		if (null == target) {
+			iteration = null;
+		} else {
+			iteration = (IIteration) version.getTarget().getExternalObject();
+		}
+		wi.setTarget(iteration);
+		//
+		// owner
+		//
+		wi.setOwner(getC(repo, version.getOwnedBy()));
+		//
+		// resolution
+		//
+		Identifier<IResolution> resolution2;
+		if (null == version.getResolution2()) {
+			resolution2 = null;
+		} else {
+			resolution2 = Identifier.create(IResolution.class, version.getResolution2());
+		}
+		wi.setResolution2(resolution2);
+		//
+		// TODO: values (custom attributes)
+		//
+		//
+		// TODO: comments
+		//
+		//
+		// TODO: subscribers
+		//
 		return null;
 	}
 

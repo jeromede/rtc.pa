@@ -45,7 +45,7 @@ import rtc.pa.utils.ProgressMonitor;
 public class WriteIt {
 
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
-			Map<String, String> matchingUserIDs) throws TeamRepositoryException, IOException {
+			Map<String, String> matchingUserIDs, String dir) throws TeamRepositoryException, IOException {
 
 		String message;
 
