@@ -159,9 +159,6 @@ public class WorkItemHelper {
 		}
 		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
 		//
-		// TODO: links
-		//
-		//
 		// TODO: attachments
 		//
 		//
