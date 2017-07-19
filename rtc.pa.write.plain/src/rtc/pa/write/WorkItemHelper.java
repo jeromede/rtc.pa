@@ -19,7 +19,9 @@ package rtc.pa.write;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.ibm.team.foundation.common.text.XMLString;
 import com.ibm.team.process.common.IIteration;
@@ -35,6 +37,8 @@ import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.IComment;
+import com.ibm.team.workitem.common.model.IComments;
 import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
@@ -46,6 +50,7 @@ import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
 
 import rtc.pa.model.Category;
+import rtc.pa.model.Comment;
 import rtc.pa.model.Iteration;
 import rtc.pa.model.Literal;
 import rtc.pa.model.Member;
@@ -78,6 +83,7 @@ public class WorkItemHelper {
 		IWorkItemHandle wiHandle;
 		WorkItemWorkingCopy wc;
 		IWorkItem wi = null;
+		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
 		String action;
 		IDetailedStatus s;
 		Identifier<IState> stateId;
@@ -103,7 +109,7 @@ public class WorkItemHelper {
 					}
 				}
 
-				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v);
+				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v, comments);
 
 				if (null != previousState) {
 					if (!state.equals(previousState)) {
@@ -168,7 +174,7 @@ public class WorkItemHelper {
 
 	private static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			IWorkItem wi, TaskVersion version) {
+			IWorkItem wi, TaskVersion version, Map<Timestamp, Comment> currentComments) {
 
 		monitor.out("Create new work item version for (summary): " + version.getSummary());
 		//
@@ -276,7 +282,7 @@ public class WorkItemHelper {
 		//
 		for (Value val : version.getValues()) {
 			IAttribute attribute = (IAttribute) val.getAttribute().getExternalObject();
-			monitor.out(attribute.getIdentifier() + " : " + attribute.getAttributeType());
+			monitor.out('\t' + attribute.getIdentifier() + " : " + attribute.getAttributeType());
 			if (wi.hasAttribute(attribute)) {
 				if (val.getAttribute().isEnum()) {
 					if (null == val.getValue()) {
@@ -302,15 +308,30 @@ public class WorkItemHelper {
 			}
 		}
 		//
-		// TODO: comments
+		// comments
 		//
+		IComments comments = wi.getComments();
+		IComment comment;
+		XMLString signature;
+		for (Comment comm : version.getComments()) {
+			if (!currentComments.containsKey(comm.getCreation())) {
+				signature = XMLString.createFromXMLText("<p>&nbsp;</p><p>&nbsp;</p><p><em>Original "
+						+ comm.getCreation() + " (" + comm.getCreator().getName() + ")</em></p>");
+				comment = comments.createComment(//
+						getC(repo, comm.getCreator()), //
+						XMLString.createFromXMLText(comm.getContent()).concat(signature)//
+				);
+				comments.append(comment);
+				currentComments.put(comm.getCreation(), comm);
+			}
+		}
 		//
 		// TODO: subscribers
 		//
 		return null;
 	}
 
-	static IContributor getC(ITeamRepository repo, Member m) {
+	private static IContributor getC(ITeamRepository repo, Member m) {
 		IContributor c = null;
 		if (null != m) {
 			c = (IContributor) m.getExternalObject();
@@ -322,8 +343,12 @@ public class WorkItemHelper {
 	}
 
 	@SuppressWarnings("deprecation")
-	static void forceState(IWorkItem wi, Identifier<IState> stateId) {
+	private static void forceState(IWorkItem wi, Identifier<IState> stateId) {
 		wi.setState2(stateId); // TOO BAD
+	}
+
+	private static boolean same(Comment c1, Comment c2) {
+		return c1.getCreation() == c2.getCreation();
 	}
 
 }
