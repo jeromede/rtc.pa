@@ -29,6 +29,7 @@ import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.common.IContributor;
+import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IDetailedStatus;
 import com.ibm.team.workitem.client.IWorkItemClient;
@@ -44,6 +45,7 @@ import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.ISeverity;
 import com.ibm.team.workitem.common.model.IState;
+import com.ibm.team.workitem.common.model.ISubscriptions;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.IWorkItemType;
@@ -326,8 +328,32 @@ public class WorkItemHelper {
 			}
 		}
 		//
-		// TODO: subscribers
+		// subscribers
 		//
+		ISubscriptions subscriptions = wi.getSubscriptions();
+		Map<String, IContributorHandle> real = new HashMap<String, IContributorHandle>();
+		Collection<IContributorHandle> toBeRemoved = new ArrayList<IContributorHandle>();
+		IContributorHandle subscriber;
+		for (Member subscr : version.getSubscribers()) {
+			subscriber = (IContributorHandle) getC(repo, subscr).getItemHandle();
+			real.put(subscriber.getItemId().getUuidValue(), subscriber);
+		}
+		for (IContributorHandle contributor : subscriptions.getContents()) {
+			if (!real.containsKey(contributor.getItemId().getUuidValue())) {
+				toBeRemoved.add(contributor);
+			}
+		}
+		for (IContributorHandle contributor : toBeRemoved) {
+			subscriptions.remove(contributor);
+		}
+		subscriptions = wi.getSubscriptions();
+		for (Member subscr : version.getSubscribers()) {
+			subscriber = (IContributorHandle) getC(repo, subscr).getItemHandle();
+			if (!subscriptions.contains(subscriber)) {
+				subscriptions.add(subscriber);
+			}
+		}
+
 		return null;
 	}
 
@@ -345,10 +371,6 @@ public class WorkItemHelper {
 	@SuppressWarnings("deprecation")
 	private static void forceState(IWorkItem wi, Identifier<IState> stateId) {
 		wi.setState2(stateId); // TOO BAD
-	}
-
-	private static boolean same(Comment c1, Comment c2) {
-		return c1.getCreation() == c2.getCreation();
 	}
 
 }
