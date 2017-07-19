@@ -272,7 +272,7 @@ public class WorkItemHelper {
 		}
 		wi.setResolution2(resolution2Id);
 		//
-		// TODO: values (custom attributes)
+		// values (custom attributes)
 		//
 		for (Value val : version.getValues()) {
 			IAttribute attribute = (IAttribute) val.getAttribute().getExternalObject();
