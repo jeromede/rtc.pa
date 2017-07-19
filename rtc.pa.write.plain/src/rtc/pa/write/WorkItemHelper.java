@@ -209,6 +209,9 @@ public class WorkItemHelper {
 		if (null == version.getDescription()) {
 			wi.setHTMLDescription(null);
 		} else {
+			//
+			// TODO: change hyperlinks if needed (bonus?)
+			//
 			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
 		}
 		//
@@ -316,6 +319,9 @@ public class WorkItemHelper {
 			if (!currentComments.containsKey(comm.getCreation())) {
 				signature = XMLString.createFromXMLText("<p>&nbsp;</p><p>&nbsp;</p><p><em>Original "
 						+ comm.getCreation() + " (" + comm.getCreator().getName() + ")</em></p>");
+				//
+				// TODO: change hyperlinks if needed (bonus?)
+				//
 				comment = comments.createComment(//
 						getC(repo, comm.getCreator()), //
 						XMLString.createFromXMLText(comm.getContent()).concat(signature)//
