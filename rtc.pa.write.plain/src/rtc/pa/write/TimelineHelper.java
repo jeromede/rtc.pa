@@ -31,6 +31,7 @@ import rtc.pa.model.Project;
 import rtc.pa.utils.ProgressMonitor;
 
 public class TimelineHelper {
+
 	static String createLine(IProjectArea pa, IProcessItemService service, ProgressMonitor monitor, Project p,
 			Line line) {
 
