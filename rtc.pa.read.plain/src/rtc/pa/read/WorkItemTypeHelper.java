@@ -72,6 +72,11 @@ public class WorkItemTypeHelper {
 		// }
 		// for (Object o : builtIn.getRetrievedItems()) {
 		// }
+		
+		//
+		// Only custom attributes.
+		// Builtin attributes to be read and written through workitem operations.
+		//
 		monitor.out("\t\tcustom attributes for " + t.getIdentifier() + " (" + t.getDisplayName() + "):");
 		List<IAttributeHandle> customAttributeHandles = t.getCustomAttributes();
 		IFetchResult custom = null;
