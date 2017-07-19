@@ -24,9 +24,9 @@ Programs to copy (read then write) content from a source and to a target [Ration
 
 # Build
 
-These programs uses the RTC API. The reading program and the writing programs can log in to different versions of RTC.
+These program (`rtc.pa.connection_test.plain`, `rtc.pa.read.plain` and `rtc.pa.write.plain`) use the RTC API.
 
-For each version of RTC you will need to connect to:
+Each program may need to connect to a specific version of RTC. For each needed version of RTC:
 
 - go to <https://jazz.net/downloads/rational-team-concert>
 - click the version of Rational Team Concert
@@ -36,15 +36,19 @@ For each version of RTC you will need to connect to:
 
 For each Eclipse project needing the API:
 
-- use the correct version of the API jar files for building each Eclipse project where this is needed, for example:
+- use the correct version of the API jar files for building each Eclipse project where this is needed; for example:
   - `rtc.pa.read.plain` connects to an RTC 5.0.2, hence needs the 5.0.2 version of the API
-  - `rtc.pa.write.plain` connects to an RTC 6.0.4, hence needs the 6.0.4 version of the API.
+  - `rtc.pa.write.plain` connects to an RTC 6.0.4, hence needs the 6.0.4 version of the API
+  - `rtc.pa.connection_test.plain` connects to both an RTC 5.0.2 and an RTC 6.0.4, hence the Eclipse project needs to be duplicated, one for the 5.0.2 version of the API, and one for the 6.0.4 version of the API.
   
 Don't try to use a version of the API different from the version of RTC you want to connect to, this won't work.
 
-The version of the API declared in the class paths in this repository is for the latest version of RTC, unziped in `/opt/IBM/RTC-6.0.4/api/`
+The version of the API declared in the class paths of the regular Eclipse projects in this repository corresponds to the latest version of RTC, unziped in `/opt/IBM/RTC-6.0.4/api/`
 
-You will have to change your Eclipse project properties if this doesn't match your local installation.
+Different projects `version*` are already set for different version of the API. This will work if the local installation has the `/opt/IBM/RTC-x.y.z/api/` directories already prepared.
+
+You will have to change your Eclipse project properties if this doesn't match your local installation (or if you are working on a non-UNIX plaform).
+
 
 # Usage
 
@@ -58,11 +62,11 @@ The needed arguments are:
 
 For example:
 
-`https://hub.jazz.net/ccm01 "UU | PPP" jazz_admin iloveyou`
+`https://hub.jazz.net/ccm13 "UU | PPP" jazz_admin iloveyou`
 
 ## Preconditions
 
-The target project areas should already exist, with its users.
+The target project area should already exist, with its users.
 
 ## Workaround for work items history
 
