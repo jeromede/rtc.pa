@@ -16,14 +16,10 @@
 
 package rtc.pa.write;
 
-import java.util.List;
-
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.common.TeamRepositoryException;
-import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IState;
-import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.workflow.IWorkflowAction;
 import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
@@ -31,35 +27,6 @@ import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
 import rtc.pa.utils.ProgressMonitor;
 
 public class StateHelper {
-
-	public static String readWorkItemTypes(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
-			ProgressMonitor monitor) {
-
-		monitor.out("Reading workflows...");
-		IWorkflowInfo wf;
-		List<IWorkItemType> allWorkItemTypes;
-		try {
-			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
-			for (IWorkItemType t : allWorkItemTypes) {
-				monitor.out("\t" + t.getDisplayName() + " (" + t.getIdentifier() + ')');
-				wf = wiCommon.getWorkflow(t.getIdentifier(), pa, monitor);
-				Identifier<IState>[] states = wf.getAllStateIds();
-				for (Identifier<IState> state : states) {
-					monitor.out("\t\tstate: " + state.getStringIdentifier());
-					Identifier<IWorkflowAction>[] actions = wf.getActionIds(state);
-					for (Identifier<IWorkflowAction> action : actions) {
-						monitor.out("\t\t\taction: " + action.getStringIdentifier());
-						Identifier<IState> result = wf.getActionResultState(action);
-						monitor.out("\t\t\t\t to state: " + result.getStringIdentifier());
-					}
-				}
-			}
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "problem while getting workflows";
-		}
-		return null;
-	}
 
 	public static String action(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, String type,
 			String state0, String state1) throws TeamRepositoryException {
@@ -107,7 +74,6 @@ public class StateHelper {
 			String type, String state) throws TeamRepositoryException {
 
 		monitor.out("\t\tlooking for state");
-
 		//
 		// State matching: hack for JazzHub -> RTC 6.0.x (some state ids have
 		// changed)

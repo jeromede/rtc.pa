@@ -18,7 +18,6 @@ package rtc.pa.write;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.ibm.team.process.client.IProcessItemService;
@@ -31,7 +30,6 @@ import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.model.IWorkItemType;
 
 import rtc.pa.model.Category;
 import rtc.pa.model.Iteration;
@@ -39,7 +37,6 @@ import rtc.pa.model.Line;
 import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
-import rtc.pa.model.TaskType;
 import rtc.pa.utils.ProgressMonitor;
 
 public class WriteIt {
@@ -54,12 +51,13 @@ public class WriteIt {
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
-		// IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
+		// IAuditableClient auditableClient = (IAuditableClient)
+		// repo.getClientLibrary(IAuditableClient.class);
 
 		message = matchMembers(repo, pa, monitor, p, matchingUserIDs);
 		if (null != message)
 			return message;
-		message = matchWorkItemTypes(repo, pa, wiClient, wiCommon, monitor, p);
+		message = WorkItemTypeHelper.matchWorkItemTypes(repo, pa, wiClient, monitor, p);
 		if (null != message)
 			return message;
 		message = writeCategories(repo, pa, wiCommon, monitor, p);
@@ -111,35 +109,6 @@ public class WriteIt {
 			monitor.out("User \"" + oldId + "\" (\"" + m.getName() + "\") is now \"" + member.getUserId() + "\" (\""
 					+ member.getName() + "\")");
 		}
-		return null;
-	}
-
-	private static String matchWorkItemTypes(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p) {
-
-		monitor.out("The workitem types are:");
-		List<IWorkItemType> allWorkItemTypes;
-		TaskType taskType;
-		String type;
-		try {
-			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
-			for (IWorkItemType t : allWorkItemTypes) {
-				type = t.getIdentifier();
-				taskType = p.getTaskType(type);
-				if (null == taskType) {
-					return "can't find workitem type \"" + type + "\" in target project";
-				}
-				taskType.setExternalObject(t.getIdentifier(), t);
-				monitor.out("\t" + t.getDisplayName() + " (" + type + ')');
-			}
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "problem while getting workitem types";
-		}
-		StateHelper.readWorkItemTypes(pa, wiClient, wiCommon, monitor);
-		//
-		// TODO: match attributes
-		//
 		return null;
 	}
 

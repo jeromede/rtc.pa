@@ -35,6 +35,7 @@ import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.ICategory;
+import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IPriority;
 import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.ISeverity;
@@ -46,6 +47,7 @@ import com.ibm.team.workitem.common.model.Identifier;
 
 import rtc.pa.model.Category;
 import rtc.pa.model.Iteration;
+import rtc.pa.model.Literal;
 import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -262,13 +264,13 @@ public class WorkItemHelper {
 		//
 		// resolution
 		//
-		Identifier<IResolution> resolution2;
+		Identifier<IResolution> resolution2Id;
 		if (null == version.getResolution2()) {
-			resolution2 = null;
+			resolution2Id = null;
 		} else {
-			resolution2 = Identifier.create(IResolution.class, version.getResolution2());
+			resolution2Id = Identifier.create(IResolution.class, version.getResolution2());
 		}
-		wi.setResolution2(resolution2);
+		wi.setResolution2(resolution2Id);
 		//
 		// TODO: values (custom attributes)
 		//
@@ -276,7 +278,24 @@ public class WorkItemHelper {
 			IAttribute attribute = (IAttribute) val.getAttribute().getExternalObject();
 			monitor.out(attribute.getIdentifier() + " : " + attribute.getAttributeType());
 			if (wi.hasAttribute(attribute)) {
-				wi.setValue(attribute, val.getValue());
+				if (val.getAttribute().isEnum()) {
+					if (null == val.getValue()) {
+						wi.setValue(attribute, null);
+					} else {
+						@SuppressWarnings("unchecked")
+						Identifier<? extends ILiteral> literalId = //
+								(Identifier<? extends ILiteral>) //
+								val.getAttribute()//
+										.getLiteral(//
+												((Literal) val.getValue())//
+														.getSourceId()//
+										)//
+										.getExternalObject();
+						wi.setValue(attribute, literalId);
+					}
+				} else {
+					wi.setValue(attribute, val.getValue());
+				}
 				monitor.out("\t\t= " + val.getValue());
 			} else {
 				monitor.out("\t\t... no!");
