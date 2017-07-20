@@ -76,6 +76,7 @@ public class WorkItemHelper {
 			break;
 		}
 		if (null == firstVersion) {
+			monitor.out("\tno first version!");
 			return null;
 		}
 		IWorkItemType type = (IWorkItemType) firstVersion.getType().getExternalObject();
@@ -106,7 +107,7 @@ public class WorkItemHelper {
 
 				if (null != previousType) {
 					if (!type.getIdentifier().equals(previousType.getIdentifier())) {
-						monitor.out("Changing work item type");
+						monitor.out("\tchanging work item type");
 						wiCommon.updateWorkItemType(wi, type, previousType, monitor);
 					}
 				}
@@ -158,6 +159,7 @@ public class WorkItemHelper {
 			return ("error fetching created work item");
 		}
 		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
+		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
 		//
 		// TODO: attachments
 		//
@@ -318,7 +320,7 @@ public class WorkItemHelper {
 		for (Comment comm : version.getComments()) {
 			if (!currentComments.containsKey(comm.getCreation())) {
 				signature = XMLString.createFromXMLText("<p>&nbsp;</p><p>&nbsp;</p><p><em>Original "
-						+ comm.getCreation() + " (" + comm.getCreator().getName() + ")</em></p>");
+						+ comm.getCreation() + " (" + getC(repo, comm.getCreator()).getName() + ")</em></p>");
 				//
 				// TODO: change hyperlinks if needed (bonus?)
 				//

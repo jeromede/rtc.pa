@@ -16,11 +16,25 @@
 
 package rtc.pa.write;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.ibm.team.links.common.IItemReference;
+import com.ibm.team.links.common.factory.IReferenceFactory;
+import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.ITeamRepository;
+import com.ibm.team.repository.common.TeamRepositoryException;
+import com.ibm.team.workitem.client.IDetailedStatus;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
+import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.IWorkItem;
+import com.ibm.team.workitem.common.model.IWorkItemHandle;
+import com.ibm.team.workitem.common.model.WorkItemEndPoints;
+import com.ibm.team.workitem.common.model.WorkItemLinkTypes;
 
 import rtc.pa.model.Link;
 import rtc.pa.model.Project;
@@ -29,97 +43,73 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class LinkHelper {
 
+	@SuppressWarnings("serial")
+	private static final Map<String, IEndPointDescriptor> linkTypes = Collections
+			.unmodifiableMap(new HashMap<String, IEndPointDescriptor>() {
+				{
+					put(WorkItemLinkTypes.BLOCKS_WORK_ITEM, WorkItemEndPoints.BLOCKS_WORK_ITEM);
+					put(WorkItemLinkTypes.COPIED_WORK_ITEM, WorkItemEndPoints.COPIED_WORK_ITEM);
+					put(WorkItemLinkTypes.DUPLICATE_WORK_ITEM, WorkItemEndPoints.DUPLICATE_WORK_ITEM);
+					put(WorkItemLinkTypes.PARENT_WORK_ITEM, WorkItemEndPoints.PARENT_WORK_ITEM);
+					put(WorkItemLinkTypes.RELATED_WORK_ITEM, WorkItemEndPoints.RESOLVES_WORK_ITEM);
+					put(WorkItemLinkTypes.MENTIONS, WorkItemEndPoints.MENTIONS);
+				}
+			});
+
 	public static String createLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task t) {
+			Task task) {
 
 		//
-		// TODO: links
+		// links
 		//
-		for (Link l : t.getLinks()) {
-			l.getTarget();
+		monitor.out("About to create links from work item " + task.getId() + " (old ID)");
+		IWorkItem wi = (IWorkItem) task.getExternalObject();
+		if (null == wi) {
+			monitor.out(
+					"SHOUD NOT HAPPEN: null wi as external object for migration task " + task.getId() + " (old Id) " + task.getExternalId());
+			return null;
 		}
-
-		return null;
-	}
-
-/* *********
-	private static String readLinks(IWorkItem w, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, Task task,
-			String dir) {
-
-		String result;
-		IWorkItemReferences references;
-		ILink link;
+		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
 		try {
-			references = wiCommon.resolveWorkItemReferences(w, monitor);
+			wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "problem resolving references for workitem " + task.getId();
+			return "impossible to initialize a work item copy";
 		}
-		IItemHandle referencedItem;
-		IWorkItemHandle referencedWorkItem;
-		IAttachmentHandle attachmentHandle;
-		IAttachment attachment;
-		IURIReference referencedURI;
-		for (IEndPointDescriptor iEndPointDescriptor : references.getTypes()) {
-			if (iEndPointDescriptor.isTarget()) {
-				List<IReference> typedReferences = references.getReferences(iEndPointDescriptor);
-				for (IReference ref : typedReferences) {
-					link = ref.getLink();
-					if (ref.isItemReference()) {
-						referencedItem = ((IItemReference) ref).getReferencedItem();
-						if (referencedItem instanceof IWorkItemHandle) {
-							referencedWorkItem = (IWorkItemHandle) referencedItem;
-							task.addLink(new Link(//
-									link.getItemId().getUuidValue(), //
-									referencedWorkItem.getItemId().getUuidValue(), //
-									link.getLinkType().getLinkTypeId(), //
-									ref.getComment()));
-							monitor.out("\t\tjust added link (type: " + link.getLinkType().getLinkTypeId() + ") for "
-									+ task.getSourceId() + " (" + task.getId() + ") to "
-									+ referencedWorkItem.getItemId().getUuidValue());
-						} else if (referencedItem instanceof IAttachmentHandle) {
-							attachmentHandle = (IAttachmentHandle) ref.resolve();
-							try {
-								attachment = wiCommon.getAuditableCommon().resolveAuditable(attachmentHandle,
-										IAttachment.DEFAULT_PROFILE, monitor);
-							} catch (TeamRepositoryException e) {
-								e.printStackTrace();
-								return "can't resolve attachment handle";
-							}
-							result = AttachmentHelper.saveAttachment(attachment, dir, monitor);
-							if (null != result) {
-								return "error saving attachment: " + result;
-							}
-							task.addAttachment(new Attachment(//
-									"" + attachment.getId(), //
-									attachment.getName(), //
-									attachment.getDescription(), //
-									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
-									attachment.getCreationDate() //
-							));
-							monitor.out("\t\tjust added attachment for " + task.getId());
-						}
-					} else if (ref.isURIReference()) {
-						referencedURI = ((IURIReference) ref);
-						if (!referencedURI.getURI().toString()
-								.contains("http://www.ibm.com/support/knowledgecenter/")) {
-							task.addArtifact(new Artifact(//
-									link.getItemId().getUuidValue(), //
-									referencedURI.getURI(), referencedURI.getComment()//
-							));
-							monitor.out("\t\tjust added artifact" + " for " + task.getSourceId() + " (" + task.getId()
-									+ ") to " + referencedURI.getURI().toString() + "(" + referencedURI.getComment()
-									+ ')');
-						}
-					}
-				}
+		try {
+			WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
+			IWorkItem otherWi;
+			IItemReference reference;
+			IEndPointDescriptor endpoint;
+			for (Link link : task.getLinks()) {
+				endpoint = linkTypes.get(link.getType());
+				if (null == endpoint)
+					continue;
+				if (null == link.getTarget())
+					continue;
+				otherWi = (IWorkItem) link.getTarget().getExternalObject();
+				if (null == otherWi)
+					continue;
+				reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
+				monitor.out(
+						"\tabout to create link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
+				wc.getReferences().add(endpoint, reference);
+				monitor.out("\tcreated link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
 			}
+			IDetailedStatus s = wc.save(monitor);
+			if (!s.isOK()) {
+				s.getException().printStackTrace();
+				return ("error adding links to new work item " + wc.getWorkItem().getId());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ("error when creating work item link");
+		} finally {
+			wiCopier.disconnect(wiH);
 		}
+		monitor.out("\tlinks from work item " + task.getId() + " (old ID) created.");
 		return null;
 	}
-
-********* */
 
 }

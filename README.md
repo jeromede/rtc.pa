@@ -100,3 +100,7 @@ You need the real project area URL. For that:
 A read program reads the source PA and creates a model instance in memory, and then serializes it to a local file. The attachments to the projects are saved to a directory.
 
 A write program reads the above local files, and, given a file matching each user ID before (source PA) and after (target PA), writes to the target PA.
+
+# Thanks
+
+A special _Danke_ to [Ralph Schoon](/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](/jazz-community) valuable help.
