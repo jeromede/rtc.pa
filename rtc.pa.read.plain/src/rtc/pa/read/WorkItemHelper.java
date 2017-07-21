@@ -67,6 +67,7 @@ public class WorkItemHelper {
 	static String readWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
+		String result;
 		monitor.out("Now reading work items...");
 		IAuditableClient auditableClient = (IAuditableClient) repo.getClientLibrary(IAuditableClient.class);
 		IQueryClient queryClient = (IQueryClient) repo.getClientLibrary(IQueryClient.class);
@@ -82,7 +83,6 @@ public class WorkItemHelper {
 		IQueryResult<IResolvedResult<IWorkItem>> results = queryClient.getResolvedExpressionResults(pa, expression,
 				IWorkItem.FULL_PROFILE);
 		results.setLimit(Integer.MAX_VALUE);
-		String result;
 		try {
 			while (results.hasNext(monitor)) {
 				result = readWorkItem(results.next(monitor).getItem(), repo, pa, wiClient, wiCommon, itemManager,
@@ -102,6 +102,7 @@ public class WorkItemHelper {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
 		String result;
+		monitor.out("\tNow reading work item " + wi.getId());
 		Task task;
 		//
 		// Task
@@ -112,8 +113,10 @@ public class WorkItemHelper {
 				p.getMember(wi.getCreator().getItemId().getUuidValue()), //
 				wi.getCreationDate());
 		p.putTask(task);
-		monitor.out("\tjust added work item " + task.getSourceId() + "(" + task.getId() + ')');
-		readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		monitor.out("\t... just added work item " + task.getSourceId() + " (" + task.getId() + ')');
+		result = readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		if (null != result)
+			return result;
 		//
 		// Links (includes attachments and artifacts (aka URIs)
 		//
@@ -134,44 +137,66 @@ public class WorkItemHelper {
 					p.getMember(approval.getApprover().getItemId().getUuidValue())//
 			));
 		}
+		monitor.out("\t... work item " + wi.getId() + " read.");
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task, String dir) {
 
+		String result;
 		List<IWorkItem> workItems;
 		try {
-			workItems = itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(wi, monitor), monitor);
-		} catch (TeamRepositoryException e1) {
-			e1.printStackTrace();
+			workItems = getHistory(wi, itemManager, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
 			return "error reading history of work item " + wi.getId();
 		}
-		String result;
+		if (workItems.isEmpty()) {
+			// Paranoid check, should not happen...
+			monitor.out("\t(looks like the version list is empty, switching to the work item as unique version)");
+			result = readWorkItemVersion(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+			if (null != result)
+				return result;		
+		} else {
 		for (IWorkItem w : workItems) {
+			if (null == w)
+				continue;
 			result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 			if (null != result)
 				return result;
 		}
+		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<IWorkItem> getHistory(IWorkItem wi, IItemManager itemManager, ProgressMonitor monitor)
+			throws TeamRepositoryException {
+		return itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(wi, monitor), monitor);
 	}
 
 	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task, String dir) {
 
+		monitor.out("\t\tNow reading work item version for " + w.getWorkItemType() + " " + w.getId() + " ...");
 		String result;
 		XMLString summary = w.getHTMLSummary();
+		monitor.out("\t\t\tsummary read");
 		XMLString description = w.getHTMLDescription();
+		monitor.out("\t\t\tdescription read");
 		Identifier<IPriority> priority = w.getPriority();
+		monitor.out("\t\t\tpriority read");
 		Identifier<ISeverity> severity = w.getSeverity();
+		monitor.out("\t\t\tseverity read");
 		List<String> tags2 = w.getTags2();
 		List<String> tags = new ArrayList<String>();
 		for (String t : tags2) {
 			tags.add(t);
 		}
+		monitor.out("\t\t\ttags read");
 		ICategory category;
 		try {
 			category = (ICategory) itemManager.fetchCompleteItem(w.getCategory(), IItemManager.DEFAULT, monitor);
@@ -179,7 +204,9 @@ public class WorkItemHelper {
 			e.printStackTrace();
 			return "can't fetch category from handle";
 		}
+		monitor.out("\t\t\tcategory read");
 		IIterationHandle target = w.getTarget();
+		monitor.out("\t\t\ttarget iteration read");
 		IContributor ownedBy;
 		try {
 			ownedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getOwner(),
@@ -188,6 +215,7 @@ public class WorkItemHelper {
 			e.printStackTrace();
 			return "problem retrieving owner for workitem " + task.getId();
 		}
+		monitor.out("\t\t\towner read");
 		IContributor resolvedBy;
 		try {
 			resolvedBy = (IContributor) repo.itemManager().fetchCompleteItem((IContributorHandle) w.getResolver(),
@@ -201,6 +229,7 @@ public class WorkItemHelper {
 		if (null != resolution2Id) {
 			resolution2 = resolution2Id.getStringIdentifier();
 		}
+		monitor.out("\t\t\tresolution read");
 		//
 		// TaskVersion
 		//
@@ -225,12 +254,14 @@ public class WorkItemHelper {
 				w.getResolutionDate(), //
 				resolution2//
 		);
+		monitor.out("\t\t\tversion created");
 		//
 		// Attributes
 		//
 		result = readAttributes(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, version);
 		if (null != result)
 			return result;
+		monitor.out("\t\t\tcustom attributes read");
 		//
 		// Comments
 		//
@@ -242,6 +273,7 @@ public class WorkItemHelper {
 					(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
 			));
 		}
+		monitor.out("\t\t\tcomments read");
 		//
 		// Subscribers
 		//
@@ -250,13 +282,14 @@ public class WorkItemHelper {
 		for (IContributorHandle subscriber : subscribers) {
 			version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
 		}
+		monitor.out("\t\t\tsubscribers read");
 		//
 		// Save
 		//
+		monitor.out("\t\t\tabout to add version");
 		p.putTaskVersion(version);
-		monitor.out("\tjust added work item " + version.getSourceId() + "(" + version.getType() + " - "
-				+ version.getTask().getId() + ')');
-
+		monitor.out("\t\t... just added version for " + version.getTask().getId() + " type "
+				+ version.getType().getName() + " modified " + version.getModified());
 		return null;
 	}
 
@@ -264,6 +297,7 @@ public class WorkItemHelper {
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p,
 			TaskVersion version) {
 
+		monitor.out("\t\t\tstarting reading custom attributes");
 		IAttribute attribute;
 		Attribute a;
 		Literal l;
@@ -272,55 +306,71 @@ public class WorkItemHelper {
 		try {
 			custom = repo.itemManager().fetchCompleteItemsPermissionAware(customAttributeHandles, IItemManager.REFRESH,
 					monitor);
+			monitor.out("\t\t\t\tcustom");
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			return "error finding custom attributes for work item version";
 		}
 		Object vObj;
 		for (Object o : custom.getRetrievedItems()) {
-			if (o instanceof IAttribute) {
+			monitor.out("\t\t\t\tnew object...");
+			try {
 				attribute = (IAttribute) o;
-				a = p.getAttribute(attribute.getIdentifier());
-				if (null == a) {
-					return "error finding custom attribute " + attribute.getIdentifier();
-				}
-				if (a.isEnum()) {
-					@SuppressWarnings("unchecked")
-					Identifier<? extends ILiteral> id = (Identifier<? extends ILiteral>) w.getValue(attribute);
-					l = a.getLiteral(id.getStringIdentifier());
-					monitor.out("\t\tvalue (" + a.getSourceId() + ":" + a.getType() + "): " + id.getStringIdentifier());
+			} catch (Exception e) {
+				monitor.out("\t\t\t\t... is not a new attribute: skip");
+				continue;
+			}
+			monitor.out("\t\t\t\t... is a new attribute");
+			monitor.out("\t\t\t\t\t" + attribute.getIdentifier());
+			a = p.getAttribute(attribute.getIdentifier());
+			if (null == a) {
+				monitor.out("\t\t\t\t\t\tnot in model: skip");
+				continue;
+			}
+			monitor.out("\t\t\t\t\tfound attribute " + a.getName());
+			if (a.isEnum()) {
+				monitor.out("\t\t\t\tcustom value is enum");
+				@SuppressWarnings("unchecked")
+				Identifier<? extends ILiteral> id = (Identifier<? extends ILiteral>) w.getValue(attribute);
+				l = a.getLiteral(id.getStringIdentifier());
+				monitor.out("\t\t\t\tcustom value (" + a.getSourceId() + ":" + a.getType() + "): "
+						+ id.getStringIdentifier());
+				version.addValue(new Value(//
+						attribute.getIdentifier(), //
+						a, //
+						l//
+				));
+			} else {
+				monitor.out(
+						"\t\t\t\tcustom value (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
+				vObj = w.getValue((IAttribute) a.getExternalObject());
+				if (vObj instanceof String) {
 					version.addValue(new Value(//
 							attribute.getIdentifier(), //
 							a, //
-							l//
+							(String) vObj//
 					));
+					monitor.out("\t\t\t\t\t... string \"" + (String) vObj + "\"");
+				} else if (vObj instanceof Timestamp) {
+					version.addValue(new Value(//
+							attribute.getIdentifier(), //
+							a, //
+							(Timestamp) vObj//
+					));
+					monitor.out("\t\t\t\t\t... timestamp " + (Timestamp) vObj);
+				} else if (vObj instanceof Boolean) {
+					version.addValue(new Value(//
+							attribute.getIdentifier(), //
+							a, //
+							(Boolean) vObj//
+					));
+					monitor.out("\t\t\t\t\t... boolean " + (Boolean) vObj);
 				} else {
-					monitor.out("\t\tvalue (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
-					vObj = w.getValue((IAttribute) a.getExternalObject());
-					if (vObj instanceof String) {
-						version.addValue(new Value(//
-								attribute.getIdentifier(), //
-								a, //
-								(String) vObj//
-						));
-					} else if (vObj instanceof Timestamp) {
-						version.addValue(new Value(//
-								attribute.getIdentifier(), //
-								a, //
-								(Timestamp) vObj//
-						));
-					} else if (vObj instanceof Boolean) {
-						version.addValue(new Value(//
-								attribute.getIdentifier(), //
-								a, //
-								(Boolean) vObj//
-						));
-					} else {
-						monitor.out("\tvalue not taken into account: " + vObj);
-					}
+					monitor.out("\t\t\t\t\t... something else (not taken into account)");
 				}
 			}
 		}
+		monitor.out("\t\t\tfinished reading custom attributes");
 		return null;
 	}
 
@@ -356,9 +406,9 @@ public class WorkItemHelper {
 									referencedWorkItem.getItemId().getUuidValue(), //
 									link.getLinkType().getLinkTypeId(), //
 									ref.getComment()));
-							monitor.out("\t\tjust added link (type: " + link.getLinkType().getLinkTypeId() + ") for "
-									+ task.getSourceId() + " (" + task.getId() + ") to "
-									+ referencedWorkItem.getItemId().getUuidValue());
+							monitor.out("\t... just added link (type: " + link.getLinkType().getLinkTypeId() + ")"//
+									+ "\n\t\tfor " + task.getSourceId() + " (" + task.getId() + ")"//
+									+ "\n\t\tto  " + referencedWorkItem.getItemId().getUuidValue());
 						} else if (referencedItem instanceof IAttachmentHandle) {
 							attachmentHandle = (IAttachmentHandle) ref.resolve();
 							try {
@@ -379,7 +429,7 @@ public class WorkItemHelper {
 									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
 									attachment.getCreationDate() //
 							));
-							monitor.out("\t\tjust added attachment for " + task.getId());
+							monitor.out("\t... just added attachment for " + task.getId());
 						}
 					} else if (ref.isURIReference()) {
 						referencedURI = ((IURIReference) ref);
@@ -389,9 +439,10 @@ public class WorkItemHelper {
 									link.getItemId().getUuidValue(), //
 									referencedURI.getURI(), referencedURI.getComment()//
 							));
-							monitor.out("\t\tjust added artifact" + " for " + task.getSourceId() + " (" + task.getId()
-									+ ") to " + referencedURI.getURI().toString() + "(" + referencedURI.getComment()
-									+ ')');
+							monitor.out("\t... just added artifact" + " for " + task.getSourceId() + " (" + task.getId()
+									+ ")"//
+									+ "\n\t\tto " + referencedURI.getURI().toString() + " ("
+									+ referencedURI.getComment() + ')');
 						}
 					}
 				}

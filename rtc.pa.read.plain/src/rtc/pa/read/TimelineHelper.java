@@ -49,7 +49,7 @@ public class TimelineHelper {
 					devLine.getEndDate(), //
 					devLine.getItemId().getUuidValue().equals(current.getItemId().getUuidValue()));
 			p.putLine(line);
-			monitor.out("\tjust added development line " + devLine.getName() + '\n' + devLine);
+			monitor.out("\tjust added development line " + devLine.getName());
 			//
 			// Iterations
 			//
@@ -94,10 +94,10 @@ public class TimelineHelper {
 			p.putIteration(line, parent, ite);
 		}
 		if (iterationHandle.sameItemId(currentIterationHandle)) {
-			monitor.out(prefix + "\tcurrent iteration!");
+			monitor.out(prefix + "\t\tcurrent iteration!");
 			line.setCurrent(ite);
 		}
-		monitor.out(prefix + "\tjust added iteration " + iteration.getName() + '\n' + iteration);
+		monitor.out(prefix + "\tjust added iteration " + iteration.getName());
 		for (IIterationHandle children : iteration.getChildren()) {
 			readIteration(devLine, currentIterationHandle, children, auditableClient, itemManager, prefix + "\t",
 					monitor, p, line, ite);

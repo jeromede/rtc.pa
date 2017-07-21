@@ -26,7 +26,9 @@ import com.ibm.team.workitem.client.IAuditableClient;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 
+import rtc.pa.model.Link;
 import rtc.pa.model.Project;
+import rtc.pa.model.Task;
 import rtc.pa.utils.ProgressMonitor;
 
 public class ReadIt {
@@ -55,8 +57,27 @@ public class ReadIt {
 		result = WorkItemHelper.readWorkItems(repo, pa, wiClient, wiCommon, itemManager, monitor, p, dir);
 		if (null != result)
 			return result;
-
+		resolve(p);
 		return null;
+	}
+
+	private static void resolve(Project p) {
+		for (Task task : p.getTasks()) {
+			for (Link link : task.getLinks()) {
+				System.out.println("resolve link (type: " //
+						+ link.getType() //
+						+ ") " //
+						+ link.getTargetId() //
+						+ "\n\tfrom " + task.getId() //
+				);
+				link.resolve(p.getTask(link.getTargetId()));
+				if (null == link.getTarget()) {
+					System.out.println("\tto   unknown target work item (" + link.getTargetId() + ')');
+				} else {
+					System.out.println("\tto   " + link.getTarget().getId());
+				}
+			}
+		}
 	}
 
 }

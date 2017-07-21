@@ -39,7 +39,7 @@ public class CategoryHelper {
 								wiCommon.resolveHierarchicalName(c, monitor), //
 								c.getHTMLDescription().getXMLText(), //
 								((null == parentId) ? null : parentId.getInternalRepresentation())));
-				monitor.out("\tjust added category " + c.getName() + '\n' + c);
+				monitor.out("\tjust added category " + c.getName());
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
