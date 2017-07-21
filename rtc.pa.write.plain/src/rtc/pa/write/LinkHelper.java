@@ -16,6 +16,10 @@
 
 package rtc.pa.write;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,11 +35,13 @@ import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.IAttachment;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.WorkItemEndPoints;
 import com.ibm.team.workitem.common.model.WorkItemLinkTypes;
 
+import rtc.pa.model.Attachment;
 import rtc.pa.model.Link;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -56,18 +62,19 @@ public class LinkHelper {
 				}
 			});
 
-	public static String createLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task task) {
+	public static String createLinksEtc(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir,
+			Project p, Task task) {
 
+		String result;
 		//
 		// links
 		//
-		monitor.out("About to create links from work item " + task.getId() + " (old ID)");
+		monitor.out("About to create links, etc. from work item " + task.getId() + " (old ID)");
 		IWorkItem wi = (IWorkItem) task.getExternalObject();
 		if (null == wi) {
-			monitor.out(
-					"SHOULD NOT HAPPEN: null work item as the external object for this migration task " + task.getId() + " (old Id) " + task.getExternalId());
+			monitor.out("SHOULD NOT HAPPEN: null work item as the external object for this migration task "
+					+ task.getId() + " (old Id) " + task.getExternalId());
 			return null;
 		}
 		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
@@ -79,36 +86,93 @@ public class LinkHelper {
 		}
 		try {
 			WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
-			IWorkItem otherWi;
-			IItemReference reference;
-			IEndPointDescriptor endpoint;
-			for (Link link : task.getLinks()) {
-				endpoint = linkTypes.get(link.getType());
-				if (null == endpoint)
-					continue;
-				if (null == link.getTarget())
-					continue;
-				otherWi = (IWorkItem) link.getTarget().getExternalObject();
-				if (null == otherWi)
-					continue;
-				reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
-				monitor.out(
-						"\tabout to create link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
-				wc.getReferences().add(endpoint, reference);
-				monitor.out("\tcreated link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
-			}
+			result = createLinks(wi, wc, task, monitor);
+			if (null != result)
+				return result;
+			result = createAttachments(pa, wiClient, wiCommon, wi, wc, task, monitor, dir);
+			if (null != result)
+				return result;
 			IDetailedStatus s = wc.save(monitor);
 			if (!s.isOK()) {
 				s.getException().printStackTrace();
-				return ("error adding links to new work item " + wc.getWorkItem().getId());
+				return ("error adding links, etc. to new work item " + wc.getWorkItem().getId());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ("error when creating work item link");
+			return ("error when creating work item link, etc.");
 		} finally {
 			wiCopier.disconnect(wiH);
 		}
-		monitor.out("\tlinks from work item " + task.getId() + " (old ID) created.");
+		monitor.out("\tlinks, etc. from work item " + task.getId() + " (old ID) created.");
+		return null;
+	}
+
+	private static String createLinks(IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
+
+		IWorkItem otherWi;
+		IItemReference reference;
+		IEndPointDescriptor endpoint;
+		for (Link link : task.getLinks()) {
+			endpoint = linkTypes.get(link.getType());
+			if (null == endpoint)
+				continue;
+			if (null == link.getTarget())
+				continue;
+			otherWi = (IWorkItem) link.getTarget().getExternalObject();
+			if (null == otherWi)
+				continue;
+			reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
+			monitor.out("\tabout to create link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
+			wc.getReferences().add(endpoint, reference);
+			monitor.out("\tcreated link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
+		}
+		return null;
+	}
+
+	private static String createAttachments(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
+			IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor, String dir) {
+
+		String filename;
+		File inputFile;
+		FileInputStream in;
+		IItemReference reference;
+		IAttachment attachment;
+		for (Attachment att : task.getAttachments()) {
+			filename = dir + File.separator + att.getSourceId() + '.' + att.getName();
+			inputFile = new File(filename);
+			monitor.out("\tabout to upload attachement from file " + filename);
+			try {
+				in = new FileInputStream(inputFile);
+				try {
+					attachment = wiClient.createAttachment(//
+							pa, //
+							att.getName(), //
+							att.getDescription() + " attached by " + att.getCreator().getName() + " "
+									+ att.getCreation(), //
+							att.getContentType(), //
+							att.getEncoding(), //
+							in, //
+							monitor);
+					attachment = (IAttachment) attachment.getWorkingCopy();
+					attachment = wiCommon.saveAttachment(attachment, monitor);
+					reference = WorkItemLinkTypes.createAttachmentReference(attachment);
+					wc.getReferences().add(WorkItemEndPoints.ATTACHMENT, reference);
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return "problem while saving attachment for file " + filename;
+				} finally {
+					if (null != in)
+						in.close();
+				}
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				return "file to attach not found " + filename;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return "i/o error while uploading file " + filename;
+			}
+			monitor.out("\t... done.");
+		}
 		return null;
 	}
 

@@ -46,13 +46,10 @@ public class WriteIt {
 
 		String message;
 
-		// IItemManager itemManager = repo.itemManager();
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
-		// IAuditableClient auditableClient = (IAuditableClient)
-		// repo.getClientLibrary(IAuditableClient.class);
 
 		message = matchMembers(repo, pa, monitor, p, matchingUserIDs);
 		if (null != message)
@@ -69,7 +66,7 @@ public class WriteIt {
 		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
 		if (null != message)
 			return message;
-		message = writeLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
+		message = writeLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p);
 		if (null != message)
 			return message;
 
@@ -163,15 +160,15 @@ public class WriteIt {
 		}
 		return null;
 	}
-	
+
 	private static String writeLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir, Project p) {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = LinkHelper.createLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			message = LinkHelper.createLinksEtc(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p, t);
 			if (null != message) {
-				return "error creating workitem " + t.getId() + " (id in source): " + message;
+				return "error creating links, etc. for workitem " + t.getId() + " (id in source): " + message;
 			}
 		}
 		return null;

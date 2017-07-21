@@ -103,7 +103,7 @@ public class Task extends Item implements Serializable {
 		approvals.add(approval);
 	}
 
-	public Collection<Approval> getApproval() {
+	public Collection<Approval> getApprovals() {
 		return approvals;
 	}
 
@@ -111,7 +111,7 @@ public class Task extends Item implements Serializable {
 		attachments.add(attachment);
 	}
 
-	public Collection<Attachment> getAttachment() {
+	public Collection<Attachment> getAttachments() {
 		return attachments;
 	}
 

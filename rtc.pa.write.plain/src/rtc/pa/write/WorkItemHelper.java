@@ -68,6 +68,7 @@ public class WorkItemHelper {
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
 			Task task) {
 
+		String result;
 		monitor.out("About to create work item (source ID): " + task.getId());
 		Collection<TaskVersion> versions = task.getHistory();
 		TaskVersion firstVersion = null;
@@ -112,7 +113,9 @@ public class WorkItemHelper {
 					}
 				}
 
-				updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v, comments);
+				result = updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v, comments);
+				if (null != result)
+					return result;
 
 				if (null != previousState) {
 					if (!state.equals(previousState)) {

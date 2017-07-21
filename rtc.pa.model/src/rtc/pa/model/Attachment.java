@@ -27,13 +27,17 @@ public class Attachment extends Item implements Serializable {
 	private String description;
 	private Member creator;
 	private Timestamp creation;
+	private String contentType;
+	private String encoding;
 
 	public String toString() {
 		return super.toString()//
 				+ Item.SEP + Item.trace("name", name)//
 				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("creator", creator)//
-				+ Item.SEP + Item.trace("creation date", creation);
+				+ Item.SEP + Item.trace("creation date", creation)//
+				+ Item.SEP + Item.trace("content type", contentType)//
+				+ Item.SEP + Item.trace("encoding", encoding);
 	}
 
 	public Attachment(//
@@ -41,12 +45,16 @@ public class Attachment extends Item implements Serializable {
 			String name, //
 			String description, //
 			Member creator, //
-			Timestamp creation) {
+			Timestamp creation, //
+			String contentType, //
+			String encoding) {
 		super(id);
 		this.name = name;
 		this.description = description;
 		this.creator = creator;
 		this.creation = creation;
+		this.contentType = contentType;
+		this.encoding = encoding;
 	}
 
 	public String getName() {
@@ -63,6 +71,14 @@ public class Attachment extends Item implements Serializable {
 
 	public Timestamp getCreation() {
 		return this.creation;
+	}
+
+	public String getContentType() {
+		return this.contentType;
+	}
+
+	public String getEncoding() {
+		return this.encoding;
 	}
 
 }
