@@ -164,12 +164,6 @@ public class WorkItemHelper {
 		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
 		//
-		// TODO: attachments
-		//
-		//
-		// TODO: artifacts
-		//
-		//
 		// TODO: approvals
 		//
 		System.out.println("Just created workitem: " + wi.getId());

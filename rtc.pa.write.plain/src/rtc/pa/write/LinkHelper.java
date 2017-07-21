@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.team.links.common.IItemReference;
+import com.ibm.team.links.common.IReference;
 import com.ibm.team.links.common.factory.IReferenceFactory;
 import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IProjectArea;
@@ -41,6 +42,7 @@ import com.ibm.team.workitem.common.model.IWorkItemHandle;
 import com.ibm.team.workitem.common.model.WorkItemEndPoints;
 import com.ibm.team.workitem.common.model.WorkItemLinkTypes;
 
+import rtc.pa.model.Artifact;
 import rtc.pa.model.Attachment;
 import rtc.pa.model.Link;
 import rtc.pa.model.Project;
@@ -89,6 +91,9 @@ public class LinkHelper {
 			result = createLinks(wi, wc, task, monitor);
 			if (null != result)
 				return result;
+			result = createArtifacts(wi, wc, task, monitor);
+			if (null != result)
+				return result;
 			result = createAttachments(pa, wiClient, wiCommon, wi, wc, task, monitor, dir);
 			if (null != result)
 				return result;
@@ -112,19 +117,34 @@ public class LinkHelper {
 		IWorkItem otherWi;
 		IItemReference reference;
 		IEndPointDescriptor endpoint;
-		for (Link link : task.getLinks()) {
-			endpoint = linkTypes.get(link.getType());
+		for (Link l : task.getLinks()) {
+			endpoint = linkTypes.get(l.getType());
 			if (null == endpoint)
 				continue;
-			if (null == link.getTarget())
+			if (null == l.getTarget())
 				continue;
-			otherWi = (IWorkItem) link.getTarget().getExternalObject();
+			otherWi = (IWorkItem) l.getTarget().getExternalObject();
 			if (null == otherWi)
 				continue;
 			reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
-			monitor.out("\tabout to create link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
+			monitor.out(
+					"\tabout to create link " + l.getType() + " from " + wi.getId() + " to " + otherWi.getId() + "...");
 			wc.getReferences().add(endpoint, reference);
-			monitor.out("\tcreated link " + link.getType() + " from " + wi.getId() + " to " + otherWi.getId());
+			monitor.out("\t... link created");
+		}
+		return null;
+	}
+
+	private static String createArtifacts(IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
+
+		IReference reference;
+		IEndPointDescriptor endpoint;
+		endpoint = WorkItemEndPoints.RELATED_ARTIFACT;
+		for (Artifact a : task.getArtifacts()) {
+			reference = IReferenceFactory.INSTANCE.createReferenceFromURI(a.getURI(), a.getComment());
+			monitor.out("\tabout to create artifact " + a.getURI().getPath() + " from " + wi.getId() + "...");
+			wc.getReferences().add(endpoint, reference);
+			monitor.out("\t... artifact created");
 		}
 		return null;
 	}
