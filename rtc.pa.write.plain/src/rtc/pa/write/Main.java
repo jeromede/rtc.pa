@@ -21,6 +21,8 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +34,10 @@ import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.client.TeamPlatform;
 import com.ibm.team.repository.common.TeamRepositoryException;
+import com.ibm.team.workitem.common.model.IWorkItem;
 
 import rtc.pa.model.Project;
+import rtc.pa.model.Task;
 import rtc.pa.utils.Login;
 import rtc.pa.utils.ProgressMonitor;
 
@@ -46,7 +50,7 @@ public class Main {
 		Map<String, String> matchingUserIDs = new HashMap<String, String>();
 		String message;
 
-		String url, proj, user, password, ser, dir, match;
+		String url, proj, user, password, ser, dir, match, numbers;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
@@ -55,12 +59,14 @@ public class Main {
 			ser = new String(args[4]);
 			dir = new String(args[5]);
 			match = new String(args[6]);
+			numbers = new String(args[7]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password serialization_file attachments_dir members_file");
 			monitor.err(
-					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt");
+					"arguments: url user password serialization_file input_attachments_dir input_members_file output_wi_ids_match_file");
 			monitor.err(
-					"note: the last argument has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
+					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt ids.txt");
+			monitor.err(
+					"note: input_members_file has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
@@ -98,6 +104,7 @@ public class Main {
 			} else {
 				monitor.err("KO: " + message);
 			}
+			message = writeIdMatchFile(numbers, p);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			monitor.err("Unable to perform: " + e.getMessage());
@@ -125,6 +132,20 @@ public class Main {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "error reading UTF-8 text file " + filename;
+		}
+		return null;
+	}
+
+	private static String writeIdMatchFile(String filename, Project p) {
+		Collection<String> lines = new ArrayList<String>(p.getTasks().size());
+		for (Task task : p.getTasks()) {
+			lines.add(task.getId() + "\t" + ((IWorkItem) task.getExternalObject()).getId());
+		}
+		try {
+			Files.write(Paths.get(filename), lines, StandardCharsets.UTF_8);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error creating UTF-8 text file " + filename;
 		}
 		return null;
 	}

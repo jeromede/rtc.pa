@@ -52,7 +52,7 @@ You will have to change your Eclipse project properties if this doesn't match yo
 
 # Usage
 
-The needed arguments are:
+The typical needed arguments are:
 
 - CCM server URL
 - project name
@@ -103,4 +103,4 @@ A write program reads the above local files, and, given a file matching each use
 
 # Thanks
 
-A special _Danke_ to [Ralph Schoon](/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](/jazz-community) valuable help.
+A special _Danke_ to [Ralph Schoon](/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](https://rsjazz.wordpress.com) valuable help.
