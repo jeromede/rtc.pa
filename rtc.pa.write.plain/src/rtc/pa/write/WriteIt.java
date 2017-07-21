@@ -66,7 +66,7 @@ public class WriteIt {
 		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
 		if (null != message)
 			return message;
-		message = writeLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p);
+		message = updateWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p);
 		if (null != message)
 			return message;
 
@@ -153,7 +153,7 @@ public class WriteIt {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = WorkItemHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			message = WorkItemVersionHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
 			if (null != message) {
 				return "error creating workitem " + t.getId() + " (id in source): " + message;
 			}
@@ -161,12 +161,13 @@ public class WriteIt {
 		return null;
 	}
 
-	private static String writeLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir, Project p) {
+	private static String updateWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir,
+			Project p) {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = LinkHelper.createLinksEtc(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p, t);
+			message = WorkItemHelper.updateWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p, t);
 			if (null != message) {
 				return "error creating links, etc. for workitem " + t.getId() + " (id in source): " + message;
 			}

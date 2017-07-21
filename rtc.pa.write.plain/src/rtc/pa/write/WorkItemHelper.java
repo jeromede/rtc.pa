@@ -16,363 +16,197 @@
 
 package rtc.pa.write;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import com.ibm.team.foundation.common.text.XMLString;
-import com.ibm.team.process.common.IIteration;
+import com.ibm.team.links.common.IItemReference;
+import com.ibm.team.links.common.IReference;
+import com.ibm.team.links.common.factory.IReferenceFactory;
+import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IProjectArea;
-import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
-import com.ibm.team.repository.common.IContributor;
-import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IDetailedStatus;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.model.IAttribute;
-import com.ibm.team.workitem.common.model.ICategory;
-import com.ibm.team.workitem.common.model.IComment;
-import com.ibm.team.workitem.common.model.IComments;
-import com.ibm.team.workitem.common.model.ILiteral;
-import com.ibm.team.workitem.common.model.IPriority;
-import com.ibm.team.workitem.common.model.IResolution;
-import com.ibm.team.workitem.common.model.ISeverity;
-import com.ibm.team.workitem.common.model.IState;
-import com.ibm.team.workitem.common.model.ISubscriptions;
+import com.ibm.team.workitem.common.model.IAttachment;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
-import com.ibm.team.workitem.common.model.IWorkItemType;
-import com.ibm.team.workitem.common.model.Identifier;
+import com.ibm.team.workitem.common.model.WorkItemEndPoints;
+import com.ibm.team.workitem.common.model.WorkItemLinkTypes;
 
-import rtc.pa.model.Category;
-import rtc.pa.model.Comment;
-import rtc.pa.model.Iteration;
-import rtc.pa.model.Literal;
-import rtc.pa.model.Member;
+import rtc.pa.model.Approval;
+import rtc.pa.model.Artifact;
+import rtc.pa.model.Attachment;
+import rtc.pa.model.Link;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
-import rtc.pa.model.TaskVersion;
-import rtc.pa.model.Value;
 import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemHelper {
 
-	static String createWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task task) {
+	@SuppressWarnings("serial")
+	private static final Map<String, IEndPointDescriptor> linkTypes = Collections
+			.unmodifiableMap(new HashMap<String, IEndPointDescriptor>() {
+				{
+					put(WorkItemLinkTypes.BLOCKS_WORK_ITEM, WorkItemEndPoints.BLOCKS_WORK_ITEM);
+					put(WorkItemLinkTypes.COPIED_WORK_ITEM, WorkItemEndPoints.COPIED_WORK_ITEM);
+					put(WorkItemLinkTypes.DUPLICATE_WORK_ITEM, WorkItemEndPoints.DUPLICATE_WORK_ITEM);
+					put(WorkItemLinkTypes.PARENT_WORK_ITEM, WorkItemEndPoints.PARENT_WORK_ITEM);
+					put(WorkItemLinkTypes.RELATED_WORK_ITEM, WorkItemEndPoints.RESOLVES_WORK_ITEM);
+					put(WorkItemLinkTypes.MENTIONS, WorkItemEndPoints.MENTIONS);
+				}
+			});
+
+	public static String updateWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir,
+			Project p, Task task) {
 
 		String result;
-		monitor.out("About to create work item (source ID): " + task.getId());
-		Collection<TaskVersion> versions = task.getHistory();
-		TaskVersion firstVersion = null;
-		for (TaskVersion v : versions) {
-			firstVersion = v;
-			break;
-		}
-		if (null == firstVersion) {
-			monitor.out("\tno first version!");
+		//
+		// links
+		//
+		monitor.out("About to update work item " + task.getId() + " (old ID)");
+		IWorkItem wi = (IWorkItem) task.getExternalObject();
+		if (null == wi) {
+			monitor.out("SHOULD NOT HAPPEN: null work item as the external object for this migration task "
+					+ task.getId() + " (old Id) " + task.getExternalId());
 			return null;
 		}
-		IWorkItemType type = (IWorkItemType) firstVersion.getType().getExternalObject();
-		IWorkItemType previousType = null;
-		String state;
-		String previousState = null;
-		IWorkItemHandle wiHandle;
-		WorkItemWorkingCopy wc;
-		IWorkItem wi = null;
-		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
-		String action;
-		IDetailedStatus s;
-		Identifier<IState> stateId;
+		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
 		try {
-			wiHandle = wiCopier.connectNew(type, monitor);
+			wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "impossible to initialize a new work item";
+			return "impossible to initialize a work item copy";
 		}
-		wc = wiCopier.getWorkingCopy(wiHandle);
-		wi = wc.getWorkItem();
 		try {
-			wi.setCreator(getC(repo, task.getCreator()));
-			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
-			for (TaskVersion v : versions) {
-				type = (IWorkItemType) v.getType().getExternalObject();
-				state = v.getState();
-
-				if (null != previousType) {
-					if (!type.getIdentifier().equals(previousType.getIdentifier())) {
-						monitor.out("\tchanging work item type");
-						wiCommon.updateWorkItemType(wi, type, previousType, monitor);
-					}
-				}
-
-				result = updateWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi, v, comments);
-				if (null != result)
-					return result;
-
-				if (null != previousState) {
-					if (!state.equals(previousState)) {
-						monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
-						monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
-						action = null;
-						try {
-							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
-									state);
-						} catch (TeamRepositoryException e) {
-							e.printStackTrace();
-							return "problem while searching action to trigger";
-						}
-						if (null == action) {
-							stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
-							if (null == stateId) {
-								return "couldn't find state " + state + " for type " + type.getIdentifier();
-							}
-							forceState(wi, stateId);
-						}
-						monitor.out("\t    action: " + action);
-						wc.setWorkflowAction(action);
-					}
-				}
-
-				s = wc.save(monitor);
-				if (!s.isOK()) {
-					s.getException().printStackTrace();
-					return ("error adding new work item version");
-				}
-				previousState = state;
-				previousType = type;
+			WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
+			result = createLinks(wi, wc, task, monitor);
+			if (null != result)
+				return result;
+			result = createArtifacts(wi, wc, task, monitor);
+			if (null != result)
+				return result;
+			result = createAttachments(pa, wiClient, wiCommon, wi, wc, task, monitor, dir);
+			if (null != result)
+				return result;
+			result = createApprovals(pa, wiClient, wiCommon, wi, wc, task, monitor);
+			if (null != result)
+				return result;
+			IDetailedStatus s = wc.save(monitor);
+			if (!s.isOK()) {
+				s.getException().printStackTrace();
+				return ("error updating work item " + wc.getWorkItem().getId());
 			}
-		} catch (TeamRepositoryException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return ("error when creating work item");
+			return ("error when creating work item links, etc.");
 		} finally {
-			wiCopier.disconnect(wi);
+			wiCopier.disconnect(wiH);
 		}
-		try {
-			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("error fetching created work item");
-		}
-		task.setExternalObject(wi.getItemId().getUuidValue(), wi);
-		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
-		//
-		// TODO: approvals
-		//
-		System.out.println("Just created workitem: " + wi.getId());
+		monitor.out("\tupdated work item " + task.getId() + " (old ID).");
 		return null;
 	}
 
-	private static String updateWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			IWorkItem wi, TaskVersion version, Map<Timestamp, Comment> currentComments) {
+	private static String createLinks(IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
 
-		monitor.out("Create new work item version for (summary): " + version.getSummary());
-		//
-		// migration specifics
-		//
-		IAttribute modifierInSource = null;
-		IAttribute modifiedInSource = null;
-		try {
-			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
-			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("can't find special custom attributes <rtc.pa.modifier> and <rtc.pa.modified>"
-					+ " that shoud exist in target to reflect history dates from source");
+		IWorkItem otherWi;
+		IItemReference reference;
+		IEndPointDescriptor endpoint;
+		for (Link l : task.getLinks()) {
+			endpoint = linkTypes.get(l.getType());
+			if (null == endpoint)
+				continue;
+			if (null == l.getTarget())
+				continue;
+			otherWi = (IWorkItem) l.getTarget().getExternalObject();
+			if (null == otherWi)
+				continue;
+			reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
+			monitor.out(
+					"\tabout to create link " + l.getType() + " from " + wi.getId() + " to " + otherWi.getId() + "...");
+			wc.getReferences().add(endpoint, reference);
+			monitor.out("\t... link created");
 		}
-		if (null != modifiedInSource) {
-			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
+		return null;
+	}
+
+	private static String createArtifacts(IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
+
+		IReference reference;
+		IEndPointDescriptor endpoint;
+		endpoint = WorkItemEndPoints.RELATED_ARTIFACT;
+		for (Artifact a : task.getArtifacts()) {
+			reference = IReferenceFactory.INSTANCE.createReferenceFromURI(a.getURI(), a.getComment());
+			monitor.out("\tabout to create artifact " + a.getURI().getPath() + " from " + wi.getId() + "...");
+			wc.getReferences().add(endpoint, reference);
+			monitor.out("\t... artifact created");
 		}
-		if (null != modifierInSource) {
-			wi.setValue(modifierInSource, getC(repo, version.getModifier()));
-		}
-		//
-		// summary
-		//
-		if (null == version.getSummary()) {
-			wi.setHTMLSummary(null);
-		} else {
-			wi.setHTMLSummary(XMLString.createFromXMLText(version.getSummary()));
-		}
-		//
-		// description
-		//
-		if (null == version.getDescription()) {
-			wi.setHTMLDescription(null);
-		} else {
-			//
-			// TODO: change hyperlinks if needed (bonus?)
-			//
-			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
-		}
-		//
-		// priority
-		//
-		Identifier<IPriority> priorityId = Identifier.create(IPriority.class, version.getPriority());
-		wi.setPriority(priorityId);
-		//
-		// severity
-		//
-		Identifier<ISeverity> severityId = Identifier.create(ISeverity.class, version.getSeverity());
-		wi.setSeverity(severityId);
-		//
-		// tags
-		//
-		List<String> tags = new ArrayList<String>(version.getTags().size());
-		tags.addAll(version.getTags());
-		wi.setTags2(tags);
-		//
-		// due date
-		//
-		wi.setDueDate(version.getDue());
-		//
-		// duration
-		//
-		wi.setDuration(version.getDuration());
-		//
-		// category
-		//
-		ICategory category;
-		Category cat = version.getCategory();
-		if (null == cat) {
+		return null;
+	}
+
+	private static String createAttachments(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
+			IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor, String dir) {
+
+		String filename;
+		File inputFile;
+		FileInputStream in;
+		IItemReference reference;
+		IAttachment attachment;
+		for (Attachment att : task.getAttachments()) {
+			filename = dir + File.separator + att.getSourceId() + '.' + att.getName();
+			inputFile = new File(filename);
+			monitor.out("\tabout to upload attachement from file " + filename);
 			try {
-				category = wiCommon.findUnassignedCategory(pa, ICategory.FULL_PROFILE, monitor);
-			} catch (TeamRepositoryException e) {
-				e.printStackTrace();
-				return "can't find /unassigned/ category";
-			}
-		} else {
-			category = (ICategory) cat.getExternalObject();
-		}
-		wi.setCategory(category);
-		//
-		// target
-		//
-		IIteration iteration;
-		Iteration target = version.getTarget();
-		if (null == target) {
-			iteration = null;
-		} else {
-			iteration = (IIteration) version.getTarget().getExternalObject();
-		}
-		wi.setTarget(iteration);
-		//
-		// owner
-		//
-		wi.setOwner(getC(repo, version.getOwnedBy()));
-		//
-		// resolution
-		//
-		Identifier<IResolution> resolution2Id;
-		if (null == version.getResolution2()) {
-			resolution2Id = null;
-		} else {
-			resolution2Id = Identifier.create(IResolution.class, version.getResolution2());
-		}
-		wi.setResolution2(resolution2Id);
-		//
-		// values (custom attributes)
-		//
-		for (Value val : version.getValues()) {
-			IAttribute attribute = (IAttribute) val.getAttribute().getExternalObject();
-			monitor.out('\t' + attribute.getIdentifier() + " : " + attribute.getAttributeType());
-			if (wi.hasAttribute(attribute)) {
-				if (val.getAttribute().isEnum()) {
-					if (null == val.getValue()) {
-						wi.setValue(attribute, null);
-					} else {
-						@SuppressWarnings("unchecked")
-						Identifier<? extends ILiteral> literalId = //
-								(Identifier<? extends ILiteral>) //
-								val.getAttribute()//
-										.getLiteral(//
-												((Literal) val.getValue())//
-														.getSourceId()//
-										)//
-										.getExternalObject();
-						wi.setValue(attribute, literalId);
-					}
-				} else {
-					wi.setValue(attribute, val.getValue());
+				in = new FileInputStream(inputFile);
+				try {
+					attachment = wiClient.createAttachment(//
+							pa, //
+							att.getName(), //
+							att.getDescription() + " attached by " + att.getCreator().getName() + " "
+									+ att.getCreation(), //
+							att.getContentType(), //
+							att.getEncoding(), //
+							in, //
+							monitor);
+					attachment = (IAttachment) attachment.getWorkingCopy();
+					attachment = wiCommon.saveAttachment(attachment, monitor);
+					reference = WorkItemLinkTypes.createAttachmentReference(attachment);
+					wc.getReferences().add(WorkItemEndPoints.ATTACHMENT, reference);
+				} catch (TeamRepositoryException e) {
+					e.printStackTrace();
+					return "problem while saving attachment for file " + filename;
+				} finally {
+					if (null != in)
+						in.close();
 				}
-				monitor.out("\t\t= " + val.getValue());
-			} else {
-				monitor.out("\t\t... no!");
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				return "file to attach not found " + filename;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return "i/o error while uploading file " + filename;
 			}
+			monitor.out("\t... done.");
 		}
-		//
-		// comments
-		//
-		IComments comments = wi.getComments();
-		IComment comment;
-		XMLString signature;
-		for (Comment comm : version.getComments()) {
-			if (!currentComments.containsKey(comm.getCreation())) {
-				signature = XMLString.createFromXMLText("<p>&nbsp;</p><p>&nbsp;</p><p><em>Original "
-						+ comm.getCreation() + " (" + getC(repo, comm.getCreator()).getName() + ")</em></p>");
-				//
-				// TODO: change hyperlinks if needed (bonus?)
-				//
-				comment = comments.createComment(//
-						getC(repo, comm.getCreator()), //
-						XMLString.createFromXMLText(comm.getContent()).concat(signature)//
-				);
-				comments.append(comment);
-				currentComments.put(comm.getCreation(), comm);
-			}
-		}
-		//
-		// subscribers
-		//
-		ISubscriptions subscriptions = wi.getSubscriptions();
-		Map<String, IContributorHandle> real = new HashMap<String, IContributorHandle>();
-		Collection<IContributorHandle> toBeRemoved = new ArrayList<IContributorHandle>();
-		IContributorHandle subscriber;
-		for (Member subscr : version.getSubscribers()) {
-			subscriber = (IContributorHandle) getC(repo, subscr).getItemHandle();
-			real.put(subscriber.getItemId().getUuidValue(), subscriber);
-		}
-		for (IContributorHandle contributor : subscriptions.getContents()) {
-			if (!real.containsKey(contributor.getItemId().getUuidValue())) {
-				toBeRemoved.add(contributor);
-			}
-		}
-		for (IContributorHandle contributor : toBeRemoved) {
-			subscriptions.remove(contributor);
-		}
-		subscriptions = wi.getSubscriptions();
-		for (Member subscr : version.getSubscribers()) {
-			subscriber = (IContributorHandle) getC(repo, subscr).getItemHandle();
-			if (!subscriptions.contains(subscriber)) {
-				subscriptions.add(subscriber);
-			}
-		}
-
 		return null;
 	}
 
-	private static IContributor getC(ITeamRepository repo, Member m) {
-		IContributor c = null;
-		if (null != m) {
-			c = (IContributor) m.getExternalObject();
-		}
-		if (null == c) {
-			c = repo.loggedInContributor();
-		}
-		return c;
-	}
+	private static String createApprovals(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
+			IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
 
-	@SuppressWarnings("deprecation")
-	private static void forceState(IWorkItem wi, Identifier<IState> stateId) {
-		wi.setState2(stateId); // TOO BAD
+		for (Approval a : task.getApprovals()) {
+
+		}
+		return null;
 	}
 
 }

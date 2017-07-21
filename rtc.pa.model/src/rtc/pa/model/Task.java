@@ -31,13 +31,9 @@ public class Task extends Item implements Serializable {
 	private Member creator;
 	private Date creation;
 	private SortedMap<Date, TaskVersion> history = new TreeMap<Date, TaskVersion>();
-
 	private Collection<Link> links = new ArrayList<Link>();
-
 	private Collection<Artifact> artifacts = new ArrayList<Artifact>();
-
 	private Collection<Attachment> attachments = new ArrayList<Attachment>();
-
 	private Collection<Approval> approvals = new ArrayList<Approval>();
 
 	public String toString() {
