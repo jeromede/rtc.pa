@@ -149,6 +149,7 @@ public class WorkItemHelper {
 			task.addApproval(new Approval(//
 					descriptor.getName(), //
 					descriptor.getTypeIdentifier(), //
+					approval.getStateIdentifier(), //
 					descriptor.getDueDate(), //
 					p.getMember(approval.getApprover().getItemId().getUuidValue())//
 			));
@@ -174,15 +175,15 @@ public class WorkItemHelper {
 			monitor.out("\t(looks like the version list is empty, switching to the work item as unique version)");
 			result = readWorkItemVersion(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 			if (null != result)
-				return result;		
-		} else {
-		for (IWorkItem w : workItems) {
-			if (null == w)
-				continue;
-			result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
-			if (null != result)
 				return result;
-		}
+		} else {
+			for (IWorkItem w : workItems) {
+				if (null == w)
+					continue;
+				result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+				if (null != result)
+					return result;
+			}
 		}
 		return null;
 	}
@@ -443,10 +444,8 @@ public class WorkItemHelper {
 									attachment.getName(), //
 									attachment.getDescription(), //
 									p.getMember(attachment.getCreator().getItemId().getUuidValue()), //
-									attachment.getCreationDate(),
-									attachment.getContent().getContentType(),//
-									attachment.getContent().getCharacterEncoding()
-							));
+									attachment.getCreationDate(), attachment.getContent().getContentType(), //
+									attachment.getContent().getCharacterEncoding()));
 							monitor.out("\t... just added attachment for " + task.getId());
 						}
 					} else if (ref.isURIReference()) {

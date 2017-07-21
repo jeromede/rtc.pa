@@ -39,10 +39,12 @@ public class Approval extends Item implements Serializable {
 	public Approval(//
 			String sourceId, // ,
 			String type, //
+			String state, //
 			Timestamp due, //
 			Member approver) {
 		super(sourceId);
 		this.type = type;
+		this.state = state;
 		this.due = due;
 		this.approver = approver;
 	}
@@ -57,6 +59,10 @@ public class Approval extends Item implements Serializable {
 
 	public Member getApprover() {
 		return this.approver;
+	}
+	
+	public String getState() {
+		return this.state;
 	}
 
 }

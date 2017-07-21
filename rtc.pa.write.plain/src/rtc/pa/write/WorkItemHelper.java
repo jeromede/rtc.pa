@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +31,16 @@ import com.ibm.team.links.common.factory.IReferenceFactory;
 import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.ITeamRepository;
+import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IDetailedStatus;
 import com.ibm.team.workitem.client.IWorkItemClient;
 import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.client.WorkItemWorkingCopy;
 import com.ibm.team.workitem.common.IWorkItemCommon;
+import com.ibm.team.workitem.common.model.IApproval;
+import com.ibm.team.workitem.common.model.IApprovalDescriptor;
+import com.ibm.team.workitem.common.model.IApprovals;
 import com.ibm.team.workitem.common.model.IAttachment;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -98,7 +103,7 @@ public class WorkItemHelper {
 			result = createAttachments(pa, wiClient, wiCommon, wi, wc, task, monitor, dir);
 			if (null != result)
 				return result;
-			result = createApprovals(pa, wiClient, wiCommon, wi, wc, task, monitor);
+			result = createApprovals(wc, task);
 			if (null != result)
 				return result;
 			IDetailedStatus s = wc.save(monitor);
@@ -200,11 +205,104 @@ public class WorkItemHelper {
 		return null;
 	}
 
-	private static String createApprovals(IProjectArea pa, IWorkItemClient wiClient, IWorkItemCommon wiCommon,
-			IWorkItem wi, WorkItemWorkingCopy wc, Task task, ProgressMonitor monitor) {
+	private static String createApprovals(WorkItemWorkingCopy wc, Task task) {
 
+		class AproovalDesc {
+			String type;
+			String name;
+			Timestamp due;
+
+			public int hashCode() {
+				return 0;
+			}
+
+			public boolean equals(Object o) {
+				if (!(o instanceof AproovalDesc))
+					return false;
+				AproovalDesc other = (AproovalDesc) o;
+				return this.type.equals(other.type) && this.name.equals(other.name) && this.due.equals(other.due);
+			}
+		}
+
+		class Aproover {
+			String state;
+			String ap;
+
+			public int hashCode() {
+				return 0;
+			}
+
+			public boolean equals(Object o) {
+				if (!(o instanceof Aproover))
+					return false;
+				Aproover other = (Aproover) o;
+				return this.state.equals(other.state) && this.ap.equals(other.ap);
+			}
+		}
+
+		class Aprooval {
+			Map<Aproover, IContributor> cont = new HashMap<Aproover, IContributor>();
+			Map<String, Aproover> aps = new HashMap<String, Aproover>();
+		}
+
+		IApprovals approvals = wc.getWorkItem().getApprovals();
+		IApprovalDescriptor descriptor;
+		IApproval approval;
+		IContributor approver;
+		Map<AproovalDesc, Aprooval> aproovals = new HashMap<AproovalDesc, Aprooval>();
+		AproovalDesc approvalDesc;
+		Aprooval aprooval;
+		Aproover aproover;
 		for (Approval a : task.getApprovals()) {
+			approvalDesc = new AproovalDesc();
+			approvalDesc.type = a.getType();
+			approvalDesc.name = a.getSourceId();
+			approvalDesc.due = a.getDue();
+			System.out.println("aproovals before: " + aproovals);
+			aprooval = aproovals.get(approvalDesc);
+			if (null == aprooval) {
+				aprooval = new Aprooval();
+				aproovals.put(approvalDesc, aprooval);
+				System.out.println("aproovals after: " + aproovals);
+			}
+			approver = null;
+			if (null != a.getApprover()) {
+				approver = (IContributor) a.getApprover().getExternalObject();
+			}
+			if (null != approver) {
+				aproover = aprooval.aps.get(approver.getUserId());
+				if (null == aproover) {
+					aproover = new Aproover();
+					aproover.state = (null == a.getState()) ? "" : a.getState();
+					aproover.ap = approver.getUserId();
+				}
+				aprooval.cont.put(aproover, approver);
+				aprooval.aps.put(aproover.ap, aproover);
+			}
+		}
 
+		for (AproovalDesc desc : aproovals.keySet()) {
+			aprooval = aproovals.get(desc);
+			System.out.println(desc.type + '/' + desc.name + '/' + desc.due);
+			for (Aproover apr : aprooval.aps.values()) {
+				approver = aprooval.cont.get(apr);
+				System.out.println("\t" + approver.getName() + '/' + apr.state);
+			}
+		}
+
+		for (AproovalDesc desc : aproovals.keySet()) {
+			aprooval = aproovals.get(desc);
+			approval = null;
+			descriptor = approvals.createDescriptor(desc.type, desc.name);
+			descriptor.setDueDate(desc.due);
+			for (Aproover apr : aprooval.aps.values()) {
+				approver = aprooval.cont.get(apr);
+				approval = approvals.createApproval(descriptor, approver);
+				if (0 != apr.state.length()) {
+					approval.setStateIdentifier(apr.state);
+				}
+				approvals.add(approval);
+			}
 		}
 		return null;
 	}
