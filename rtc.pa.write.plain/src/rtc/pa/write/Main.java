@@ -62,11 +62,11 @@ public class Main {
 			numbers = new String(args[7]);
 		} catch (Exception e) {
 			monitor.err(
-					"arguments: url user password serialization_file input_attachments_dir input_members_file output_wi_ids_match_file");
+					"arguments: ccm_url user password serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
 			monitor.err(
 					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt ids.txt");
 			monitor.err(
-					"note: input_members_file has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
+					"note: members_input_file has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
@@ -105,6 +105,8 @@ public class Main {
 				monitor.err("KO: " + message);
 			}
 			message = writeIdMatchFile(numbers, p);
+			if (null != message)
+				monitor.err(message);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			monitor.err("Unable to perform: " + e.getMessage());
