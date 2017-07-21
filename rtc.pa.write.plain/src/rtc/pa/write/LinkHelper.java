@@ -67,7 +67,7 @@ public class LinkHelper {
 		IWorkItem wi = (IWorkItem) task.getExternalObject();
 		if (null == wi) {
 			monitor.out(
-					"SHOUD NOT HAPPEN: null wi as external object for migration task " + task.getId() + " (old Id) " + task.getExternalId());
+					"SHOULD NOT HAPPEN: null work item as the external object for this migration task " + task.getId() + " (old Id) " + task.getExternalId());
 			return null;
 		}
 		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
