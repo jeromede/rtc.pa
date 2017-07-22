@@ -134,10 +134,14 @@ public class WorkItemVersionHelper {
 							if (null == stateId) {
 								return "couldn't find state " + state + " for type " + type.getIdentifier();
 							}
+							monitor.out("\t    force state (TOO BAD) to become:");
 							forceState(wi, stateId);
+							monitor.out("\t    " + stateId);
+						} else {
+							monitor.out("\t    action:");
+							wc.setWorkflowAction(action);
+							monitor.out("\t    " + action);
 						}
-						monitor.out("\t    action: " + action);
-						wc.setWorkflowAction(action);
 					}
 				}
 
@@ -182,7 +186,7 @@ public class WorkItemVersionHelper {
 			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return ("can't find special custom attributes <rtc.pa.modifier> and <rtc.pa.modified>"
+			return ("can't find special custom attributes <rtc.pa.modifier> and/or <rtc.pa.modified>"
 					+ " that shoud exist in target to reflect history dates from source");
 		}
 		if (null != modifiedInSource) {
