@@ -125,7 +125,7 @@ public class TestReadIt {
 				for (Identifier<IWorkflowAction> action : actions) {
 					monitor.out("\t\t\taction: " + action.getStringIdentifier());
 					Identifier<IState> resultState = wf.getActionResultState(action);
-					monitor.out("\t\t\t\tto state: " + resultState.getStringIdentifier() + state.getStringIdentifier());
+					monitor.out("\t\t\t\tto state: " + resultState.getStringIdentifier());
 				}
 			}
 		}
