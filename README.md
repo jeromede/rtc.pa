@@ -1,8 +1,13 @@
 # Status
 
-Reading a project area to a file (and directory for attachments) works.
+Reading from a project area to a file (and to a directory for attachments) works.
 
-Writing is still in development (barely usable yet).
+Writing to another project area from the previous file and directory works.
+
+## Still to do
+
+- change automatic links to work items in summaries and comments to that they point to the new item number, not the old one.
+
 
 # What
 
@@ -11,20 +16,24 @@ Programs to copy (read then write) content from a source and to a target [Ration
 - categories
 - development lines and iterations
 - work item links, attachments, approvals, comments
-- work item history (all the work item "versions")
+- work item history (all the work item "versions").
+
+No existing elements in the target PA are deleted, the writing part only adds new elements.
 
 ## Limitations
 
 - Work item types and workflows must be "compatible".
+- Only work items from the considered PA are taken into account (no link to items in other project areas for example).
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
 - The timelines will be re-created in the target project area, the program doesn't try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
 - Links between work items inside the read PA are the only one taken into account.
 - If a user is not part of the source project area anymore, and can't be found in the input matching file, s·he will be replaced by the user running the program.
 
+
 # Build
 
-These program (`rtc.pa.connection_test.plain`, `rtc.pa.read.plain` and `rtc.pa.write.plain`) use the RTC API.
+These programs (`rtc.pa.connection_test.plain`, `rtc.pa.read.plain` and `rtc.pa.write.plain`) use the RTC API.
 
 Each program may need to connect to a specific version of RTC. For each needed version of RTC:
 
@@ -58,7 +67,7 @@ The typical needed arguments are:
 - project name
 - user ID
 - password
-- ... (see each program usage in `Main.java`)
+- ... (see each program usage in its `Main.java`)
 
 For example:
 
@@ -71,7 +80,7 @@ The target project area should already exist, with its users.
 ## Workaround for work items history
 
 In the target project areas, work items versions will be shown as created by the user the migration tool used to log in, and the timestamps will correspond to when the migration took place.
-There's currently no way to override this.
+There iss currently no way to override this.
 
 As a workaround, the target PA process can be customized to add the following two custom attributes to all the workitems:
 
@@ -79,6 +88,7 @@ As a workaround, the target PA process can be customized to add the following tw
 - ID: `rtc.pa.modifier`, Type: `Contributor`
 
 If these custom attributes exist in the target PA, they will be used and set in the work item histories to reflect what took place when and by whom in the source PA.
+
 
 # Special
 
