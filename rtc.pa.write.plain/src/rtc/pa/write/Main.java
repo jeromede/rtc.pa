@@ -50,7 +50,7 @@ public class Main {
 		Map<String, String> matchingUserIDs = new HashMap<String, String>();
 		String message;
 
-		String url, proj, user, password, ser, dir, match, numbers;
+		String url, proj, user, password, ser, dir, match, numbers, whenother;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
@@ -60,6 +60,11 @@ public class Main {
 			dir = new String(args[5]);
 			match = new String(args[6]);
 			numbers = new String(args[7]);
+			try {
+				whenother = new String(args[8]);
+			} catch (Exception e) {
+				whenother = "";
+			}
 		} catch (Exception e) {
 			monitor.err(
 					"arguments: ccm_url user password serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
@@ -74,7 +79,7 @@ public class Main {
 			monitor.err();
 			return;
 		}
-		message = matchingMembers(matchingUserIDs, match);
+		message = matchingMembers(matchingUserIDs, match, whenother);
 		if (null != message) {
 			monitor.err("problem with the matching members file: " + message);
 			return;
@@ -95,7 +100,7 @@ public class Main {
 			IProjectArea pa = null;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs, dir);
+				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs, dir, whenother);
 			} else {
 				message = uri + " is not a project area";
 			}
@@ -118,7 +123,7 @@ public class Main {
 		}
 	}
 
-	static String matchingMembers(Map<String, String> map, String filename) {
+	static String matchingMembers(Map<String, String> map, String filename, String whenother) {
 		try {
 			List<String> lines;
 			String l;
@@ -132,8 +137,10 @@ public class Main {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			return "error reading UTF-8 text file " + filename;
+			if (0 == whenother.length()) {
+				e.printStackTrace();
+				return "error reading UTF-8 text file " + filename;
+			}
 		}
 		return null;
 	}

@@ -42,7 +42,8 @@ import rtc.pa.utils.ProgressMonitor;
 public class WriteIt {
 
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
-			Map<String, String> matchingUserIDs, String dir) throws TeamRepositoryException, IOException {
+			Map<String, String> matchingUserIDs, String dir, String whenother)
+			throws TeamRepositoryException, IOException {
 
 		String message;
 
@@ -51,7 +52,7 @@ public class WriteIt {
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
 
-		message = matchMembers(repo, pa, monitor, p, matchingUserIDs);
+		message = matchMembers(repo, pa, monitor, p, matchingUserIDs, whenother);
 		if (null != message)
 			return message;
 		message = WorkItemTypeHelper.matchWorkItemTypes(repo, pa, wiClient, monitor, p);
@@ -74,7 +75,7 @@ public class WriteIt {
 	}
 
 	private static String matchMembers(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
-			Map<String, String> matchingUserIDs) {
+			Map<String, String> matchingUserIDs, String whenother) {
 
 		monitor.out("Matching user IDs:");
 		for (String k : matchingUserIDs.keySet()) {
@@ -82,6 +83,7 @@ public class WriteIt {
 		}
 		Map<String, IContributor> members = new HashMap<String, IContributor>();
 		IContributor member;
+		IContributor whenother_member = null;
 		for (IContributorHandle contribHandle : pa.getMembers()) {
 			try {
 				member = (IContributor) repo.itemManager().fetchCompleteItem(contribHandle, IItemManager.DEFAULT,
@@ -90,17 +92,30 @@ public class WriteIt {
 				e.printStackTrace();
 				return "error resolving IContributorHandle";
 			}
+			if (member.getUserId().equals(whenother)) {
+				whenother_member = member;
+			}
 			members.put(member.getUserId(), member);
 		}
 		String oldId, newId;
 		for (Member m : p.getMembers()) {
+			member = null;
 			oldId = m.getUserId();
 			newId = matchingUserIDs.get(oldId);
 			if (null == newId) {
-				return "user ID \"" + oldId
-						+ "\" was in the source RTC project area (or has been at some point), but it has not been found in the user matching file";
+				if (null == whenother_member) {
+					return "user ID \"" + oldId + "\" was in the source RTC project area (or has been at some point),"
+							+ " but it has not been found in the user matching file";
+				} else {
+					monitor.out(
+							"user ID \"" + oldId + "\" was in the source RTC project area (or has been at some point),"
+									+ " but it has not been found in the user matching file; it is replaced by: "
+									+ whenother_member.getUserId());
+					member = whenother_member;
+				}
+			} else {
+				member = members.get(newId);
 			}
-			member = members.get(newId);
 			if (null == member) {
 				return "user ID \"" + newId + "\" (before: \"" + oldId
 						+ "\") has not been found in the target project area";
