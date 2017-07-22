@@ -118,7 +118,6 @@ public class WorkItemTypeHelper {
 			ProgressMonitor monitor, //
 			Map<String, IWorkItemType> map) {
 
-		monitor.out("The workitem types are:");
 		List<IWorkItemType> allWorkItemTypes;
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);

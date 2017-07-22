@@ -92,8 +92,7 @@ public class TimelineHelper {
 				iteration = (IIteration) savedItems[1];
 				line.setExternalObject(devLine.getId(), devLine);
 				ite.setExternalObject(iteration.getId(), iteration);
-				monitor.out("\titeration \"" + ite.getName() + "\" in line \"" + line.getName() + "\"" + '\n' + devLine
-						+ '\n' + iteration);
+				monitor.out("\titeration \"" + ite.getName() + "\" in line \"" + line.getName() + "\"");
 			} else {
 				IIteration parentIteration = (IIteration) parent.getExternalObject();
 				IIteration parentIterationC = (IIteration) service.getMutableCopy(parentIteration);
