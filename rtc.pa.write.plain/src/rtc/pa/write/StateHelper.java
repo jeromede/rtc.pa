@@ -31,6 +31,7 @@ public class StateHelper {
 	public static String action(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, String type,
 			String state0, String state1) throws TeamRepositoryException {
 
+		monitor.out("\t\tlooking for action");
 		//
 		// This is an expansive shortcut
 		// TODO: refactor workitem state change (create a model, read matching
@@ -52,16 +53,22 @@ public class StateHelper {
 				end = "com.ibm.team.workitem.taskWorkflow.state.s" + state1;
 			}
 		}
+		monitor.out("\t\t\tbegin state: " + begin);
+		monitor.out("\t\t\tend   state: " + end);
 		//
 		// Search workflow
 		//
 		IWorkflowInfo wf = wiCommon.getWorkflow(type, pa, monitor);
 		Identifier<IState>[] states = wf.getAllStateIds();
 		for (Identifier<IState> s : states) {
+			monitor.out("\t\t\tbegin state? " + s.getStringIdentifier());
 			if (s.getStringIdentifier().equals(begin)) {
+				monitor.out("\t\t\tbegin state! " + s.getStringIdentifier());
 				Identifier<IWorkflowAction>[] actions = wf.getActionIds(s);
 				for (Identifier<IWorkflowAction> a : actions) {
+					monitor.out("\t\t\taction? " + a.getStringIdentifier());
 					if (wf.getActionResultState(a).getStringIdentifier().equals(end)) {
+						monitor.out("\t\t\taction! " + a.getStringIdentifier());
 						return a.getStringIdentifier();
 					}
 				}
@@ -92,7 +99,7 @@ public class StateHelper {
 		IWorkflowInfo wf = wiCommon.getWorkflow(type, pa, monitor);
 		Identifier<IState>[] states = wf.getAllStateIds();
 		for (Identifier<IState> s : states) {
-			monitor.out("\t\tstate? " + s.getStringIdentifier());
+			monitor.out("\t\t\tstate? " + s.getStringIdentifier());
 			if (s.getStringIdentifier().equals(begin)) {
 				return s;
 			}

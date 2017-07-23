@@ -64,10 +64,7 @@ public class WriteIt {
 		message = writeDevelopmentLines(repo, pa, service, monitor, p);
 		if (null != message)
 			return message;
-		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p);
-		if (null != message)
-			return message;
-		message = updateWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p);
+		message = writeWorkItems2(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, dir);
 		if (null != message)
 			return message;
 
@@ -163,28 +160,44 @@ public class WriteIt {
 		return null;
 	}
 
-	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p) {
+	private static String writeWorkItems1(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			String dir) {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = WorkItemVersionHelper.createWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			message = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
+					t);
 			if (null != message) {
-				return "error creating workitem " + t.getId() + " (id in source): " + message;
+				return "error creating work item " + t.getId() + " (id in source): " + message;
+			}
+		}
+		for (Task t : p.getTasks()) {
+			message = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
+					dir);
+			if (null != message) {
+				return "error creating links, etc. for work item " + t.getId() + " (id in source): " + message;
 			}
 		}
 		return null;
 	}
 
-	private static String updateWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, String dir,
-			Project p) {
+	private static String writeWorkItems2(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			String dir) {
 
 		String message;
 		for (Task t : p.getTasks()) {
-			message = WorkItemHelper.updateWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, dir, p, t);
+			message = WorkItemBuilder.createMinimalWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
+					t, dir);
 			if (null != message) {
-				return "error creating links, etc. for workitem " + t.getId() + " (id in source): " + message;
+				return "error creating minimal work item with links, etc. " + t.getId() + " (id in source): " + message;
+			}
+		}
+		for (Task t : p.getTasks()) {
+			message = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+			if (null != message) {
+				return "error creating/updating versions for work item " + t.getId() + " (id in source): " + message;
 			}
 		}
 		return null;

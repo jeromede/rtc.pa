@@ -79,6 +79,16 @@ public class Main {
 			monitor.err();
 			return;
 		}
+		monitor.out("Target server URL: " + url);
+		monitor.out("Target project: " + proj);
+		monitor.out("URL: " + user);
+		monitor.out("Password: " + "***");
+		monitor.out("Serialized input file: " + ser);
+		monitor.out("Attachment input dir: " + dir);
+		monitor.out("Matching user IDs input file: " + match);
+		monitor.out("Matching work item IDs output file: " + numbers);
+		monitor.out("Default user ID: " + whenother);
+		
 		message = matchingMembers(matchingUserIDs, match, whenother);
 		if (null != message) {
 			monitor.err("problem with the matching members file: " + message);

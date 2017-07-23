@@ -104,6 +104,7 @@ You need the real project area URL. For that:
 - the page you reach looks like `https://hub.jazz.net/ccmXX/web/projects/UUU | PPP`
   - `https://hub.jazz.net/ccmXX` is the CCM server URL
   - `UUU | PPP` is the project name.
+
   
 # Design
 
@@ -111,6 +112,9 @@ A read program reads the source PA and creates a model instance in memory, and t
 
 A write program reads the above local files, and, given a file matching each user ID before (source PA) and after (target PA), writes to the target PA.
 
+> [Discussion on design here](DESIGN.md).
+
+
 # Thanks
 
-A special _Danke_ to [Ralph Schoon](/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](https://rsjazz.wordpress.com) valuable help.
+A special _Danke_ to [Ralph Schoon](https://github.com/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](https://rsjazz.wordpress.com) valuable help.

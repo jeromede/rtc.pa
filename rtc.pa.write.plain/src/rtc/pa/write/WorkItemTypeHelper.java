@@ -46,7 +46,6 @@ public class WorkItemTypeHelper {
 			Project p) {
 
 		String result;
-		monitor.out("The workitem types are:");
 		String typeId;
 		IWorkItemType type;
 		String attrId;
@@ -81,7 +80,7 @@ public class WorkItemTypeHelper {
 				attr.setExternalObject(attrId, attribute);
 				if (attr.isEnum()) {
 					if (!AttributeTypes.isEnumerationAttributeType(typeId)) {
-						return "Work item type " + typeId + //
+						return "work item type " + typeId + //
 								" was a enumeration in the source project area "
 								+ "but is not anymore in the target project area";
 					}
@@ -109,7 +108,6 @@ public class WorkItemTypeHelper {
 					}
 				}
 			}
-			monitor.out("\t" + type.getDisplayName() + " (" + typeId + ')');
 		}
 		return null;
 	}
@@ -134,7 +132,6 @@ public class WorkItemTypeHelper {
 	private static String getCustomAttributes(ITeamRepository repo, ProgressMonitor monitor, //
 			IWorkItemType type, Map<String, IAttribute> map) {
 
-		monitor.out("\tcustom attributes for " + type.getIdentifier() + " (" + type.getDisplayName() + "):");
 		List<IAttributeHandle> customAttributeHandles = type.getCustomAttributes();
 		IFetchResult custom = null;
 		IAttribute attribute;
@@ -158,15 +155,12 @@ public class WorkItemTypeHelper {
 	private static String getLiterals(ITeamRepository repo, IWorkItemClient wiClient, ProgressMonitor monitor, //
 			IAttribute attribute, Map<String, ILiteral> map) {
 
-		monitor.out("\t\tliterals for " + attribute.getIdentifier() + " (" + attribute.getDisplayName() + "):");
 		try {
 			IEnumeration<? extends ILiteral> enumeration = wiClient.resolveEnumeration(attribute, monitor);
 			ILiteral literal;
 			for (Object o : enumeration.getEnumerationLiterals()) {
 				if (o instanceof ILiteral) {
 					literal = (ILiteral) o;
-					monitor.out("\t\t\t\tliteral: " + literal.getIdentifier2().getStringIdentifier() + " ("
-							+ literal.getName() + ")");
 					map.put(literal.getIdentifier2().getStringIdentifier(), literal);
 				}
 			}
@@ -185,8 +179,6 @@ public class WorkItemTypeHelper {
 		try {
 			enumeration = wiClient.resolveEnumeration(attribute, monitor);
 			nullLiteral = enumeration.findNullEnumerationLiteral();
-			monitor.out("\t\t\t\tnull literal: " + ((null == nullLiteral) ? null
-					: nullLiteral.getIdentifier2().getStringIdentifier() + " (" + nullLiteral.getName() + ")"));
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 		}
