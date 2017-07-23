@@ -47,8 +47,8 @@ import rtc.pa.utils.ProgressMonitor;
 public class WorkItemBuilder {
 
 	static String createUpdateWorkItemWithAllVersions(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task task) {
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor,
+			Map<Integer, Task> tasks, Project p, Task task) {
 
 		String result;
 		monitor.out("About to create/update work item (source ID): " + task.getId() + " (old id)");
@@ -109,8 +109,8 @@ public class WorkItemBuilder {
 					}
 				}
 
-				result = WorkItemCopyBuilder.fillWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, wi,
-						v, comments);
+				result = WorkItemCopyBuilder.fillWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, tasks, p, wi, v,
+						comments);
 				if (null != result)
 					return result;
 
@@ -189,7 +189,6 @@ public class WorkItemBuilder {
 		IWorkItemHandle wiH;
 		WorkItemWorkingCopy wc;
 		IWorkItem wi = null;
-		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
 		IDetailedStatus s;
 		try {
 			wiH = wiCopier.connectNew(type, monitor);
@@ -204,8 +203,8 @@ public class WorkItemBuilder {
 			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
 			type = (IWorkItemType) firstVersion.getType().getExternalObject();
 
-			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
-					wi, firstVersion, comments);
+			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, p, wi,
+					firstVersion);
 			if (null != result)
 				return result;
 

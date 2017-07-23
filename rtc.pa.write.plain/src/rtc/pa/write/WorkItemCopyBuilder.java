@@ -94,28 +94,45 @@ public class WorkItemCopyBuilder {
 			});
 
 	static String fillMinimalWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			IWorkItem wi, TaskVersion version, Map<Timestamp, Comment> currentComments) {
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p, IWorkItem wi, TaskVersion version) {
 
-		monitor.out("Fill (first) new work item version with minimal information for (summary): " + version.getSummary());
+		monitor.out(
+				"Fill (first) new work item version with minimal information for (summary): " + version.getSummary());
+		String result;
+		result = fillMinimal(repo, pa, wiClient, wiCommon, monitor, wi, version);
+		if (null != result)
+			return result;
+		return null;
+	}
+
+	private static String fillMinimal(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, IWorkItem wi, TaskVersion version) {
+
 		//
 		// migration specifics
 		//
 		IAttribute modifierInSource = null;
 		IAttribute modifiedInSource = null;
+		IAttribute sourceId = null;
 		try {
 			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
 			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
+			sourceId = wiClient.findAttribute(pa, "rtc.pa.id", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return ("can't find special custom attributes <rtc.pa.modifier> and/or <rtc.pa.modified>"
-					+ " that shoud exist in target to reflect history dates from source");
+			monitor.err(
+					"Can't find special custom attributes <rtc.pa.modifier> and/nor <rtc.pa.modified> and/nor <rtc.pa.id>"
+							+ " that could exist in target to reflect the old work item history as read from source."
+							+ " Continue anyway.");
 		}
 		if (null != modifiedInSource) {
 			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
 		}
 		if (null != modifierInSource) {
 			wi.setValue(modifierInSource, WorkItemBuilder.getC(repo, version.getModifier()));
+		}
+		if (null != sourceId) {
+			wi.setValue(sourceId, new Integer(version.getTask().getId()));
 		}
 		//
 		// summary
@@ -144,48 +161,23 @@ public class WorkItemCopyBuilder {
 
 		return null;
 	}
+
 	static String fillWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			IWorkItem wi, TaskVersion version, Map<Timestamp, Comment> currentComments) {
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, Map<Integer, Task> tasks, Project p, IWorkItem wi,
+			TaskVersion version, Map<Timestamp, Comment> currentComments) {
 
 		monitor.out("Fill new work item version for (summary): " + version.getSummary());
-		//
-		// migration specifics
-		//
-		IAttribute modifierInSource = null;
-		IAttribute modifiedInSource = null;
-		try {
-			modifierInSource = wiClient.findAttribute(pa, "rtc.pa.modifier", monitor);
-			modifiedInSource = wiClient.findAttribute(pa, "rtc.pa.modified", monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return ("can't find special custom attributes <rtc.pa.modifier> and/or <rtc.pa.modified>"
-					+ " that shoud exist in target to reflect history dates from source");
-		}
-		if (null != modifiedInSource) {
-			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
-		}
-		if (null != modifierInSource) {
-			wi.setValue(modifierInSource, WorkItemBuilder.getC(repo, version.getModifier()));
-		}
-		//
-		// summary
-		//
-		if (null == version.getSummary()) {
-			wi.setHTMLSummary(null);
-		} else {
-			wi.setHTMLSummary(XMLString.createFromXMLText(version.getSummary()));
-		}
+		String result;
+		result = fillMinimal(repo, pa, wiClient, wiCommon, monitor, wi, version);
+		if (null != result)
+			return result;
 		//
 		// description
 		//
 		if (null == version.getDescription()) {
 			wi.setHTMLDescription(null);
 		} else {
-			//
-			// TODO: change hyperlinks if needed (bonus?)
-			//
-			wi.setHTMLDescription(XMLString.createFromXMLText(version.getDescription()));
+			wi.setHTMLDescription(XMLString.createFromXMLText(transpose(version.getDescription(), tasks)));
 		}
 		//
 		// priority
@@ -211,22 +203,6 @@ public class WorkItemCopyBuilder {
 		// duration
 		//
 		wi.setDuration(version.getDuration());
-		//
-		// category
-		//
-		ICategory category;
-		Category cat = version.getCategory();
-		if (null == cat) {
-			try {
-				category = wiCommon.findUnassignedCategory(pa, ICategory.FULL_PROFILE, monitor);
-			} catch (TeamRepositoryException e) {
-				e.printStackTrace();
-				return "can't find /unassigned/ category";
-			}
-		} else {
-			category = (ICategory) cat.getExternalObject();
-		}
-		wi.setCategory(category);
 		//
 		// target
 		//
@@ -293,12 +269,9 @@ public class WorkItemCopyBuilder {
 				signature = XMLString
 						.createFromXMLText("<p>&nbsp;</p><p>&nbsp;</p><p><em>Original " + comm.getCreation() + " ("
 								+ WorkItemBuilder.getC(repo, comm.getCreator()).getName() + ")</em></p>");
-				//
-				// TODO: change hyperlinks if needed (bonus?)
-				//
 				comment = comments.createComment(//
 						WorkItemBuilder.getC(repo, comm.getCreator()), //
-						XMLString.createFromXMLText(comm.getContent()).concat(signature)//
+						XMLString.createFromXMLText(transpose(comm.getContent(), tasks)).concat(signature)//
 				);
 				comments.append(comment);
 				currentComments.put(comm.getCreation(), comm);
@@ -332,6 +305,11 @@ public class WorkItemCopyBuilder {
 		}
 
 		return null;
+	}
+
+	private static String transpose(String content, Map<Integer, Task> tasks) {
+		// TODO
+		return content;
 	}
 
 	static String updateWorkItemCopyWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
