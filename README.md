@@ -26,9 +26,10 @@ No existing elements in the target PA are deleted, the writing part only adds ne
 - Only work items from the considered PA are taken into account (no link to items in other project areas for example).
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
-- Timelines will be re-created in the target project area. Note: the write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
+- Timelines (development lines, iterations) will be re-created in the target project area. The write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived). Note: they should probably be renamed as the writing program puts a timestamp in the name.
 - Links between work items inside the read PA are the only one taken into account.
 - If a user is not part of the source project area anymore, and can’t be found in the input matching file, s·he will be replaced by the user running the program.
+- Who resolves a work item will be the user running the migration tool (who is the one triggering the state change action). See below for the adopted workaround.
 
 
 # Build
@@ -103,6 +104,9 @@ The target project area should already exist, with its users.
 
 It would be configured so that each item type has the following 3 custom attributes (see next §).
 
+
+# Behavior
+
 ## Workaround for work items history
 
 In the target project areas, work items versions will be shown as created by the user the migration tool used to log in, and the timestamps will correspond to when the migration took place.
@@ -113,25 +117,45 @@ As a workaround, the target PA process can be customized to add the following tw
 - Suggested name: `Original modification date`, ID: `rtc.pa.modified`, Type: `Timestamp`
 - Suggested name: `Original modifier`, ID: `rtc.pa.modifier`, Type: `Contributor`
 
-Another custom attribute will be used to help remember the previous ID (the one from the source PA) for each work item:
+Another custom attribute will be used (if it exists) to help remember the previous ID (the one from the source PA) for each work item:
 
 - Suggested name: `Original ID`, ID: `rtc.pa.id`, Type: `Integer`
 
-## Migration tool behavior
+Yes another custom attribute will be used (if it exists) to show in the history who the resolver was, in case the change is a work item resolution.
 
-If any of these custom attributes (`rtc.pa.modified`, `rtc.pa.modifier`, `rtc.pa.id`) exist in the target PA, they will be used and their value set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
+- Suggested name: `Original resolver`, ID: `rtc.pa.resolver`, Type: `Contributor`
 
-Furthermore, the way automatic hyperlinks are transposed is by the following algorithm. In each description and comment, text like:
+## Migration specific custom attributes
+
+If any of these custom attributes (`rtc.pa.modified`, `rtc.pa.modifier`, `rtc.pa.id`, `rtc.pa.resolver`) exist in the target PA, they will be used and their value set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
+
+## More on old work item IDs
+
+The following behaviors can be changed in `rtc.pa.write.text.Transposition`.
+
+### Work item summary
+
+The work item summary will be prefixed by the original work item ID between accolades:
+
+> ga bu zo meu
+
+becomes
+
+> {12345} ga bu zo meu
+
+, where 12345 is the ID of the same work item in the source repository.
+
+### Descriptions and comments
+
+Furthermore, "automatic hyperlinks" are transposed, using the following algorithm. In each description and comment, text like:
 
 > ga bu 12345 zo meu
 
-where "12345" is the ID of the work item in the source PA, will be modified to become:
+, where "12345" is the ID of the work item in the source PA, will be modified to become:
 
 > ga bu 678 {12345} zo meu
 
-where "678" is the corresponding work item ID in the target PA.
-
-This can be changed in `rtc.pa.write.text.Transposition`
+, where "678" is the corresponding work item ID in the target PA.
 
 
 # Special

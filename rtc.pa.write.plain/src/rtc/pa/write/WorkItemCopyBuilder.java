@@ -123,7 +123,7 @@ public class WorkItemCopyBuilder {
 			e.printStackTrace();
 			monitor.out(
 					"Can't find special custom attributes <rtc.pa.modifier> and/nor <rtc.pa.modified> and/nor <rtc.pa.id>"
-							+ " that could exist in target to reflect the old work item history as read from source."
+							+ " that could exist in target to better reflect the old work item history as read from source."
 							+ " Continue anyway.");
 		}
 		if (null != modifiedInSource) {
@@ -229,6 +229,24 @@ public class WorkItemCopyBuilder {
 			resolution2Id = Identifier.create(IResolution.class, version.getResolution2());
 		}
 		wi.setResolution2(resolution2Id);
+		version.getResolvedBy(); // ... but can't be used. Custom attribute
+									// instead, see just below:
+		//
+		// resolution migration specifics
+		//
+		IAttribute resolverInSource = null;
+		try {
+			resolverInSource = wiClient.findAttribute(pa, "rtc.pa.resolver", monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			monitor.out("Can't find special custom attributes <rtc.pa.resolver>"
+					+ " that could exist in target to better reflect the old work item history as read from source."
+					+ " Continue anyway.");
+		}
+		if (null != resolverInSource) {
+			wi.setValue(resolverInSource, WorkItemBuilder.getC(repo, version.getResolvedBy()));
+		}
+
 		//
 		// values (custom attributes)
 		//
