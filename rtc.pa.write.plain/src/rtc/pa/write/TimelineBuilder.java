@@ -36,9 +36,9 @@ public class TimelineBuilder {
 			Line line) {
 
 		IDevelopmentLine devLine = service.createDevelopmentLine();
-		devLine.setId(line.getAlternateId() + " " + Instant.now());
+		devLine.setId(line.getAlternateId());
 		if (null != line.getName()) {
-			devLine.setName(line.getName() + " " + Instant.now());
+			devLine.setName(line.getName());
 		}
 		if (null != line.getEnds()) {
 			devLine.setEndDate(line.getEnds());
@@ -70,9 +70,9 @@ public class TimelineBuilder {
 			Line line, Iteration parent, Iteration ite) {
 
 		IIteration iterationC = service.createIteration();
-		iterationC.setId(ite.getAlternateId() + " " + Instant.now());
+		iterationC.setId(ite.getAlternateId());
 		if (null != ite.getName()) {
-			iterationC.setName(ite.getName() + " " + Instant.now());
+			iterationC.setName(ite.getName());
 		}
 		if (null != ite.getStarts()) {
 			iterationC.setStartDate(ite.getStarts());

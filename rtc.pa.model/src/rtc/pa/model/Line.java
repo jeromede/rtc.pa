@@ -71,8 +71,8 @@ public class /* Development */ Line extends Item implements Serializable {
 			boolean projectLine) {
 		super(sourceId);
 		this.id = id;
-		this.alternateId = id + " {" + nextInternal + '}';
-		this.name = name + " {" + nextInternal++ + '}';
+		this.alternateId = id + ' ' + nextInternal;
+		this.name = name + ' ' + nextInternal++;
 		this.starts = starts;
 		this.ends = ends;
 		this.projectLine = projectLine;

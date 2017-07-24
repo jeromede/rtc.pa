@@ -59,8 +59,8 @@ public class Iteration extends Item implements Serializable {
 			Date ends) {
 		super(sourceId);
 		this.id = id;
-		this.alternateId = id + " {" + nextInternal + '}';
-		this.name = name + " {" + nextInternal++ + '}';
+		this.alternateId = id + ' ' + nextInternal;
+		this.name = name + ' ' + nextInternal++;
 		this.label = label;
 		this.description = description;
 		this.starts = starts;
