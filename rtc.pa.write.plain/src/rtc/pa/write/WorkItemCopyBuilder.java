@@ -120,7 +120,7 @@ public class WorkItemCopyBuilder {
 			sourceId = wiClient.findAttribute(pa, "rtc.pa.id", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			monitor.err(
+			monitor.out(
 					"Can't find special custom attributes <rtc.pa.modifier> and/nor <rtc.pa.modified> and/nor <rtc.pa.id>"
 							+ " that could exist in target to reflect the old work item history as read from source."
 							+ " Continue anyway.");

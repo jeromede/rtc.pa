@@ -77,6 +77,8 @@ For example:
 
 The target project area should already exist, with its users.
 
+It would be configured so that each item type has the following 3 custom attributes (see next §).
+
 ## Workaround for work items history
 
 In the target project areas, work items versions will be shown as created by the user the migration tool used to log in, and the timestamps will correspond to when the migration took place.
@@ -87,7 +89,11 @@ As a workaround, the target PA process can be customized to add the following tw
 - ID: `rtc.pa.modified`, Type: `Timestamp`
 - ID: `rtc.pa.modifier`, Type: `Contributor`
 
-If these custom attributes exist in the target PA, they will be used and set in the work item histories to reflect what took place when and by whom in the source PA.
+Another custom attribute will be used to help remember the previous ID (the one from the source PA) for each work item:
+
+- ID: `rtc.pa.id`, Type: `Integer`
+
+If these custom attributes exist in the target PA, they will be used and set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
 
 
 # Special
