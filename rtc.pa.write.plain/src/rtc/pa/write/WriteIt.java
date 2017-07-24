@@ -95,6 +95,17 @@ public class WriteIt {
 			}
 			members.put(member.getUserId(), member);
 		}
+		// Add special unassigned
+		IContributor unassigned = null;
+		try {
+			unassigned = repo.contributorManager().fetchContributorByUserId("unassigned", monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			unassigned = null;
+		}
+		if (null != unassigned) {
+			members.put(unassigned.getUserId(), unassigned);
+		}
 		String oldId, newId;
 		for (Member m : p.getMembers()) {
 			member = null;

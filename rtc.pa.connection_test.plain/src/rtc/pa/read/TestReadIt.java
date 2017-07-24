@@ -74,7 +74,8 @@ public class TestReadIt {
 				e.printStackTrace();
 				return "error resolving IContributorHandle";
 			}
-			monitor.out("- " + contrib.getUserId() + " (" + contrib.getName() + ")");
+			monitor.out(
+					"- " + contrib.getUserId() + " (" + contrib.getName() + ") " + contrib.getItemId().getUuidValue());
 		}
 		return null;
 	}
@@ -90,6 +91,17 @@ public class TestReadIt {
 		result = readContributors(pa.getMembers(), repo, pa, monitor);
 		if (null != result)
 			return result;
+		IContributor unassigned = null;
+		try {
+			unassigned = repo.contributorManager().fetchContributorByUserId("unassigned", monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			unassigned = null;
+		}
+		if (null != unassigned) {
+			monitor.out("- " + unassigned.getUserId() + " (" + unassigned.getName() + ") "
+					+ unassigned.getItemId().getUuidValue());
+		}
 		return null;
 	}
 
