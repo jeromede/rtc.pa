@@ -141,7 +141,7 @@ public class WorkItemCopyBuilder {
 		if (null == version.getSummary()) {
 			wi.setHTMLSummary(null);
 		} else {
-			wi.setHTMLSummary(XMLString.createFromXMLText(version.getSummary()));
+			wi.setHTMLSummary(XMLString.createFromXMLText(prefix(version.getSummary(), version.getTask().getId())));
 		}
 		//
 		// category
@@ -328,6 +328,10 @@ public class WorkItemCopyBuilder {
 
 	private static String transpose(String content, Map<String, String> tasks) {
 		return Transposition.transpose(content, tasks);
+	}
+
+	private static String prefix(String content, int id) {
+		return Transposition.prefix(content, id);
 	}
 
 	static String updateWorkItemCopyWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,

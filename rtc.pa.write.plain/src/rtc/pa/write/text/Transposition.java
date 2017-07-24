@@ -43,4 +43,12 @@ public class Transposition {
 		return result;
 	}
 
+	public static String prefix(String content, int id) {
+		return "{" + id + "} " + content;
+	}
+
+	public static String prefix(String content, String id) {
+		return "{" + id + "} " + content;
+	}
+
 }
