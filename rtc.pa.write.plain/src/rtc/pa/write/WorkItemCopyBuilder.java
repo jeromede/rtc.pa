@@ -77,6 +77,7 @@ import rtc.pa.model.Task;
 import rtc.pa.model.TaskVersion;
 import rtc.pa.model.Value;
 import rtc.pa.utils.ProgressMonitor;
+import rtc.pa.write.text.Transposition;
 
 public class WorkItemCopyBuilder {
 
@@ -163,7 +164,7 @@ public class WorkItemCopyBuilder {
 	}
 
 	static String fillWorkItemVersion(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, ProgressMonitor monitor, Map<Integer, Task> tasks, Project p, IWorkItem wi,
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, Map<String, String> tasks, Project p, IWorkItem wi,
 			TaskVersion version, Map<Timestamp, Comment> currentComments) {
 
 		monitor.out("Fill new work item version for (summary): " + version.getSummary());
@@ -307,9 +308,8 @@ public class WorkItemCopyBuilder {
 		return null;
 	}
 
-	private static String transpose(String content, Map<Integer, Task> tasks) {
-		// TODO
-		return content;
+	private static String transpose(String content, Map<String, String> tasks) {
+		return Transposition.transpose(content, tasks);
 	}
 
 	static String updateWorkItemCopyWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,

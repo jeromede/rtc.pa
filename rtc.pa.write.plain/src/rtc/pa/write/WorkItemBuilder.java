@@ -48,7 +48,7 @@ public class WorkItemBuilder {
 
 	static String createUpdateWorkItemWithAllVersions(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor,
-			Map<Integer, Task> tasks, Project p, Task task) {
+			Map<String, String> tasks, Project p, Task task) {
 
 		String result;
 		monitor.out("About to create/update work item (source ID): " + task.getId() + " (old id)");

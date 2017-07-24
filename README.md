@@ -86,14 +86,26 @@ There iss currently no way to override this.
 
 As a workaround, the target PA process can be customized to add the following two custom attributes to all the workitems:
 
-- ID: `rtc.pa.modified`, Type: `Timestamp`
-- ID: `rtc.pa.modifier`, Type: `Contributor`
+- Suggested name: `Original modification date`, ID: `rtc.pa.modified`, Type: `Timestamp`
+- Suggested name: `Original modifier`, ID: `rtc.pa.modifier`, Type: `Contributor`
 
 Another custom attribute will be used to help remember the previous ID (the one from the source PA) for each work item:
 
-- ID: `rtc.pa.id`, Type: `Integer`
+- Suggested name: `Original ID`, ID: `rtc.pa.id`, Type: `Integer`
 
-If these custom attributes exist in the target PA, they will be used and set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
+## Migration tool behavior
+
+If any of these custom attributes (`Original modification date`, `Original modifier`, `rtc.pa.id`) exist in the target PA, they will be used and their value set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
+
+Furthermore, the way automatic hyperlinks are transposed is by the following algorithm. In each description and comment, text like:
+
+> ga bu 12345 zo meu
+
+where "12345" is the ID of the work item in the source PA, will be modified to become:
+
+> ga bu 678 {12345} zo meu
+
+where "678" is the corresponding work item ID in the target PA.
 
 
 # Special

@@ -65,11 +65,7 @@ public class WriteIt {
 		if (null != message)
 			return message;
 
-		Map<Integer, Task> tasks = new HashMap<Integer, Task>();
-		for (Task task : p.getTasks()) {
-			tasks.put(task.getId(), task);
-		}
-		message = writeWorkItems2(repo, pa, wiClient, wiCommon, wiCopier, monitor, tasks, p, dir);
+		message = writeWorkItems2(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, dir);
 		if (null != message)
 			return message;
 
@@ -166,8 +162,8 @@ public class WriteIt {
 	}
 
 	private static String writeWorkItems2(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor,
-			Map<Integer, Task> tasks, Project p, String dir) {
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			String dir) {
 
 		String message;
 		for (Task t : p.getTasks()) {
@@ -176,6 +172,10 @@ public class WriteIt {
 			if (null != message) {
 				return "error creating minimal work item with links, etc. " + t.getId() + " (id in source): " + message;
 			}
+		}
+		Map<String, String> tasks = new HashMap<String, String>();
+		for (Task task : p.getTasks()) {
+			tasks.put("" + task.getId(), task.getExternalId());
 		}
 		for (Task t : p.getTasks()) {
 			message = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
