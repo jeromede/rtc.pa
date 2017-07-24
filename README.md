@@ -26,9 +26,9 @@ No existing elements in the target PA are deleted, the writing part only adds ne
 - Only work items from the considered PA are taken into account (no link to items in other project areas for example).
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
-- The timelines will be re-created in the target project area, the program doesn't try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
+- Timelines will be re-created in the target project area. Note: the write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived).
 - Links between work items inside the read PA are the only one taken into account.
-- If a user is not part of the source project area anymore, and can't be found in the input matching file, s·he will be replaced by the user running the program.
+- If a user is not part of the source project area anymore, and can’t be found in the input matching file, s·he will be replaced by the user running the program.
 
 
 # Build
@@ -50,13 +50,13 @@ For each Eclipse project needing the API:
   - `rtc.pa.write.plain` connects to an RTC 6.0.4, hence needs the 6.0.4 version of the API
   - `rtc.pa.connection_test.plain` connects to both an RTC 5.0.2 and an RTC 6.0.4, hence the Eclipse project needs to be duplicated, one for the 5.0.2 version of the API, and one for the 6.0.4 version of the API.
   
-Don't try to use a version of the API different from the version of RTC you want to connect to, this won't work.
+Don’t try to use a version of the API different from the version of RTC you want to connect to, this won’t work.
 
 The version of the API declared in the class paths of the regular Eclipse projects in this repository corresponds to the latest version of RTC, unziped in `/opt/IBM/RTC-6.0.4/api/`
 
 Different projects `version*` are already set for different version of the API. This will work if the local installation has the `/opt/IBM/RTC-x.y.z/api/` directories already prepared.
 
-You will have to change your Eclipse project properties if this doesn't match your local installation (or if you are working on a non-UNIX plaform).
+You will have to change your Eclipse project properties if this doesn’t match your local installation (or if you are working on a non-UNIX plaform).
 
 
 # Usage
@@ -82,7 +82,7 @@ It would be configured so that each item type has the following 3 custom attribu
 ## Workaround for work items history
 
 In the target project areas, work items versions will be shown as created by the user the migration tool used to log in, and the timestamps will correspond to when the migration took place.
-There iss currently no way to override this.
+There is currently no way to override this.
 
 As a workaround, the target PA process can be customized to add the following two custom attributes to all the workitems:
 
@@ -95,7 +95,7 @@ Another custom attribute will be used to help remember the previous ID (the one 
 
 ## Migration tool behavior
 
-If any of these custom attributes (`Original modification date`, `Original modifier`, `rtc.pa.id`) exist in the target PA, they will be used and their value set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
+If any of these custom attributes (`rtc.pa.modified`, `rtc.pa.modifier`, `rtc.pa.id`) exist in the target PA, they will be used and their value set in the work item histories to reflect what took place when and by whom in the source PA. The value of `rtc.pa.id` could also be displayed in the work item forms.
 
 Furthermore, the way automatic hyperlinks are transposed is by the following algorithm. In each description and comment, text like:
 
@@ -106,6 +106,8 @@ where "12345" is the ID of the work item in the source PA, will be modified to b
 > ga bu 678 {12345} zo meu
 
 where "678" is the corresponding work item ID in the target PA.
+
+This can be changed in `rtc.pa.write.text.Transposition`
 
 
 # Special
@@ -135,4 +137,4 @@ A write program reads the above local files, and, given a file matching each use
 
 # Thanks
 
-A special _Danke_ to [Ralph Schoon](https://github.com/rsjazz) for his [direct](https://jazz.net/forum/users/rschoon) or [indirect](https://rsjazz.wordpress.com) valuable help.
+_Vielen Dank_ [Ralph](https://github.com/rsjazz) for your [direct](https://jazz.net/forum/users/rschoon) or [indirect](https://rsjazz.wordpress.com) valuable help.
