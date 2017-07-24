@@ -131,9 +131,9 @@ public class WorkItemBuilder {
 							if (null == stateId) {
 								return "couldn't find state " + state + " for type " + type.getIdentifier();
 							}
-							monitor.out("\t    force state (TOO BAD) to become:");
+							monitor.out("\tforce state (TOO BAD) to become:");
 							forceState(wi, stateId);
-							monitor.out("\t    " + stateId.getStringIdentifier());
+							monitor.out("\t" + stateId.getStringIdentifier());
 						} 
 //						else {
 //							monitor.out("\t    action:");
@@ -287,7 +287,7 @@ public class WorkItemBuilder {
 		} finally {
 			wiCopier.disconnect(wiH);
 		}
-		monitor.out("\tupdated work item " + task.getId() + " (old ID).");
+		monitor.out("Just updated work item " + task.getId() + " (old ID).");
 		return null;
 	}
 

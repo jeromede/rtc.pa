@@ -368,9 +368,9 @@ public class WorkItemCopyBuilder {
 				continue;
 			reference = IReferenceFactory.INSTANCE.createReferenceToItem(otherWi.getItemHandle());
 			monitor.out(
-					"\tabout to create link " + l.getType() + " from " + wi.getId() + " to " + otherWi.getId() + "...");
+					"\tabout to add link " + l.getType() + " from " + wi.getId() + " to " + otherWi.getId() + "...");
 			wc.getReferences().add(endpoint, reference);
-			monitor.out("\t... link created");
+			monitor.out("\t... link created.");
 		}
 		return null;
 	}
@@ -384,7 +384,7 @@ public class WorkItemCopyBuilder {
 			reference = IReferenceFactory.INSTANCE.createReferenceFromURI(a.getURI(), a.getComment());
 			monitor.out("\tabout to create artifact " + a.getURI().getPath() + " from " + wi.getId() + "...");
 			wc.getReferences().add(endpoint, reference);
-			monitor.out("\t... artifact created");
+			monitor.out("\t... artifact created.");
 		}
 		return null;
 	}
