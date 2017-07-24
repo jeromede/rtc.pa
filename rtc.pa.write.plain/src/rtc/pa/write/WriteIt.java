@@ -141,7 +141,7 @@ public class WriteIt {
 
 		String message;
 		for (Category cat : p.getCategories()) {
-			message = CategoryHelper.createCategory(pa, wiCommon, monitor, p, cat);
+			message = CategoryBuilder.createCategory(pa, wiCommon, monitor, p, cat);
 			if (null != message) {
 				return "error creating category: " + message;
 			}
@@ -154,17 +154,17 @@ public class WriteIt {
 
 		String message;
 		for (Line line : p.getLines()) {
-			message = TimelineHelper.createLine(pa, service, monitor, p, line);
+			message = TimelineBuilder.createLine(pa, service, monitor, p, line);
 			if (null != message) {
 				return "error creating line: " + message;
 			}
 			for (Iteration ite : line.getIterations()) {
-				message = TimelineHelper.createIteration(pa, service, monitor, p, line, null, ite);
+				message = TimelineBuilder.createIteration(pa, service, monitor, p, line, null, ite);
 				if (null != message) {
 					return "error creating iteration: " + message;
 				}
 			}
-			message = TimelineHelper.setLineCurrent(pa, service, monitor, line);
+			message = TimelineBuilder.setLineCurrent(pa, service, monitor, line);
 			if (null != message) {
 				return "error setting current iteration in line: " + message;
 			}
