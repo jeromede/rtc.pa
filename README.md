@@ -73,6 +73,30 @@ For example:
 
 `https://hub.jazz.net/ccm13 "UU | PPP" jazz_admin iloveyou`
 
+## Read program usage
+
+`rtc.pa.read.Main source_repository_url source_project_area_name login password serialization_output_file ouput_directory_for_attachments`
+
+For example:
+
+`rtc.pa.read.Main https://old.example.com/ccm 'HR UX' admin 'Xy0H!T,K7m' 'HR UX.ser' attachments`
+
+## Trace .ser file
+
+`rtc.pa.model.trace.Main serialization_file`
+
+For example:
+
+`rtc.pa.model.trace.Main 'HR UX.ser'`
+
+## Write program usage
+
+`rtc.pa.write.Main target_repository_url target_project_area_name login password serialization_input_file input_directory_for_attachments matching_members_input_file matching_workitem_ids_output_file`
+
+For example:
+
+`rtc.pa.write.Main https://ccm.example.com/ccm 'HR UX' migrator 'jK12l;:-)8:-)' 'HR UX.ser' attachments members.txt workitem_ids.txt`
+
 ## Preconditions
 
 The target project area should already exist, with its users.
