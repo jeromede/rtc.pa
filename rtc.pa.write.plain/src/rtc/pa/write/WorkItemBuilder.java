@@ -72,13 +72,7 @@ public class WorkItemBuilder {
 		WorkItemWorkingCopy wc;
 		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
 
-		// String action;
-		/*
-		 * See below: we always force a state change instead of triggering an
-		 * action, because of some weird side effects detected during tests
-		 * (like resolution with duplicate trying to pop up a UI window asking
-		 * for a duplicate link).
-		 */
+		String action;
 
 		IDetailedStatus s;
 		Identifier<IState> stateId;
@@ -102,6 +96,7 @@ public class WorkItemBuilder {
 		}
 		wc = wiCopier.getWorkingCopy(wiH);
 		wi = wc.getWorkItem();
+		boolean retry;
 		try {
 			if (create) {
 				wi.setCreator(getC(repo, task.getCreator()));
@@ -123,44 +118,56 @@ public class WorkItemBuilder {
 				if (null != result)
 					return result;
 
+				stateId = null;
 				if (null != previousState) {
 					if (!state.equals(previousState)) {
 						monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
 						monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
 
-						// action = null;
-						// try {
-						// action = StateHelper.action(pa, wiCommon, monitor,
-						// type.getIdentifier(), previousState,
-						// state);
-						// } catch (TeamRepositoryException e) {
-						// e.printStackTrace();
-						// return "problem while searching action to trigger";
-						// }
-						// if (null == action) {
-
 						stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
 						if (null == stateId) {
 							return "couldn't find state " + state + " for type " + type.getIdentifier();
 						}
-						monitor.out("\tforce state to become:");
-						forceState(wi, stateId);
-						monitor.out("\t" + stateId.getStringIdentifier());
+						action = null;
+						try {
+							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
+									state);
+						} catch (TeamRepositoryException e) {
+							e.printStackTrace();
+							return "problem while searching action to trigger";
+						}
 
-						// }
-						// else {
-						// monitor.out("\t action:");
-						// wc.setWorkflowAction(action);
-						// monitor.out("\t " + action);
-						// }
+						if (null == action) {
+							monitor.out("\tforce state to become:");
+							forceState(wi, stateId);
+							monitor.out("\t" + stateId.getStringIdentifier());
+						} else {
+							monitor.out("\t action:");
+							wc.setWorkflowAction(action);
+							monitor.out("\t " + action);
+						}
 					}
 				}
 
 				s = wc.save(monitor);
-				if (!s.isOK()) {
+				if (s.isOK()) {
+					retry = false;
+				} else {
+					retry = true;
 					s.getException().printStackTrace();
-					monitor.out("error adding new work item version, but continue anyway...");
+					monitor.out("error adding new work item version, retrying by forcing state change...");
 				}
+				if (retry && (null != stateId)) {
+					monitor.out("\tforce state to become:");
+					forceState(wi, stateId);
+					monitor.out("\t" + stateId.getStringIdentifier());
+					s = wc.save(monitor);
+					if (!s.isOK()) {
+						s.getException().printStackTrace();
+						monitor.out("error adding new work item version, continue anyway");
+					}
+				}
+
 				previousState = state;
 				previousType = type;
 			}
