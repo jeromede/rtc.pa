@@ -112,7 +112,7 @@ It would be configured so that each item type has the following 3 custom attribu
 In the target project areas, work items versions will be shown as created by the user the migration tool used to log in, and the timestamps will correspond to when the migration took place.
 There is currently no way to override this.
 
-As a workaround, the target PA process can be customized to add the following two custom attributes to all the workitems:
+As a workaround, the target PA process can be customized to add the following two custom attributes to all the work items:
 
 - Suggested name: `Original modification date`, ID: `rtc.pa.modified`, Type: `Timestamp`
 - Suggested name: `Original modifier`, ID: `rtc.pa.modifier`, Type: `Contributor`
@@ -121,7 +121,7 @@ Another custom attribute will be used (if it exists) to help remember the previo
 
 - Suggested name: `Original ID`, ID: `rtc.pa.id`, Type: `Integer`
 
-Yes another custom attribute will be used (if it exists) to show in the history who the resolver was, in case the change is a work item resolution.
+Yet another custom attribute will be used (if it exists) to show in the history who the resolver was, in case the change is a work item resolution:
 
 - Suggested name: `Original resolver`, ID: `rtc.pa.resolver`, Type: `Contributor`
 
@@ -135,11 +135,11 @@ The following behaviors can be changed in `rtc.pa.write.text.Transposition`.
 
 ### Work item summary
 
-The work item summary will be prefixed by the original work item ID between accolades:
+Each work item summary will be prefixed by the original work item ID between braces:
 
 > ga bu zo meu
 
-becomes
+becomes:
 
 > {12345} ga bu zo meu
 
