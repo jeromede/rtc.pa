@@ -119,13 +119,13 @@ public class WorkItemBuilder {
 						monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
 						monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
 						action = null;
-						try {
-							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
-									state);
-						} catch (TeamRepositoryException e) {
-							e.printStackTrace();
-							return "problem while searching action to trigger";
-						}
+//						try {
+//							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
+//									state);
+//						} catch (TeamRepositoryException e) {
+//							e.printStackTrace();
+//							return "problem while searching action to trigger";
+//						}
 						if (null == action) {
 							stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
 							if (null == stateId) {
@@ -134,11 +134,12 @@ public class WorkItemBuilder {
 							monitor.out("\t    force state (TOO BAD) to become:");
 							forceState(wi, stateId);
 							monitor.out("\t    " + stateId.getStringIdentifier());
-						} else {
-							monitor.out("\t    action:");
-							wc.setWorkflowAction(action);
-							monitor.out("\t    " + action);
-						}
+						} 
+//						else {
+//							monitor.out("\t    action:");
+//							wc.setWorkflowAction(action);
+//							monitor.out("\t    " + action);
+//						}
 					}
 				}
 
