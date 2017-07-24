@@ -71,25 +71,34 @@ public class WorkItemBuilder {
 		IWorkItemHandle wiH;
 		WorkItemWorkingCopy wc;
 		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
-		String action;
+
+		// String action;
+		/*
+		 * See below: we always force a state change instead of triggering an
+		 * action, because of some weird side effects detected during tests
+		 * (like resolution with duplicate trying to pop up a UI window asking
+		 * for a duplicate link).
+		 */
+
 		IDetailedStatus s;
 		Identifier<IState> stateId;
 		IWorkItem wi;
-		if (create) {
-			wi = null;
-		} else {
-			wi = (IWorkItem) task.getExternalObject();
-		}
 		try {
 			if (create) {
+				wi = null;
 				wiH = wiCopier.connectNew(type, monitor);
 			} else {
+				wi = (IWorkItem) task.getExternalObject();
 				wiH = (IWorkItemHandle) wi.getItemHandle();
 				wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
 			}
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "impossible to initialize a new work item";
+			if (create) {
+				return "impossible to initialize a new work item";
+			} else {
+				return "impossible to initialize an update for an existing work item";
+			}
 		}
 		wc = wiCopier.getWorkingCopy(wiH);
 		wi = wc.getWorkItem();
@@ -118,35 +127,38 @@ public class WorkItemBuilder {
 					if (!state.equals(previousState)) {
 						monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
 						monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
-						action = null;
-//						try {
-//							action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState,
-//									state);
-//						} catch (TeamRepositoryException e) {
-//							e.printStackTrace();
-//							return "problem while searching action to trigger";
-//						}
-						if (null == action) {
-							stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
-							if (null == stateId) {
-								return "couldn't find state " + state + " for type " + type.getIdentifier();
-							}
-							monitor.out("\tforce state (TOO BAD) to become:");
-							forceState(wi, stateId);
-							monitor.out("\t" + stateId.getStringIdentifier());
-						} 
-//						else {
-//							monitor.out("\t    action:");
-//							wc.setWorkflowAction(action);
-//							monitor.out("\t    " + action);
-//						}
+
+						// action = null;
+						// try {
+						// action = StateHelper.action(pa, wiCommon, monitor,
+						// type.getIdentifier(), previousState,
+						// state);
+						// } catch (TeamRepositoryException e) {
+						// e.printStackTrace();
+						// return "problem while searching action to trigger";
+						// }
+						// if (null == action) {
+
+						stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
+						if (null == stateId) {
+							return "couldn't find state " + state + " for type " + type.getIdentifier();
+						}
+						monitor.out("\tforce state to become:");
+						forceState(wi, stateId);
+						monitor.out("\t" + stateId.getStringIdentifier());
+
+						// }
+						// else {
+						// monitor.out("\t action:");
+						// wc.setWorkflowAction(action);
+						// monitor.out("\t " + action);
+						// }
 					}
 				}
 
 				s = wc.save(monitor);
 				if (!s.isOK()) {
 					s.getException().printStackTrace();
-					// return ("error adding new work item version");
 					monitor.out("error adding new work item version, but continue anyway...");
 				}
 				previousState = state;
