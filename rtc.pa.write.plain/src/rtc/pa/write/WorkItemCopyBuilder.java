@@ -274,7 +274,7 @@ public class WorkItemCopyBuilder {
 				}
 				monitor.out("\t\t= " + val.getValue());
 			} else {
-				monitor.out("\t\t... no!");
+				monitor.out("\t\t... no value!");
 			}
 		}
 		//
@@ -381,10 +381,14 @@ public class WorkItemCopyBuilder {
 		IEndPointDescriptor endpoint;
 		for (Link l : task.getLinks()) {
 			endpoint = linkTypes.get(l.getType());
-			if (null == endpoint)
+			if (null == endpoint) {
 				continue;
-			if (null == l.getTarget())
+			}
+			if (null == l.getTarget()) {
+				monitor.out("\tstrange: link target is null (source: " + wi.getId() + " link type: " + l.getType()
+						+ ")\n\tcontinue anyway with other links");
 				continue;
+			}
 			otherWi = (IWorkItem) l.getTarget().getExternalObject();
 			if (null == otherWi)
 				continue;

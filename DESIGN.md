@@ -1,16 +1,14 @@
 # DESIGN
 
-## Second approach ([1.0.0-rc.1]())
+## Second approach ([1.0.0-rc.2](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.2))
 
 First create a (first version of) each work item, its links; then, for each work item again, continue with the other versions:
 
 1) Create categories
 2) Create development lines and iterations
-3) For each work item, create a minimal work item version, with:
-    - links
-    - attachments
-    - approvals
-4) For each work item again, create each version from the history:
+3) For each work item, create a minimal work item version
+    - and collect the matching between source IDs and target IDs (needed for step 4)
+4) For each work item again, update by adding each version from the history (+ change automatic links in descriptions and comments):
     - builtin attributes
     - custom attributes
     - comments
@@ -18,12 +16,16 @@ First create a (first version of) each work item, its links; then, for each work
     - subscribers
     - change state if needed
     - change WI type if needed
+5) For each work item again, update with:
+    - links
+    - attachments
+    - approvals
 
 The change was more or less a refactoring of the previous algorithm.
 
 Note: some other changes make the new model incompatible with the previous one, hence the older serialized model instances won’t be readable.
 
-## First approach ([1.0.0-pre.1]())
+## First approach ([1.0.0-pre.1](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-pre.1))
 
 1) Create categories
 2) Create development lines and iterations

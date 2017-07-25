@@ -46,12 +46,81 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemBuilder {
 
+	static String createMinimalWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
+			Task task, String dir) {
+
+		String result;
+		monitor.out("About to create minimal work item {" + task.getId() + "}");
+		Collection<TaskVersion> versions = task.getHistory();
+		TaskVersion firstVersion = null;
+		for (TaskVersion v : versions) {
+			firstVersion = v;
+			break;
+		}
+		if (null == firstVersion) {
+			monitor.out("\tno first version!");
+			return null;
+		}
+		IWorkItemType type = (IWorkItemType) firstVersion.getType().getExternalObject();
+		IWorkItemHandle wiH;
+		try {
+			wiH = wiCopier.connectNew(type, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "impossible to initialize a new work item";
+		}
+		WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
+		IWorkItem wi = wc.getWorkItem();
+		IDetailedStatus s;
+		try {
+			wi.setCreator(getC(repo, task.getCreator()));
+			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
+			type = (IWorkItemType) firstVersion.getType().getExternalObject();
+
+			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, p, wi,
+					firstVersion);
+			if (null != result)
+				return result;
+
+			/*
+			 * ************************************************************
+			 */
+			result = WorkItemCopyBuilder.updateWorkItemCopyWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor,
+					dir, wi, wiH, p, task);
+			if (null != result)
+				return result;
+			/*
+			 * *************************************************************
+			 */
+
+			s = wc.save(monitor);
+			if (!s.isOK()) {
+				s.getException().printStackTrace();
+				return ("error creating minimal new work item with its links, etc.");
+			}
+
+		} finally {
+			wiCopier.disconnect(wi);
+		}
+		try {
+			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error fetching created work item");
+		}
+		task.setExternalObject("" + wi.getId(), wi);
+		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
+		System.out.println("Just created minimal work item with links: " + wi.getId() + " {" + task.getId() + '}');
+		return null;
+	}
+
 	static String createUpdateWorkItemWithAllVersions(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor,
 			Map<String, String> tasks, Project p, Task task) {
 
 		String result;
-		monitor.out("About to create/update work item (source ID): " + task.getId() + " (old id)");
+		monitor.out("About to create/update work item {" + task.getId() + '}');
 		boolean create = (null == task.getExternalObject());
 		Collection<TaskVersion> versions = task.getHistory();
 
@@ -113,10 +182,16 @@ public class WorkItemBuilder {
 					}
 				}
 
+				/*
+				 * *********************************************************
+				 */
 				result = WorkItemCopyBuilder.fillWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, tasks, p, wi, v,
 						comments);
 				if (null != result)
 					return result;
+				/*
+				 * *********************************************************
+				 */
 
 				stateId = null;
 				if (null != previousState) {
@@ -164,7 +239,8 @@ public class WorkItemBuilder {
 					s = wc.save(monitor);
 					if (!s.isOK()) {
 						s.getException().printStackTrace();
-						monitor.out("error adding new work item version, continue anyway");
+						monitor.out(
+								"error adding new work item version, even after forcing state change, continue anyway");
 					}
 				}
 
@@ -185,62 +261,49 @@ public class WorkItemBuilder {
 		}
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
-		System.out.println("Just created work item: " + wi.getId() + " (new id)");
+		monitor.out("Just created/updated work item " + wi.getId() + " {" + task.getId() + '}');
 		return null;
 	}
 
-	static String createMinimalWorkItemWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	static String updateWorkItemWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
 			Task task, String dir) {
 
 		String result;
-		monitor.out("About to create minimal work item (source ID), with links: " + task.getId() + " (old id)");
-		Collection<TaskVersion> versions = task.getHistory();
-		TaskVersion firstVersion = null;
-		for (TaskVersion v : versions) {
-			firstVersion = v;
-			break;
-		}
-		if (null == firstVersion) {
-			monitor.out("\tno first version!");
-			return null;
-		}
-		IWorkItemType type = (IWorkItemType) firstVersion.getType().getExternalObject();
-		IWorkItemHandle wiH;
-		WorkItemWorkingCopy wc;
-		IWorkItem wi = null;
-		IDetailedStatus s;
+		monitor.out("About to update work item with links, etc. {" + task.getId() + '}');
+		IWorkItem wi = (IWorkItem) task.getExternalObject();
+		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
 		try {
-			wiH = wiCopier.connectNew(type, monitor);
+			wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return "impossible to initialize a new work item";
+			return "impossible to initialize a work item copy";
 		}
-		wc = wiCopier.getWorkingCopy(wiH);
+		WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
 		wi = wc.getWorkItem();
 		try {
-			wi.setCreator(getC(repo, task.getCreator()));
-			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
-			type = (IWorkItemType) firstVersion.getType().getExternalObject();
 
-			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, p, wi,
-					firstVersion);
-			if (null != result)
-				return result;
-
+			/*
+			 * ************************************************************
+			 */
 			result = WorkItemCopyBuilder.updateWorkItemCopyWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor,
 					dir, wi, wiH, p, task);
 			if (null != result)
 				return result;
+			/*
+			 * ************************************************************
+			 */
 
-			s = wc.save(monitor);
+			IDetailedStatus s = wc.save(monitor);
 			if (!s.isOK()) {
 				s.getException().printStackTrace();
-				return ("error creating minimal new work item with its links, etc.");
+				return ("error updating work item with links, etc. " + wi.getId());
 			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ("error when creating work item links, etc.");
 		} finally {
-			wiCopier.disconnect(wi);
+			wiCopier.disconnect(wiH);
 		}
 		try {
 			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
@@ -250,7 +313,7 @@ public class WorkItemBuilder {
 		}
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
-		System.out.println("Just created minimal work item with links: " + wi.getId() + " (new id)");
+		monitor.out("Just updated work item with links, etc. " + wi.getId() + " {" + task.getId() + '}');
 		return null;
 	}
 
@@ -266,48 +329,8 @@ public class WorkItemBuilder {
 	}
 
 	@SuppressWarnings("deprecation")
-	static void forceState(IWorkItem wi, Identifier<IState> stateId) {
+	private static void forceState(IWorkItem wi, Identifier<IState> stateId) {
 		wi.setState2(stateId); // TOO BAD
-	}
-
-	static String updateWorkItemWithLinks(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task task, String dir) {
-
-		String result;
-		monitor.out("About to update work item " + task.getId() + " (old ID)");
-		IWorkItem wi = (IWorkItem) task.getExternalObject();
-		if (null == wi) {
-			monitor.out("SHOULD NOT HAPPEN: null work item as the external object for this migration task "
-					+ task.getId() + " (old Id) " + task.getExternalId());
-			return null;
-		}
-		IWorkItemHandle wiH = (IWorkItemHandle) wi.getItemHandle();
-		try {
-			wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
-		} catch (TeamRepositoryException e) {
-			e.printStackTrace();
-			return "impossible to initialize a work item copy";
-		}
-		try {
-			WorkItemWorkingCopy wc = wiCopier.getWorkingCopy(wiH);
-			result = WorkItemCopyBuilder.updateWorkItemCopyWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor,
-					dir, wi, wiH, p, task);
-			if (null != result)
-				return result;
-			IDetailedStatus s = wc.save(monitor);
-			if (!s.isOK()) {
-				s.getException().printStackTrace();
-				return ("error updating work item with links, etc. " + wc.getWorkItem().getId());
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ("error when creating work item links, etc.");
-		} finally {
-			wiCopier.disconnect(wiH);
-		}
-		monitor.out("Just updated work item " + task.getId() + " (old ID).");
-		return null;
 	}
 
 }

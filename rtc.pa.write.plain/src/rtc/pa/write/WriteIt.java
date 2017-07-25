@@ -166,10 +166,9 @@ public class WriteIt {
 
 		String result;
 		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.createMinimalWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
-					t, dir);
+			result = WorkItemBuilder.createMinimalWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t, dir);
 			if (null != result) {
-				return "error creating minimal work item with links, etc. " + t.getId() + " (id in source): " + result;
+				return "error creating minimal work item " + t.getId() + " (id in source): " + result;
 			}
 		}
 		Map<String, String> tasks = new HashMap<String, String>();
@@ -180,7 +179,14 @@ public class WriteIt {
 			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
 					monitor, tasks, p, t);
 			if (null != result) {
-				return "error creating/updating versions for work item " + t.getId() + " (id in source): " + result;
+				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
+			}
+		}
+		for (Task t : p.getTasks()) {
+			result = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
+					dir);
+			if (null != result) {
+				return "error updating work item with links, etc. " + t.getId() + " (id in source): " + result;
 			}
 		}
 		return null;
