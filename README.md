@@ -6,7 +6,7 @@ Writing to another project area from the previous file and directory works.
 
 ## Still to do
 
-- change automatic links to work items in summaries and comments to that they point to the new item number, not the old one.
+- change automatic links to work items in summaries and comments so that they point to the new item number, not the old one.
 
 
 # What
@@ -26,10 +26,10 @@ No existing elements in the target PA are deleted, the writing part only adds ne
 - Only work items from the considered PA are taken into account (no link to items in other project areas for example).
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
 (But see workaround below.)
-- Timelines (development lines, iterations) will be re-created in the target project area. The write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived). Note: they should probably be renamed as the writing program puts a timestamp in the name.
+- Timelines (development lines, iterations) will be re-created in the target project area. The write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived). Note: they should probably be renamed as the writing program puts a index in the ID/name.
 - Links between work items inside the read PA are the only one taken into account.
 - If a user is not part of the source project area anymore, and can’t be found in the input matching file, s·he will be replaced by the user running the program.
-- Who resolves a work item will be the user running the migration tool (who is the one triggering the state change action). See below for the adopted workaround.
+- Who resolves a work item will be the user running the migration tool (who is the one triggering the state change action). See below for the a workaround to see who did it originally.
 
 
 # Build
@@ -98,11 +98,22 @@ For example:
 
 `rtc.pa.write.Main https://ccm.example.com/ccm 'HR UX' migrator 'jK12l;:-)8:-)' 'HR UX.ser' attachments members.txt workitem_ids.txt`
 
+Note: `matching_members_input_file` has to be a UTF-8 text file with a line for each member; this line should read like:
+
+> `ID_in_source ID_in_target`
+
+(two IDs separated by spaces).
+
+Don’t forget the special user `unassigned`, who should still be the same in the target project area, unless you made the administrative operation to change its name. So, there also should be a line like:
+
+> `unassigned unassigned`
+
+
 ## Preconditions
 
 The target project area should already exist, with its users.
 
-It would be configured so that each item type has the following 3 custom attributes (see next §).
+It would be configured so that each item type has the following 4 custom attributes (see next §).
 
 
 # Behavior
@@ -131,7 +142,7 @@ If any of these custom attributes (`rtc.pa.modified`, `rtc.pa.modifier`, `rtc.pa
 
 ## More on old work item IDs
 
-The following behaviors can be changed in `rtc.pa.write.text.Transposition`.
+The following behaviors can be changed in the code of `rtc.pa.write.text.Transposition`.
 
 ### Work item summary
 
