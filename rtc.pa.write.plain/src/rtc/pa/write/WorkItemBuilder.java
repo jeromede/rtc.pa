@@ -78,16 +78,11 @@ public class WorkItemBuilder {
 			wi.setCreationDate(new Timestamp(task.getCreation().getTime()));
 			type = (IWorkItemType) firstVersion.getType().getExternalObject();
 
-			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, p, wi,
-					firstVersion);
-			if (null != result)
-				return result;
-
 			/*
 			 * ************************************************************
 			 */
-			result = WorkItemCopyBuilder.updateWorkItemCopyWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor,
-					dir, wi, wiH, p, task);
+			result = WorkItemCopyBuilder.fillMinimalWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, p, wi,
+					firstVersion);
 			if (null != result)
 				return result;
 			/*
