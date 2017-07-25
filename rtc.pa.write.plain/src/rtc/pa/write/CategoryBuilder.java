@@ -27,6 +27,7 @@ import rtc.pa.model.Project;
 import rtc.pa.utils.ProgressMonitor;
 
 public class CategoryBuilder {
+
 	static String createCategory(IProjectArea pa, IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p,
 			Category cat) {
 

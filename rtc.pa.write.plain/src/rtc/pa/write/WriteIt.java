@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.team.process.client.IProcessItemService;
+import com.ibm.team.process.client.workingcopies.IWorkingCopyManager;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
@@ -32,8 +33,6 @@ import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
 import com.ibm.team.workitem.common.IWorkItemCommon;
 
 import rtc.pa.model.Category;
-import rtc.pa.model.Iteration;
-import rtc.pa.model.Line;
 import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -51,6 +50,7 @@ public class WriteIt {
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		IWorkItemWorkingCopyManager wiCopier = wiClient.getWorkItemWorkingCopyManager();
 		IProcessItemService service = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IWorkingCopyManager pCopier = service.getWorkingCopyManager();
 
 		message = matchMembers(repo, pa, monitor, p, matchingUserIDs, whenother);
 		if (null != message)
@@ -61,11 +61,10 @@ public class WriteIt {
 		message = writeCategories(repo, pa, wiCommon, monitor, p);
 		if (null != message)
 			return message;
-		message = writeDevelopmentLines(repo, pa, service, monitor, p);
+		message = writeDevelopmentLines(repo, pa, service, pCopier, monitor, p);
 		if (null != message)
 			return message;
-
-		message = writeWorkItems2(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, dir);
+		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, dir);
 		if (null != message)
 			return message;
 
@@ -150,38 +149,27 @@ public class WriteIt {
 	}
 
 	private static String writeDevelopmentLines(ITeamRepository repo, IProjectArea pa, IProcessItemService service,
-			ProgressMonitor monitor, Project p) {
+			IWorkingCopyManager pCopier, ProgressMonitor monitor, Project p) {
 
-		String message;
-		for (Line line : p.getLines()) {
-			message = TimelineBuilder.createLine(pa, service, monitor, p, line);
-			if (null != message) {
-				return "error creating line: " + message;
-			}
-			for (Iteration ite : line.getIterations()) {
-				message = TimelineBuilder.createIteration(pa, service, monitor, p, line, null, ite);
-				if (null != message) {
-					return "error creating iteration: " + message;
-				}
-			}
-			message = TimelineBuilder.setLineCurrent(pa, service, monitor, line);
-			if (null != message) {
-				return "error setting current iteration in line: " + message;
-			}
+		try {
+			TimelineBuilder.createTimelines(repo, pa, service, pCopier, monitor, p);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "error while creating development lines and iterations";
 		}
 		return null;
 	}
 
-	private static String writeWorkItems2(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
 			String dir) {
 
-		String message;
+		String result;
 		for (Task t : p.getTasks()) {
-			message = WorkItemBuilder.createMinimalWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
+			result = WorkItemBuilder.createMinimalWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p,
 					t, dir);
-			if (null != message) {
-				return "error creating minimal work item with links, etc. " + t.getId() + " (id in source): " + message;
+			if (null != result) {
+				return "error creating minimal work item with links, etc. " + t.getId() + " (id in source): " + result;
 			}
 		}
 		Map<String, String> tasks = new HashMap<String, String>();
@@ -189,10 +177,10 @@ public class WriteIt {
 			tasks.put("" + task.getId(), task.getExternalId());
 		}
 		for (Task t : p.getTasks()) {
-			message = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
+			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
 					monitor, tasks, p, t);
-			if (null != message) {
-				return "error creating/updating versions for work item " + t.getId() + " (id in source): " + message;
+			if (null != result) {
+				return "error creating/updating versions for work item " + t.getId() + " (id in source): " + result;
 			}
 		}
 		return null;
