@@ -76,6 +76,7 @@ public class Task extends Item implements Serializable {
 	}
 
 	public Collection<TaskVersion> getHistory() {
+		// TODO: should return a list since it is sorted
 		return history.values();
 	}
 

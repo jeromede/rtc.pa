@@ -111,7 +111,7 @@ public class WorkItemBuilder {
 		}
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
-		System.out.println("Just created minimal work item with links: " + wi.getId() + " {" + task.getId() + '}');
+		System.out.println("Just created minimal work item " + wi.getId() + " {" + task.getId() + '}');
 		return null;
 	}
 

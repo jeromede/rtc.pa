@@ -127,13 +127,34 @@ public class WorkItemCopyBuilder {
 							+ " Continue anyway.");
 		}
 		if (null != modifiedInSource) {
-			wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
+			try {
+				wi.setValue(modifiedInSource, new Timestamp(version.getModified().getTime()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				monitor.out("Error setting value " + version.getModified().getTime() + " (timestamp) on attribute "
+						+ modifiedInSource.getIdentifier() + " for work item " + wi.getId() + " {"
+						+ version.getTask().getId() + "} ...Continue anyway...");
+			}
 		}
 		if (null != modifierInSource) {
-			wi.setValue(modifierInSource, WorkItemBuilder.getC(repo, version.getModifier()));
+			try {
+				wi.setValue(modifierInSource, WorkItemBuilder.getC(repo, version.getModifier()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				monitor.out("Error setting value " + WorkItemBuilder.getC(repo, version.getModifier()).getUserId()
+						+ " (contributor) on attribute " + modifierInSource.getIdentifier() + " for work item "
+						+ wi.getId() + " {" + version.getTask().getId() + "} ...Continue anyway...");
+			}
 		}
 		if (null != sourceId) {
-			wi.setValue(sourceId, new Integer(version.getTask().getId()));
+			try {
+				wi.setValue(sourceId, new Integer(version.getTask().getId()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				monitor.out("Error setting value " + version.getTask().getId() + " (integer) on attribute "
+						+ sourceId.getIdentifier() + " for work item " + wi.getId() + " {" + version.getTask().getId()
+						+ "} ...Continue anyway...");
+			}
 		}
 		//
 		// summary
@@ -244,7 +265,14 @@ public class WorkItemCopyBuilder {
 					+ " Continue anyway.");
 		}
 		if (null != resolverInSource) {
-			wi.setValue(resolverInSource, WorkItemBuilder.getC(repo, version.getResolvedBy()));
+			try {
+				wi.setValue(resolverInSource, WorkItemBuilder.getC(repo, version.getResolvedBy()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				monitor.out("Error setting value " + WorkItemBuilder.getC(repo, version.getResolvedBy()).getUserId()
+						+ " (contributor) on attribute " + resolverInSource.getIdentifier() + " for work item "
+						+ wi.getId() + " {" + version.getTask().getId() + "} ...Continue anyway...");
+			}
 		}
 
 		//
