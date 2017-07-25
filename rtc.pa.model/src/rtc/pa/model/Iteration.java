@@ -35,6 +35,7 @@ public class Iteration extends Item implements Serializable {
 	private String description;
 	private Date starts;
 	private Date ends;
+	private boolean hasDeliverable;
 	private Map<String, Iteration> iterations = new HashMap<String, Iteration>();
 
 	public String toString() {
@@ -46,6 +47,7 @@ public class Iteration extends Item implements Serializable {
 				+ Item.SEP + Item.trace("description", description)//
 				+ Item.SEP + Item.trace("starts", starts)//
 				+ Item.SEP + Item.trace("ends", ends)//
+				+ Item.SEP + Item.trace("has deliverable", hasDeliverable) //
 				+ Item.SEP + Item.trace_list("\nSUBITERATIONS", Item.itemsToString(iterations.values()));
 	}
 
@@ -56,7 +58,8 @@ public class Iteration extends Item implements Serializable {
 			String label, //
 			String description, //
 			Date starts, //
-			Date ends) {
+			Date ends, //
+			boolean hasDeliverable) {
 		super(sourceId);
 		this.id = id;
 		this.alternateId = id + ' ' + nextInternal;
@@ -93,6 +96,10 @@ public class Iteration extends Item implements Serializable {
 
 	public Date getEnds() {
 		return this.ends;
+	}
+
+	public boolean hasDeliverable() {
+		return this.hasDeliverable;
 	}
 
 	void putIteration(Iteration iteration) {

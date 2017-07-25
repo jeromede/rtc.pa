@@ -103,7 +103,8 @@ public class TimelineHelper {
 				iteration.getLabel(), //
 				iteration.getDescription().getSummary(), //
 				iteration.getStartDate(), //
-				iteration.getEndDate());
+				iteration.getEndDate(), //
+				iteration.hasDeliverable());
 		if (null == parent) {
 			p.putIteration(line, ite);
 		} else {
