@@ -1,6 +1,6 @@
 # DESIGN
 
-## Second approach ([1.0.0-rc.2](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.2))
+## Second approach ([1.0.0-rc.3](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.3))
 
 First create a (first version of) each work item, its links; then, for each work item again, continue with the other versions:
 
@@ -21,9 +21,9 @@ First create a (first version of) each work item, its links; then, for each work
     - attachments
     - approvals
 
-The change was more or less a refactoring of the previous algorithm.
+This has been more or less a reordering of the previous algorithm.
 
-Note: some other changes make the new model incompatible with the previous one, hence the older serialized model instances won’t be readable.
+Note: some other changes make the new model incompatible with the previous one, hence older serialized model instances won’t be readable.
 
 ## First approach ([1.0.0-pre.1](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-pre.1))
 
