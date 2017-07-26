@@ -14,11 +14,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-package rtc.pa.model.trace;
+package rtc.pa.model.utilities;
 
 import rtc.pa.model.Project;
 
-public abstract class Main {
+public abstract class Trace {
 
 	public static void main(String[] args) {
 
