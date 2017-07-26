@@ -80,11 +80,11 @@ For example:
 
 ## Trace .ser file
 
-`rtc.pa.model.trace.Main serialization_file`
+`rtc.pa.model.utilities.Trace serialization_file`
 
 For example:
 
-`rtc.pa.model.trace.Main 'HR UX.ser'`
+`rtc.pa.model.utilities.Trace 'HR UX.ser'`
 
 ## Write program usage
 
