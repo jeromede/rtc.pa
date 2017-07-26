@@ -4,10 +4,6 @@ Reading from a project area to a file (and to a directory for attachments) works
 
 Writing to another project area from the previous file and directory works.
 
-## Still to do
-
-- change automatic links to work items in summaries and comments so that they point to the new item number, not the old one.
-
 
 # What
 
@@ -24,10 +20,10 @@ No existing elements in the target PA are deleted, the writing part only adds ne
 
 - Work item types and workflows must be "compatible".
 - Only work items from the considered PA are taken into account (no link to items in other project areas for example).
+- Hence, the only links taken into account are the ones between work items inside the read PA.
 - History in the target PA will show the user the tool uses to log in and the timestamps will correspond to when the objects are written.
-(But see workaround below.)
+See a workaround below.
 - Timelines (development lines, iterations) will be re-created in the target project area. The write program doesn’t try to reuse existing development lines or iterations if some exist (and then, they should probably be archived). Note: they should probably be renamed as the writing program puts a index in the ID/name.
-- Links between work items inside the read PA are the only one taken into account.
 - If a user is not part of the source project area anymore, and can’t be found in the input matching file, s·he will be replaced by the user running the program.
 - Who resolves a work item will be the user running the migration tool (who is the one triggering the state change action). See below for the a workaround to see who did it originally.
 
@@ -184,6 +180,7 @@ You need the real project area URL. For that:
   - `https://hub.jazz.net/ccmXX` is the CCM server URL
   - `UUU | PPP` is the project name.
 
+Note: Bluemix Track&Plan (aka JazzHub) is definitely shut down end of July 2017. A new and better option is to use IBM Track and Plan on Cloud, which is RTC as SaaS.
   
 # Design
 
