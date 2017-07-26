@@ -17,10 +17,14 @@
 package rtc.pa.read;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.ibm.team.links.common.registry.IEndPointDescriptor;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
@@ -38,6 +42,8 @@ import com.ibm.team.workitem.common.model.ILiteral;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItemType;
 import com.ibm.team.workitem.common.model.Identifier;
+import com.ibm.team.workitem.common.model.WorkItemEndPoints;
+import com.ibm.team.workitem.common.model.WorkItemLinkTypes;
 import com.ibm.team.workitem.common.workflow.IWorkflowAction;
 import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
 
@@ -57,6 +63,9 @@ public class TestReadIt {
 		if (null != result)
 			return result;
 		result = readWorkItemTypes(repo, pa, wiClient, wiCommon, monitor);
+		if (null != result)
+			return result;
+		result = readLinkTypes(repo, monitor);
 		if (null != result)
 			return result;
 		return null;
@@ -203,6 +212,29 @@ public class TestReadIt {
 				e.printStackTrace();
 				return "error while reading enumeration";
 			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("serial")
+	private static final Map<String, IEndPointDescriptor> linkTypes = Collections
+			.unmodifiableMap(new HashMap<String, IEndPointDescriptor>() {
+				{
+					put(WorkItemLinkTypes.BLOCKS_WORK_ITEM, WorkItemEndPoints.BLOCKS_WORK_ITEM);
+					put(WorkItemLinkTypes.COPIED_WORK_ITEM, WorkItemEndPoints.COPIED_WORK_ITEM);
+					put(WorkItemLinkTypes.DUPLICATE_WORK_ITEM, WorkItemEndPoints.DUPLICATE_WORK_ITEM);
+					put(WorkItemLinkTypes.PARENT_WORK_ITEM, WorkItemEndPoints.PARENT_WORK_ITEM);
+					put(WorkItemLinkTypes.RELATED_WORK_ITEM, WorkItemEndPoints.RESOLVES_WORK_ITEM);
+					put(WorkItemLinkTypes.MENTIONS, WorkItemEndPoints.MENTIONS);
+				}
+			});
+
+	private static String readLinkTypes(ITeamRepository repo, ProgressMonitor monitor) {
+		monitor.out("Reading link types...");
+		IEndPointDescriptor wiep;
+		for (String wilt : linkTypes.keySet()) {
+			wiep = linkTypes.get(wilt);
+			monitor.out("\t" + wilt + " | " + wiep.getId());
 		}
 		return null;
 	}
