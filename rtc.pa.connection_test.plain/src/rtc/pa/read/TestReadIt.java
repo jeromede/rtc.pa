@@ -122,6 +122,8 @@ public class TestReadIt {
 		monitor.out("Reading workflows...");
 		IWorkflowInfo wf;
 		List<IWorkItemType> allWorkItemTypes;
+		SortedMap<String, Identifier<IState>> states;
+		SortedMap<String, Identifier<IWorkflowAction>> actions;
 		try {
 			allWorkItemTypes = wiClient.findWorkItemTypes(pa, monitor);
 		} catch (TeamRepositoryException e) {
@@ -139,17 +141,26 @@ public class TestReadIt {
 				e.printStackTrace();
 				return "problem while getting workflow";
 			}
-			Identifier<IState>[] states = wf.getAllStateIds();
-			for (Identifier<IState> state : states) {
-				monitor.out("\t\tstate: " + state.getStringIdentifier());
-				Identifier<IWorkflowAction>[] actions = wf.getActionIds(state);
-				for (Identifier<IWorkflowAction> action : actions) {
-					monitor.out("\t\t\taction: " + action.getStringIdentifier());
+			states = new TreeMap<String, Identifier<IState>>();
+			for (Identifier<IState> state : wf.getAllStateIds()) {
+				states.put(state.getStringIdentifier(), state);
+			}
+			for (Identifier<IState> state: states.values()) {
+				monitor.out("\t\tstate: " + state.getStringIdentifier() + " (" + wf.getStateName(state) + ")");
+				actions = new TreeMap<String, Identifier<IWorkflowAction>>();
+				for (Identifier<IWorkflowAction> action : wf.getActionIds(state)) {
+					actions.put(action.getStringIdentifier(), action);
+				}
+				for (Identifier<IWorkflowAction> action : actions.values()) {
+					monitor.out(
+							"\t\t\taction: " + action.getStringIdentifier() + " (" + wf.getActionName(action) + ")");
 					Identifier<IState> resultState = wf.getActionResultState(action);
-					monitor.out("\t\t\t\tto state: " + resultState.getStringIdentifier());
+					monitor.out("\t\t\t\tto state: " + resultState.getStringIdentifier() + " (" + wf.getStateName(state)
+							+ ")");
 				}
 			}
 		}
+
 		SortedMap<String, IAttribute> attributes;
 		try {
 			for (IWorkItemType t : types.values()) {
