@@ -1,8 +1,26 @@
 # DESIGN
 
-## Second approach ([1.0.0-rc.4](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.4))
+## Third approach ([1.0.0-rc.4](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.4))
 
-Inverted steps 4 and 5 from the below process.
+Inverted steps 4 and 5 from the below process. Now:
+
+1) Create categories
+2) Create development lines and iterations
+3) For each work item, create a minimal work item version
+    - and collect the matching between source IDs and target IDs (needed for step 5)
+4) For each work item again, update with:
+    - links
+    - attachments
+    - approvals
+5) For each work item again, update by adding each version from the history (+ change automatic links in descriptions and comments):
+    - builtin attributes
+    - custom attributes
+    - comments
+    - tags
+    - subscribers
+    - change state if needed
+    - change WI type if needed
+
 
 ## Second approach ([1.0.0-rc.3](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.3))
 
