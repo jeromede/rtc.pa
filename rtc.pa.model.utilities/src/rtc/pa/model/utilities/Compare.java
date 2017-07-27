@@ -30,6 +30,7 @@ import java.util.Map;
 import rtc.pa.model.Link;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
+import rtc.pa.model.TaskVersion;
 
 public abstract class Compare {
 
@@ -58,6 +59,16 @@ public abstract class Compare {
 	private static void trace(String t, String s1, String s2) {
 		System.out.println(t + ": \"" + s1 + "\" | \"" + s2 + '\"');
 	}
+
+	@SuppressWarnings("serial")
+	private static final Collection<String> linkTypes = Collections.unmodifiableList(new ArrayList<String>() {
+		{
+			add("com.ibm.team.workitem.linktype.blocksworkitem");
+			add("com.ibm.team.workitem.linktype.copiedworkitem");
+			add("com.ibm.team.workitem.linktype.duplicateworkitem");
+			add("com.ibm.team.workitem.linktype.parentworkitem");
+		}
+	});
 
 	private static void matchingIds(Map<Integer, Integer> map, String filename) throws IOException {
 		List<String> lines;
@@ -96,7 +107,8 @@ public abstract class Compare {
 		Project p2 = Project.deserialize(ser2);
 		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
 		matchingIds(map, ids);
-		trace("About to compare projects " + p1.getName() + " and " + p2.getName() + "...");
+		trace("About to compare projects \n\t1) <" + p1.getUri() + "web/projects/" + p1.getName() + ">\n\t2) <" + p2.getUri()
+				+ "web/projects/" + p2.getName() + ">");
 		trace("\tCriteria:");
 		trace("\t- same number of work items");
 		trace("\t- same number of links between two corresponding work items");
@@ -126,13 +138,14 @@ public abstract class Compare {
 			i2 = map.get(i1);
 			t1 = getTask(p1, i1);
 			if (null == t1) {
-				trace("something is wrong, project 1 doesn't contain work item" + i1);
+				trace("\tsomething is wrong, project 1 doesn't contain work item" + i1);
 			}
 			t2 = getTask(p2, i2);
 			if (null == t2) {
-				trace("something is wrong, project 2 doesn't contain work item" + i1);
+				trace("\tsomething is wrong, project 2 doesn't contain work item" + i1);
 			}
-			if (same(t1, t2)) {
+			trace("Comparison for work item", t1.getId(), t2.getId());
+			if (same(t1, t2, map)) {
 				trace("OK so far, same work items", t1.getId(), t2.getId());
 			} else {
 				trace("KO, different work items", t1.getId(), t2.getId());
@@ -141,6 +154,56 @@ public abstract class Compare {
 			}
 		}
 		return result;
+	}
+
+	private static boolean same(Task t1, Task t2, Map<Integer, Integer> map) {
+		boolean result = true;
+		trace("\tState comparison for work item", t1.getId(), t2.getId());
+		if (!state(last(t1)).equals(state(last(t2)))) {
+			trace("\tKO, different final states", state(last(t1)), state(last(t2)));
+			trace("\t... continue anyway...");
+		}
+		trace("\tLink comparison for work item", t1.getId(), t2.getId());
+		int n1 = trace_links(t1);
+		int n2 = trace_links(t2);
+		if (n1 != n2) {
+			trace("\tKO, different total number of links between the two", n1, n2);
+			trace("\t... continue anyway...");
+			result = false;
+		}
+		Link l2;
+		for (Link l1 : t1.getLinks()) {
+			if (!linkTypes.contains(l1.getType())) {
+				continue;
+			}
+			l2 = isThere(l1, t2, map);
+			if (null == l2) {
+				trace("\tKO, didn't find in " + t2.getId() + " a link equivalent to " + t1.getId() + "--("
+						+ l1.getType() + ")-->");
+				trace("\t... continue anyway...");
+				result = false;
+			} else {
+				trace("\t\tOK so far,    " + t1.getId() + "--(" + l1.getType() + ")-->" + l1.getTarget().getId()//
+						+ "\n\t\tequivalent to " + t2.getId() + "--(" + l2.getType() + ")-->" + l2.getTarget().getId()//
+				);
+			}
+		}
+		return result;
+	}
+
+	private static Link isThere(Link l1, Task t2, Map<Integer, Integer> map) {
+		Task other1 = l1.getTarget();
+		Task other2;
+		for (Link l2 : t2.getLinks()) {
+			if (!linkTypes.contains(l2.getType())) {
+				continue;
+			}
+			other2 = l2.getTarget();
+			if (l1.getType().equals(l2.getType()) && (map.get(other1.getId()) == other2.getId())) {
+				return l2;
+			}
+		}
+		return null;
 	}
 
 	private static Task getTask(Project p, int id) {
@@ -152,38 +215,35 @@ public abstract class Compare {
 		return null;
 	}
 
-	private static boolean same(Task t1, Task t2) {
-		boolean result = true;
-		trace("\tLink comparison between work items", t1.getId(), t2.getId());
-		int n1 = trace_links(t1);
-		int n2 = trace_links(t2);
-		if (n1 != n2) {
-			trace("\tKO, different total number of links between the two", n1, n2);
-			trace("\t... continue anyway...");
-			result = false;
+	private static TaskVersion last(Task task) {
+		TaskVersion result = null;
+		for (TaskVersion v : task.getHistory()) {
+			result = v;
 		}
 		return result;
 	}
 
-	@SuppressWarnings("serial")
-	private static final Collection<String> linkTypes = Collections.unmodifiableList(new ArrayList<String>() {
-		{
-			add("com.ibm.team.workitem.linktype.blocksworkitem");
-			add("com.ibm.team.workitem.linktype.copiedworkitem");
-			// add("com.ibm.team.workitem.linktype.textualReference");
-			// add("com.ibm.team.workitem.linktype.relatedworkitem");
-			add("com.ibm.team.workitem.linktype.duplicateworkitem");
-			add("com.ibm.team.workitem.linktype.parentworkitem");
+	private static String state(TaskVersion version) {
+		String state = version.getState();
+		String type = version.getType().getSourceId();
+		if (1 == state.length()) {
+			if (type.equals("defect")) {
+				return "com.ibm.team.workitem.defectWorkflow.state.s" + state;
+			} else if (type.equals("task")) {
+				return "com.ibm.team.workitem.taskWorkflow.state.s" + state;
+			}
 		}
-	});
+		return state;
+	}
 
 	private static int trace_links(Task t) {
-		trace("\t\tLinks for work item", t.getId());
+		// trace("\t\tLinks for work item", t.getId());
 		int n = 0;
 		for (Link l : t.getLinks()) {
 			if (null != l.getTarget()) {
 				if (linkTypes.contains(l.getType())) {
-					trace("\t\t\t---(" + l.getType() + ")---> " + l.getTarget().getId());
+					// trace("\t\t\t---(" + l.getType() + ")---> " +
+					// l.getTarget().getId());
 					n++;
 				}
 			}
