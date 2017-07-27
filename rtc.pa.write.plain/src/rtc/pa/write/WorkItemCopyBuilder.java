@@ -121,10 +121,9 @@ public class WorkItemCopyBuilder {
 			sourceId = wiClient.findAttribute(pa, "rtc.pa.id", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			monitor.out(
-					"Can't find special custom attributes <rtc.pa.modifier> and/nor <rtc.pa.modified> and/nor <rtc.pa.id>"
-							+ " that could exist in target to better reflect the old work item history as read from source."
-							+ " Continue anyway.");
+			monitor.out("Warning: can't find special custom attributes <rtc.pa.modifier>"
+					+ " (used if it exists in target to better reflect the old work item history as read from source)."
+					+ " ...Continue without setting it...");
 		}
 		if (null != modifiedInSource) {
 			try {
@@ -260,9 +259,9 @@ public class WorkItemCopyBuilder {
 			resolverInSource = wiClient.findAttribute(pa, "rtc.pa.resolver", monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			monitor.out("Can't find special custom attributes <rtc.pa.resolver>"
-					+ " that could exist in target to better reflect the old work item history as read from source."
-					+ " Continue anyway.");
+			monitor.out("Warning: can't find special custom attributes <rtc.pa.resolver>"
+					+ " (used if it exists in target to better reflect the old work item history as read from source)."
+					+ " ...Continue without setting it...");
 		}
 		if (null != resolverInSource) {
 			try {
@@ -543,12 +542,10 @@ public class WorkItemCopyBuilder {
 			approvalDesc.type = a.getType();
 			approvalDesc.name = a.getSourceId();
 			approvalDesc.due = a.getDue();
-			System.out.println("aproovals before: " + aproovals);
 			aprooval = aproovals.get(approvalDesc);
 			if (null == aprooval) {
 				aprooval = new Aprooval();
 				aproovals.put(approvalDesc, aprooval);
-				System.out.println("aproovals after: " + aproovals);
 			}
 			approver = null;
 			if (null != a.getApprover()) {

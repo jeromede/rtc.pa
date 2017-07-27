@@ -176,17 +176,17 @@ public class WriteIt {
 			tasks.put("" + task.getId(), task.getExternalId());
 		}
 		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
-					monitor, tasks, p, t);
-			if (null != result) {
-				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
-			}
-		}
-		for (Task t : p.getTasks()) {
 			result = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
 					dir);
 			if (null != result) {
 				return "error updating work item with links, etc. " + t.getId() + " (id in source): " + result;
+			}
+		}
+		for (Task t : p.getTasks()) {
+			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
+					monitor, tasks, p, t);
+			if (null != result) {
+				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
 			}
 		}
 		return null;

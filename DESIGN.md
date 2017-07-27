@@ -1,5 +1,9 @@
 # DESIGN
 
+## Second approach ([1.0.0-rc.4](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.4))
+
+Inverted steps 4 and 5 from the below process.
+
 ## Second approach ([1.0.0-rc.3](https://github.com/jeromede/rtc.pa/releases/tag/1.0.0-rc.3))
 
 First create a (first version of) each work item, its links; then, for each work item again, continue with the other versions:

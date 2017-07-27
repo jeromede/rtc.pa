@@ -92,7 +92,7 @@ public class WorkItemBuilder {
 			s = wc.save(monitor);
 			if (!s.isOK()) {
 				s.getException().printStackTrace();
-				return ("error creating minimal new work item with its links, etc.");
+				return "error creating minimal new work item with its links, etc.";
 			}
 
 		} finally {
@@ -102,7 +102,7 @@ public class WorkItemBuilder {
 			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
-			return ("error fetching created work item");
+			return "error fetching created work item";
 		}
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
@@ -225,7 +225,8 @@ public class WorkItemBuilder {
 				} else {
 					retry = true;
 					s.getException().printStackTrace();
-					monitor.out("error adding new work item version, retrying by forcing state change...");
+					monitor.out("Error adding new work item " + wi.getId()
+							+ " version, retrying by forcing state change...");
 				}
 				if (retry && (null != stateId)) {
 					monitor.out("\tforce state to become:");
@@ -234,8 +235,12 @@ public class WorkItemBuilder {
 					s = wc.save(monitor);
 					if (!s.isOK()) {
 						s.getException().printStackTrace();
-						monitor.out(
-								"error adding new work item version, even after forcing state change, continue anyway");
+						monitor.out("Error adding new work item " + wi.getId()
+								+ " version, even after forcing state change... Continue anyway..."
+								+ " This is probably happening because of a \"resolve state\" with resolution \"duplicate\""
+								+ " but without actually any \"duplicate\" link."
+								+ " It's probably OK, though, check work item " + wi.getId()
+								+ " in the target project area after migration");
 					}
 				}
 
