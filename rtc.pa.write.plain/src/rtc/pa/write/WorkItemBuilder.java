@@ -174,6 +174,12 @@ public class WorkItemBuilder {
 					if (!type.getIdentifier().equals(previousType.getIdentifier())) {
 						monitor.out("\tchanging work item type");
 						wiCommon.updateWorkItemType(wi, type, previousType, monitor);
+						s = wc.save(monitor);
+						if (!s.isOK()) {
+							s.getException().printStackTrace();
+							monitor.out("Error changing version for work item " + wi.getId() + " from "
+									+ previousType.getIdentifier() + " to " + type.getIdentifier());
+						}
 					}
 				}
 
@@ -262,6 +268,131 @@ public class WorkItemBuilder {
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
 		monitor.out("Just created/updated work item " + wi.getId() + " {" + task.getId() + '}');
+		return null;
+	}
+
+	public static String createUpdateWorkItemWithLastVersion(ITeamRepository repo, IProjectArea pa,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier,
+			ProgressMonitor monitor, Map<String, String> tasks, Project p, Task task) {
+
+		String result;
+		monitor.out("About to update work item with last version {" + task.getId() + '}');
+		Collection<TaskVersion> versions = task.getHistory();
+
+		TaskVersion v = null;
+		for (TaskVersion w : versions) {
+			v = w;
+		}
+		IWorkItemType type;
+		String state;
+		String previousState = null;
+		IWorkItemHandle wiH;
+		WorkItemWorkingCopy wc;
+		Map<Timestamp, Comment> comments = new HashMap<Timestamp, Comment>();
+
+		String action;
+
+		IDetailedStatus s;
+		Identifier<IState> stateId;
+		IWorkItem wi;
+		try {
+			wi = (IWorkItem) task.getExternalObject();
+			type = (IWorkItemType) v.getType().getExternalObject();
+			previousState = wi.getState2().getStringIdentifier();
+			wiH = (IWorkItemHandle) wi.getItemHandle();
+			wiCopier.connect(wiH, IWorkItem.FULL_PROFILE, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "impossible to initialize an update for an existing work item";
+		}
+		wc = wiCopier.getWorkingCopy(wiH);
+		wi = wc.getWorkItem();
+		boolean retry;
+		try {
+			state = v.getState();
+
+			/*
+			 * *********************************************************
+			 */
+			result = WorkItemCopyBuilder.fillWorkItemVersion(repo, pa, wiClient, wiCommon, monitor, tasks, p, wi, v,
+					comments);
+			if (null != result)
+				return result;
+			/*
+			 * *********************************************************
+			 */
+
+			stateId = null;
+			if (null != previousState) {
+				if (!state.equals(previousState)) {
+					monitor.out("\tfrom state " + type.getIdentifier() + ":" + previousState);
+					monitor.out("\t  to state " + type.getIdentifier() + ":" + state);
+
+					stateId = StateHelper.stateId(pa, wiCommon, monitor, type.getIdentifier(), state);
+					if (null == stateId) {
+						return "couldn't find state " + state + " for type " + type.getIdentifier();
+					}
+					action = null;
+					try {
+						action = StateHelper.action(pa, wiCommon, monitor, type.getIdentifier(), previousState, state);
+					} catch (TeamRepositoryException e) {
+						e.printStackTrace();
+						return "problem while searching action to trigger";
+					}
+
+					if (null == action) {
+						monitor.out("\tforce state to become:");
+						forceState(wi, stateId);
+						monitor.out("\t" + stateId.getStringIdentifier());
+					} else {
+						monitor.out("\t action:");
+						wc.setWorkflowAction(action);
+						monitor.out("\t " + action);
+					}
+				}
+			}
+
+			s = wc.save(monitor);
+			if (s.isOK()) {
+				retry = false;
+			} else {
+				retry = true;
+				s.getException().printStackTrace();
+				monitor.out(
+						"Error adding new work item " + wi.getId() + " version, retrying by forcing state change...");
+			}
+			if (retry && (null != stateId)) {
+				monitor.out("\tforce state to become:");
+				forceState(wi, stateId);
+				monitor.out("\t" + stateId.getStringIdentifier());
+				s = wc.save(monitor);
+				if (!s.isOK()) {
+					s.getException().printStackTrace();
+					monitor.out("Error adding new work item " + wi.getId()
+							+ " version, even after forcing state change... Continue anyway..."
+							+ " This is probably happening because of a \"resolve state\" with resolution \"duplicate\""
+							+ " but without actually any \"duplicate\" link."
+							+ " It's probably OK, though, check work item " + wi.getId()
+							+ " in the target project area after migration");
+				}
+			}
+
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error when creating work item");
+		} finally {
+			wiCopier.disconnect(wi);
+		}
+		try {
+			wi = (IWorkItem) repo.itemManager().fetchCompleteItem(wi, IItemManager.DEFAULT, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return ("error fetching created work item");
+		}
+		task.setExternalObject("" + wi.getId(), wi);
+		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
+		monitor.out("Just created/updated work item " + wi.getId() + " {" + task.getId() + '}');
+
 		return null;
 	}
 

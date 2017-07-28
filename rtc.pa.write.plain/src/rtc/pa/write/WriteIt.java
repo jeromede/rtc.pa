@@ -165,6 +165,9 @@ public class WriteIt {
 			String dir) {
 
 		String result;
+		//
+		// Create work items and match the IDs before/after (source/target)
+		//
 		for (Task t : p.getTasks()) {
 			result = WorkItemBuilder.createMinimalWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t, dir);
 			if (null != result) {
@@ -175,6 +178,19 @@ public class WriteIt {
 		for (Task task : p.getTasks()) {
 			tasks.put("" + task.getId(), task.getExternalId());
 		}
+		//
+		// Add all versions
+		//
+		for (Task t : p.getTasks()) {
+			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
+					monitor, tasks, p, t);
+			if (null != result) {
+				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
+			}
+		}
+		//
+		// Update with links
+		//
 		for (Task t : p.getTasks()) {
 			result = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
 					dir);
@@ -182,11 +198,14 @@ public class WriteIt {
 				return "error updating work item with links, etc. " + t.getId() + " (id in source): " + result;
 			}
 		}
+		//
+		// Finalize with last version
+		//
 		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
+			result = WorkItemBuilder.createUpdateWorkItemWithLastVersion(repo, pa, wiClient, wiCommon, wiCopier,
 					monitor, tasks, p, t);
 			if (null != result) {
-				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
+				return "error updating work item with last version " + t.getId() + " (id in source): " + result;
 			}
 		}
 		return null;
