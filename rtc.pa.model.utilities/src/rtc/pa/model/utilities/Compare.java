@@ -107,8 +107,8 @@ public abstract class Compare {
 		Project p2 = Project.deserialize(ser2);
 		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
 		matchingIds(map, ids);
-		trace("About to compare projects \n\t1) <" + p1.getUri() + "web/projects/" + p1.getName() + ">\n\t2) <" + p2.getUri()
-				+ "web/projects/" + p2.getName() + ">");
+		trace("About to compare projects \n\t1) <" + p1.getUri() + "web/projects/" + p1.getName() + ">\n\t2) <"
+				+ p2.getUri() + "web/projects/" + p2.getName() + ">");
 		trace("\tCriteria:");
 		trace("\t- same number of work items");
 		trace("\t- same number of links between two corresponding work items");
@@ -138,11 +138,11 @@ public abstract class Compare {
 			i2 = map.get(i1);
 			t1 = getTask(p1, i1);
 			if (null == t1) {
-				trace("\tsomething is wrong, project 1 doesn't contain work item" + i1);
+				trace("\tsomething is wrong, project 1 doesn't contain work item", i1);
 			}
 			t2 = getTask(p2, i2);
 			if (null == t2) {
-				trace("\tsomething is wrong, project 2 doesn't contain work item" + i1);
+				trace("\tsomething is wrong, project 2 doesn't contain work item", i1);
 			}
 			trace("Comparison for work item", t1.getId(), t2.getId());
 			if (same(t1, t2, map)) {
@@ -183,8 +183,8 @@ public abstract class Compare {
 				trace("\t... continue anyway...");
 				result = false;
 			} else {
-				trace("\t\tOK so far,    " + t1.getId() + "--(" + l1.getType() + ")-->" + l1.getTarget().getId()//
-						+ "\n\t\tequivalent to " + t2.getId() + "--(" + l2.getType() + ")-->" + l2.getTarget().getId()//
+				trace("\tOK here,    " + t1.getId() + "--(" + l1.getType() + ")-->" + l1.getTarget().getId()//
+						+ "\n\tequivalent to " + t2.getId() + "--(" + l2.getType() + ")-->" + l2.getTarget().getId()//
 				);
 			}
 		}
