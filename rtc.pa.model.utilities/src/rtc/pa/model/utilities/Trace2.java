@@ -26,6 +26,7 @@ import rtc.pa.model.Comment;
 import rtc.pa.model.Iteration;
 import rtc.pa.model.Line;
 import rtc.pa.model.Link;
+import rtc.pa.model.Literal;
 import rtc.pa.model.Member;
 import rtc.pa.model.Project;
 import rtc.pa.model.Task;
@@ -52,6 +53,7 @@ public abstract class Trace2 {
 		out.println(m + ":\t" + s1 + "\t--> " + s2);
 	}
 
+	@SuppressWarnings("unused")
 	private static void trace(String m, String s, Integer i) {
 		out.println(m + ":\t" + s + "\t--> " + i);
 	}
@@ -120,7 +122,7 @@ public abstract class Trace2 {
 		trace("\tcreator", id(t.getCreator()));
 		trace("\tcreation", t.getCreation().toInstant().toString());
 		for (Link l : t.getLinks()) {
-			trace("\tlink", l.getType(), l.getTarget().getId());
+			trace("\tlink", l.getType(), (null == l.getTarget()) ? "" : "" + l.getTarget().getId());
 		}
 		for (Artifact a : t.getArtifacts()) {
 			trace("\tartifact", "", a.getURI().toASCIIString());
@@ -136,33 +138,37 @@ public abstract class Trace2 {
 			trace("\t\ttype", v.getType().getName());
 			trace("\t\tsummary", v.getSummary());
 			trace("\t\tstate", state(v));
-			trace("\t\tcategory", v.getCategory().getHierarchicalName());
-			trace("\t\ttarget", (null == v.getTarget()) ? null : v.getTarget().getId());
-			trace("\t\towned by", (null == v.getOwnedBy()) ? null : v.getOwnedBy().getUserId());
+			trace("\t\tcategory", (null == v.getCategory()) ? "" : v.getCategory().getHierarchicalName());
+			trace("\t\ttarget", (null == v.getTarget()) ? "" : v.getTarget().getId());
+			trace("\t\towned by", (null == v.getOwnedBy()) ? "" : v.getOwnedBy().getUserId());
 			trace("\t\tresolution", v.getResolution2());
-			trace("\t\tresolution date", (null == v.getResolution()) ? null : v.getResolution().toInstant().toString());
+			trace("\t\tresolution date", (null == v.getResolution()) ? "" : v.getResolution().toInstant().toString());
 			trace("\t\tresolved by", v.getResolvedBy().getUserId());
 			trace("\t\tmodified", v.getModified().toInstant().toString());
 			trace("\t\tmodified", v.getModified().toInstant().toString());
-			trace("\t\tmodified by", (null == v.getModifier()) ? null : v.getModifier().getUserId());
+			trace("\t\tmodified by", (null == v.getModifier()) ? "" : v.getModifier().getUserId());
 			trace("\t\tpriority", v.getPriority());
 			trace("\t\tseverity", v.getSeverity());
-			trace("\t\tdue date", (null == v.getDue()) ? null : v.getDue().toInstant().toString());
-			trace("\t\tduration", new Long(v.getDuration()).toString());
+			trace("\t\tdue date", (null == v.getDue()) ? "" : v.getDue().toInstant().toString());
+			trace("\t\tduration", "" + v.getDuration());
 			trace("\t\tdescription", v.getDescription());
 			trace("\t\ttags", v.getTags().toString());
 			trace("\t\tsubscribers");
 			for (Member m : v.getSubscribers()) {
-				trace("\t\t\t" + m.getUserId());
+				trace("\t\t\t" + ((null == m) ? "" : m.getUserId()));
 			}
 			trace("\t\tother values");
 			for (Value val : v.getValues()) {
-				trace("\t\t\t" + val.getAttribute().getName() + ": " + val.getValue().toString());
+				if (val.getAttribute().isEnum()) {
+					trace("\t\t\t" + val.getAttribute().getType() + ": " + ((Literal) val.getValue()).getSourceId());
+				} else {
+					trace("\t\t\t" + val.getAttribute().getName() + ": " + val.getValue().toString());
+				}
 			}
 			trace("\t\tcomments");
 			for (Comment c : v.getComments()) {
-				trace("\t\t\t(by " + c.getCreator().getUserId() + ", " + c.getCreation().toInstant().toString()
-						+ "):\n\t\t\t\t\"" + c.getContent() + "\"");
+				trace("\t\t\t(by " + ((null == c.getCreator()) ? "" : c.getCreator().getUserId()) + ", "
+						+ c.getCreation().toInstant().toString() + "):\n\t\t\t\t\"" + c.getContent() + "\"");
 			}
 		}
 	}
