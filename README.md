@@ -30,7 +30,9 @@ See a workaround below.
 
 # Build
 
-These programs (`rtc.pa.connection_test.plain`, `rtc.pa.read.plain` and `rtc.pa.write.plain`) use the RTC API.
+This Github repository is an Eclipse workspace.
+
+The main programs (`rtc.pa.connection_test.plain`, `rtc.pa.read.plain` and `rtc.pa.write.plain`) use the RTC API.
 
 Each program may need to connect to a specific version of RTC. For each needed version of RTC:
 
@@ -82,9 +84,11 @@ For example:
 
 `rtc.pa.model.utilities.Trace serialization_file`
 
+`rtc.pa.model.utilities.Trace2 serialization_file`
+
 For example:
 
-`rtc.pa.model.utilities.Trace 'HR UX.ser'`
+`rtc.pa.model.utilities.Trace2 'HR UX.ser'`
 
 ## Write program usage
 
@@ -103,6 +107,19 @@ Note: `matching_members_input_file` has to be a UTF-8 text file with a line for 
 Don’t forget the special user `unassigned`, who should still be the same in the target project area, unless you made the administrative operation to change its name. So, there also should be a line like:
 
 > `unassigned unassigned`
+
+## Comparison program usage
+
+After writing the target PA, it can be read back with the reading tool and the two .ser files compared using `rtc.pa.model.utilities.Compare` to check that everything went OK, with the help of the first output file matching the work item IDs. Here is the complete process:
+
+```
+rtc.pa.read.Main https://old.example.com/ccm 'HR UX' admin 'Xy0H!T,K7m' 'HR UX.ser' attachments > read.log 2>&1
+rtc.pa.model.utilities.Trace2 'HR UX.ser' > 'HR UX.txt'
+rtc.pa.write.Main https://ccm.example.com/ccm 'HR UX' migrator 'jK12l;:-)8:-)' 'HR UX.ser' attachments members.txt workitem_ids.txt > write.log 2>&1
+rtc.pa.read.Main https://old.example.com/ccm 'HR UX' migrator 'jK12l;:-)8:-)' 'HR UX 2.ser' attachments > read2.log 2>&1
+rtc.pa.model.utilities.Trace2 'HR UX 2.ser' > 'HR UX 2.txt'
+rtc.pa.model.utilities.Compare 'HR UX.ser' 'HR UX 2.ser' workitem_ids.txt > compare.log 2>&1
+```
 
 
 ## Preconditions
