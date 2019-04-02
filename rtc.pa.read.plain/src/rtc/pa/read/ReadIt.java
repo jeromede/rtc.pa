@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,7 +33,7 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class ReadIt {
 
-	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p, String dir)
+	public static String execute(ITeamRepository repo, IProjectArea pa, boolean complete, ProgressMonitor monitor, Project p, String dir)
 			throws TeamRepositoryException, IOException {
 
 		IItemManager itemManager = repo.itemManager();
@@ -54,7 +54,7 @@ public class ReadIt {
 		result = TimelineHelper.readDevelopmentLines(repo, pa, auditableClient, itemManager, monitor, p);
 		if (null != result)
 			return result;
-		result = WorkItemHelper.readWorkItems(repo, pa, wiClient, wiCommon, itemManager, monitor, p, dir);
+		result = WorkItemHelper.readWorkItems(repo, pa, complete, wiClient, wiCommon, itemManager, monitor, p, dir);
 		if (null != result)
 			return result;
 		resolve(p);

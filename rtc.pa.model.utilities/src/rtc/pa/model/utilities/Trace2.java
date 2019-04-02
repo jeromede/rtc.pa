@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -160,9 +160,12 @@ public abstract class Trace2 {
 			trace("\t\tother values");
 			for (Value val : v.getValues()) {
 				if (val.getAttribute().isEnum()) {
-					trace("\t\t\t" + val.getAttribute().getType() + ": " + ((Literal) val.getValue()).getSourceId());
+					trace("\t\t\t" + val.getAttribute().getName() + ": "
+							+ ((Literal) val.getValue()).getSourceId() + "::" + val.getAttribute().getType() + " ("
+							+ ((Literal) val.getValue()).getName() + ")");
 				} else {
-					trace("\t\t\t" + val.getAttribute().getName() + ": " + val.getValue().toString());
+					trace("\t\t\t" + val.getAttribute().getName() + ": " + val.getAttribute().getSourceId() + "::"
+							+ val.getAttribute().getType() + " " + val.getValue().toString());
 				}
 			}
 			trace("\t\tcomments");

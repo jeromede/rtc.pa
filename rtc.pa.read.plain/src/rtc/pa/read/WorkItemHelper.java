@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -80,7 +80,7 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemHelper {
 
-	static String readWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+	static String readWorkItems(ITeamRepository repo, IProjectArea pa, boolean complete, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
 
 		String result;
@@ -101,8 +101,8 @@ public class WorkItemHelper {
 		results.setLimit(Integer.MAX_VALUE);
 		try {
 			while (results.hasNext(monitor)) {
-				result = readWorkItem(results.next(monitor).getItem(), repo, pa, wiClient, wiCommon, itemManager,
-						monitor, p, dir);
+				result = readWorkItem(results.next(monitor).getItem(), repo, pa, complete, wiClient, wiCommon,
+						itemManager, monitor, p, dir);
 				if (null != result)
 					return result;
 			}
@@ -114,8 +114,9 @@ public class WorkItemHelper {
 		return null;
 	}
 
-	static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor, Project p, String dir) {
+	static String readWorkItem(IWorkItem wi, ITeamRepository repo, IProjectArea pa, boolean complete,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
+			Project p, String dir) {
 
 		String result;
 		monitor.out("\tNow reading work item " + wi.getId());
@@ -130,35 +131,39 @@ public class WorkItemHelper {
 				wi.getCreationDate());
 		p.putTask(task);
 		monitor.out("\t... just added work item " + task.getSourceId() + " (" + task.getId() + ')');
-		result = readWorkItemVersions(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		result = readWorkItemVersions(wi, repo, pa, complete, wiClient, wiCommon, itemManager, monitor, p, task, dir);
 		if (null != result)
 			return result;
 		//
 		// Links (includes attachments and artifacts (aka URIs)
 		//
-		result = readLinks(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
-		if (null != result)
-			return result;
+		if (complete) {
+			result = readLinks(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+			if (null != result)
+				return result;
+		}
 		//
 		// Approvals
 		//
-		IApprovals approvals = wi.getApprovals();
-		IApprovalDescriptor descriptor;
-		for (IApproval approval : approvals.getContents()) {
-			descriptor = approval.getDescriptor();
-			task.addApproval(new Approval(//
-					descriptor.getName(), //
-					descriptor.getTypeIdentifier(), //
-					approval.getStateIdentifier(), //
-					descriptor.getDueDate(), //
-					p.getMember(approval.getApprover().getItemId().getUuidValue())//
-			));
+		if (complete) {
+			IApprovals approvals = wi.getApprovals();
+			IApprovalDescriptor descriptor;
+			for (IApproval approval : approvals.getContents()) {
+				descriptor = approval.getDescriptor();
+				task.addApproval(new Approval(//
+						descriptor.getName(), //
+						descriptor.getTypeIdentifier(), //
+						approval.getStateIdentifier(), //
+						descriptor.getDueDate(), //
+						p.getMember(approval.getApprover().getItemId().getUuidValue())//
+				));
+			}
 		}
 		monitor.out("\t... work item " + wi.getId() + " read.");
 		return null;
 	}
 
-	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa,
+	private static String readWorkItemVersions(IWorkItem wi, ITeamRepository repo, IProjectArea pa, boolean complete,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task, String dir) {
 
@@ -173,14 +178,16 @@ public class WorkItemHelper {
 		if (workItems.isEmpty()) {
 			// Paranoid check, should not happen...
 			monitor.out("\t(looks like the version list is empty, switching to the work item as unique version)");
-			result = readWorkItemVersion(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+			result = readWorkItemVersion(wi, repo, pa, complete, wiClient, wiCommon, itemManager, monitor, p, task,
+					dir);
 			if (null != result)
 				return result;
-		} else {
+		} else if (complete) {
 			for (IWorkItem w : workItems) {
 				if (null == w)
 					continue;
-				result = readWorkItemVersion(w, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+				result = readWorkItemVersion(w, repo, pa, complete, wiClient, wiCommon, itemManager, monitor, p, task,
+						dir);
 				if (null != result)
 					return result;
 			}
@@ -194,7 +201,7 @@ public class WorkItemHelper {
 		return itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(wi, monitor), monitor);
 	}
 
-	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa,
+	private static String readWorkItemVersion(IWorkItem w, ITeamRepository repo, IProjectArea pa, boolean complete,
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task, String dir) {
 
@@ -282,24 +289,28 @@ public class WorkItemHelper {
 		//
 		// Comments
 		//
-		for (IComment comment : w.getComments().getContents()) {
-			version.addComment(new Comment(//
-					w.getContextId().getUuidValue(), //
-					p.getMember(comment.getCreator().getItemId().getUuidValue()), //
-					comment.getCreationDate(), //
-					(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
-			));
+		if (complete) {
+			for (IComment comment : w.getComments().getContents()) {
+				version.addComment(new Comment(//
+						w.getContextId().getUuidValue(), //
+						p.getMember(comment.getCreator().getItemId().getUuidValue()), //
+						comment.getCreationDate(), //
+						(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
+				));
+			}
+			monitor.out("\t\t\tcomments read");
 		}
-		monitor.out("\t\t\tcomments read");
 		//
 		// Subscribers
 		//
-		ISubscriptions subscriptions = w.getSubscriptions();
-		IContributorHandle[] subscribers = subscriptions.getContents();
-		for (IContributorHandle subscriber : subscribers) {
-			version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
+		if (complete) {
+			ISubscriptions subscriptions = w.getSubscriptions();
+			IContributorHandle[] subscribers = subscriptions.getContents();
+			for (IContributorHandle subscriber : subscribers) {
+				version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
+			}
+			monitor.out("\t\t\tsubscribers read");
 		}
-		monitor.out("\t\t\tsubscribers read");
 		//
 		// Save
 		//
@@ -344,7 +355,7 @@ public class WorkItemHelper {
 				monitor.out("\t\t\t\t\t\tnot in model: skip");
 				continue;
 			}
-			monitor.out("\t\t\t\t\tfound attribute " + a.getName());
+			monitor.out("\t\t\t\t\tfound attribute " + a.getName()); // TODO: null for enums!
 			if (a.isEnum()) {
 				monitor.out("\t\t\t\tcustom value is enum");
 				@SuppressWarnings("unchecked")

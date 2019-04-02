@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,6 +33,10 @@ public class Literal extends Item implements Serializable {
 			String id, String name) {
 		super(id);
 		this.name = name;
+	}
+	
+	public String getName(){
+		return name;
 	}
 
 }

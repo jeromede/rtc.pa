@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -39,17 +39,20 @@ public class Main {
 		Project p = null;
 
 		String url, proj, user, password, ser, dir;
+		boolean complete;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
-			ser = new String(args[4]);
-			dir = new String(args[5]);
+			complete = new Boolean(args[4]).booleanValue();
+			ser = new String(args[5]);
+			dir = new String(args[6]);
 		} catch (Exception e) {
-			monitor.err("arguments: url pa user password serialization_file attachment_dir");
+			monitor.err("arguments: url pa user password complete? serialization_file attachment_dir");
 			monitor.err(
-					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here");
+					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou true UU_PP.ser attachments_here"
+							+ "(\n\n\"not complete\" means only the last version of the type, state, and attribute values: no history, no links, no attachements...)");
 			System.err.print("Bad arguments:");
 			for (String arg : args) {
 				monitor.err(arg);
@@ -71,7 +74,7 @@ public class Main {
 				pa = (IProjectArea) pa0;
 				p = new Project(pa.getItemId().getUuidValue(), pa.getName(), pa.getProcessName(),
 						repo.getRepositoryURI(), pa.getDescription().getSummary());
-				message = ReadIt.execute(repo, pa, monitor, p, dir);
+				message = ReadIt.execute(repo, pa, complete, monitor, p, dir);
 			} else {
 				message = new String(uri + " is not a project area");
 			}

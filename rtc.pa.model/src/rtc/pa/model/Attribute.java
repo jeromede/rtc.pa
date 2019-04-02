@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 jeromede@fr.ibm.com
+ * Copyright (c) 2017,2018,2019 jeromede@fr.ibm.com
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -52,6 +52,7 @@ public class Attribute extends Item implements Serializable {
 			Collection<Literal> literals, //
 			Literal nullLiteral) {
 		super(id);
+		this.name = name;
 		this.type = type;
 		this.literals = new HashMap<String, Literal>();
 		for (Literal l : literals) {
