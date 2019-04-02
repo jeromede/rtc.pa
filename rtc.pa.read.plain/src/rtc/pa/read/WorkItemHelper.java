@@ -421,9 +421,9 @@ public class WorkItemHelper {
 							task.addLink(new Link(//
 									link.getItemId().getUuidValue(), //
 									referencedWorkItem.getItemId().getUuidValue(), //
-									link.getLinkType().getLinkTypeId(), //
+									link.getLinkTypeId(), //
 									ref.getComment()));
-							monitor.out("\t... just added link (type: " + link.getLinkType().getLinkTypeId() + ")"//
+							monitor.out("\t... just added link (type: " + link.getLinkTypeId() + ")"//
 									+ "\n\t\tfor " + task.getSourceId() + " (" + task.getId() + ")"//
 									+ "\n\t\tto  " + referencedWorkItem.getItemId().getUuidValue());
 						} else if (referencedItem instanceof IAttachmentHandle) {

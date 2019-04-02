@@ -67,7 +67,7 @@ public class Main {
 			}
 		} catch (Exception e) {
 			monitor.err(
-					"arguments: ccm_url user password serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
+					"arguments: ccm_url pa user password serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
 			monitor.err(
 					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt ids.txt");
 			monitor.err(

@@ -47,7 +47,7 @@ public class Main {
 			ser = new String(args[4]);
 			dir = new String(args[5]);
 		} catch (Exception e) {
-			monitor.err("arguments: url user password serialization_file attachment_dir");
+			monitor.err("arguments: url pa user password serialization_file attachment_dir");
 			monitor.err(
 					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here");
 			System.err.print("Bad arguments:");
