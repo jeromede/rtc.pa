@@ -3,7 +3,6 @@
 	<name>version606.rtc.pa.change.plain</name>
 	<comment></comment>
 	<projects>
-		<project>rtc.model</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
