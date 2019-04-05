@@ -51,27 +51,31 @@ public class Main {
 		String message;
 
 		String url, proj, user, password, ser, dir, match, numbers, whenother;
+		boolean complete;
 		try {
 			url = new String(args[0]);
 			proj = new String(args[1]);
 			user = new String(args[2]);
 			password = new String(args[3]);
-			ser = new String(args[4]);
-			dir = new String(args[5]);
-			match = new String(args[6]);
-			numbers = new String(args[7]);
+			complete = new Boolean(args[4]).booleanValue();
+			ser = new String(args[5]);
+			dir = new String(args[6]);
+			match = new String(args[7]);
+			numbers = new String(args[8]);
 			try {
-				whenother = new String(args[8]);
+				whenother = new String(args[9]);
 			} catch (Exception e) {
 				whenother = "";
 			}
 		} catch (Exception e) {
 			monitor.err(
-					"arguments: ccm_url pa user password serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
+					"arguments: ccm_url pa user password create_work_items serialization_input_file attachments_input_dir members_input_file wi_ids_match_output_file");
 			monitor.err(
-					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou UU_PP.ser attachments_here members.txt ids.txt");
+					"example: https://my.clm.example.com/ccm \"UU | PPP\" jazz_admin iloveyou true UU_PP.ser attachments_here members.txt ids.txt");
 			monitor.err(
 					"note: members_input_file has to be a UTF-8 text file with a line for each member; this line should read like:\n\tID_in_source ID_in_target");
+			monitor.err(
+					"note: create_work_items not true means that only a new version is created for work items found with the same id");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
@@ -88,7 +92,7 @@ public class Main {
 		monitor.out("Matching user IDs input file: " + match);
 		monitor.out("Matching work item IDs output file: " + numbers);
 		monitor.out("Default user ID: " + whenother);
-		
+
 		message = matchingMembers(matchingUserIDs, match, whenother);
 		if (null != message) {
 			monitor.err("problem with the matching members file: " + message);
@@ -110,18 +114,18 @@ public class Main {
 			IProjectArea pa = null;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				message = WriteIt.execute(repo, pa, monitor, p, matchingUserIDs, dir, whenother);
+				message = WriteIt.execute(repo, pa, complete, monitor, p, matchingUserIDs, dir, whenother);
 			} else {
 				message = uri + " is not a project area";
 			}
 			if (null == message) {
 				monitor.out("OK, done.");
+				message = writeIdMatchFile(numbers, p);
+				if (null != message)
+					monitor.err(message);
 			} else {
 				monitor.err("KO: " + message);
 			}
-			message = writeIdMatchFile(numbers, p);
-			if (null != message)
-				monitor.err(message);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			monitor.err("Unable to perform: " + e.getMessage());

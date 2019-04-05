@@ -50,6 +50,11 @@ public abstract class Item implements java.io.Serializable {
 		this.sourceId = id;
 	}
 
+	public Item change(String newId) {
+		this.sourceId = newId;
+		return this;
+	}
+
 	public String getSourceId() {
 		return this.sourceId;
 	}

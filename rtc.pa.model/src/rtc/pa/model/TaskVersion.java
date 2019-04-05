@@ -101,8 +101,8 @@ public class TaskVersion extends Item implements Serializable {
 		this.state = state;
 		this.modifier = modifier;
 		this.modified = modified;
-		this.description = description;
 		this.summary = summary;
+		this.description = description;
 		this.priority = priority;
 		this.severity = severity;
 		this.tags = tags;
@@ -114,6 +114,19 @@ public class TaskVersion extends Item implements Serializable {
 		this.resolvedBy = resolvedBy;
 		this.resolution = resolution;
 		this.resolution2 = resolution2;
+	}
+
+	public TaskVersion clone() {
+		return new TaskVersion(this.getSourceId() + "1", this.task, this.type, this.state, this.modifier, this.modified,
+				this.summary, this.description, this.priority, this.severity, (List<String>) this.tags, this.due,
+				this.duration, this.category, this.target, this.ownedBy, this.resolvedBy, this.resolution,
+				this.resolution2);
+	}
+
+	public TaskVersion change(Project p, TaskType newType) {
+		this.type = newType;
+		this.summary = p.saver().get(this.summary + " (process changed)");
+		return this;
 	}
 
 	public Task getTask() {

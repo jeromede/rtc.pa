@@ -53,5 +53,11 @@ public class TaskType extends Item implements Serializable {
 	public Collection<Attribute> getAttributes() {
 		return attributes.values();
 	}
+	
+	public TaskType change(String newId, String newName) {
+		super.change(newId);
+		this.name = newName;
+		return this;
+	}
 
 }

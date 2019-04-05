@@ -95,8 +95,6 @@ public class WorkItemTypeHelper {
 	private static String addAttribute(IWorkItemClient wiClient, ProgressMonitor monitor, Project p, TaskType tt,
 			IAttribute attribute) {
 
-		monitor.out("\t\t\t" + attribute.getIdentifier() + " (" + attribute.getDisplayName() + ") : "
-				+ attribute.getAttributeType());
 		Attribute a;
 		Literal lit;
 		Collection<Literal> lits = null;
@@ -120,7 +118,7 @@ public class WorkItemTypeHelper {
 						monitor.out("\t\t\t\tliteral: " + literal.getIdentifier2().getStringIdentifier() + " ("
 								+ literal.getName() + ")");
 						lit = new Literal(literal.getIdentifier2().getStringIdentifier(), literal.getName());
-						lit.setExternalObject(literal.getName(), lit);
+						lit.setExternalObject(literal.getName(), lit); // TODO: itself??? Couldn't it be null instead?
 						lits.add(lit);
 					}
 				}

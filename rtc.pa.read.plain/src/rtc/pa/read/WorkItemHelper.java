@@ -137,27 +137,23 @@ public class WorkItemHelper {
 		//
 		// Links (includes attachments and artifacts (aka URIs)
 		//
-		if (complete) {
-			result = readLinks(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
-			if (null != result)
-				return result;
-		}
+		result = readLinks(wi, repo, pa, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+		if (null != result)
+			return result;
 		//
 		// Approvals
 		//
-		if (complete) {
-			IApprovals approvals = wi.getApprovals();
-			IApprovalDescriptor descriptor;
-			for (IApproval approval : approvals.getContents()) {
-				descriptor = approval.getDescriptor();
-				task.addApproval(new Approval(//
-						descriptor.getName(), //
-						descriptor.getTypeIdentifier(), //
-						approval.getStateIdentifier(), //
-						descriptor.getDueDate(), //
-						p.getMember(approval.getApprover().getItemId().getUuidValue())//
-				));
-			}
+		IApprovals approvals = wi.getApprovals();
+		IApprovalDescriptor descriptor;
+		for (IApproval approval : approvals.getContents()) {
+			descriptor = approval.getDescriptor();
+			task.addApproval(new Approval(//
+					descriptor.getName(), //
+					descriptor.getTypeIdentifier(), //
+					approval.getStateIdentifier(), //
+					descriptor.getDueDate(), //
+					p.getMember(approval.getApprover().getItemId().getUuidValue())//
+			));
 		}
 		monitor.out("\t... work item " + wi.getId() + " read.");
 		return null;
@@ -167,7 +163,7 @@ public class WorkItemHelper {
 			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IItemManager itemManager, ProgressMonitor monitor,
 			Project p, Task task, String dir) {
 
-		String result;
+		String result = null;
 		List<IWorkItem> workItems;
 		try {
 			workItems = getHistory(wi, itemManager, monitor);
@@ -191,8 +187,22 @@ public class WorkItemHelper {
 				if (null != result)
 					return result;
 			}
+		} else {
+			IWorkItem v = null;
+			for (IWorkItem w : workItems) {
+				if (null == w)
+					continue;
+				v = w;
+			}
+			// Paranoid check, should not happen...
+			monitor.out("\t(looks like the only version(s) in the list are null. Error)");
+			if (null == v)
+				return "error reading history of work item (only null version(s)) " + wi.getId();
+			result = readWorkItemVersion(v, repo, pa, complete, wiClient, wiCommon, itemManager, monitor, p, task, dir);
+			if (null != result)
+				return result;
 		}
-		return null;
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -289,28 +299,24 @@ public class WorkItemHelper {
 		//
 		// Comments
 		//
-		if (complete) {
-			for (IComment comment : w.getComments().getContents()) {
-				version.addComment(new Comment(//
-						w.getContextId().getUuidValue(), //
-						p.getMember(comment.getCreator().getItemId().getUuidValue()), //
-						comment.getCreationDate(), //
-						(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
-				));
-			}
-			monitor.out("\t\t\tcomments read");
+		for (IComment comment : w.getComments().getContents()) {
+			version.addComment(new Comment(//
+					w.getContextId().getUuidValue(), //
+					p.getMember(comment.getCreator().getItemId().getUuidValue()), //
+					comment.getCreationDate(), //
+					(null == comment.getHTMLContent()) ? null : p.saver().get(comment.getHTMLContent().getXMLText())//
+			));
 		}
+		monitor.out("\t\t\tcomments read");
 		//
 		// Subscribers
 		//
-		if (complete) {
-			ISubscriptions subscriptions = w.getSubscriptions();
-			IContributorHandle[] subscribers = subscriptions.getContents();
-			for (IContributorHandle subscriber : subscribers) {
-				version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
-			}
-			monitor.out("\t\t\tsubscribers read");
+		ISubscriptions subscriptions = w.getSubscriptions();
+		IContributorHandle[] subscribers = subscriptions.getContents();
+		for (IContributorHandle subscriber : subscribers) {
+			version.addSubscriber(p.getMember(subscriber.getItemId().getUuidValue()));
 		}
+		monitor.out("\t\t\tsubscribers read");
 		//
 		// Save
 		//
@@ -355,7 +361,7 @@ public class WorkItemHelper {
 				monitor.out("\t\t\t\t\t\tnot in model: skip");
 				continue;
 			}
-			monitor.out("\t\t\t\t\tfound attribute " + a.getName()); // TODO: null for enums!
+			monitor.out("\t\t\t\t\tfound attribute " + a.getName());
 			if (a.isEnum()) {
 				monitor.out("\t\t\t\tcustom value is enum");
 				@SuppressWarnings("unchecked")

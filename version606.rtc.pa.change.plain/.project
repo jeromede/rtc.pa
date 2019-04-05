@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>version606.rtc.pa.change.plain</name>
+	<comment></comment>
+	<projects>
+		<project>rtc.model</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>src/rtc/pa/change</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/rtc.pa.change.plain/src/rtc/pa/change</locationURI>
+		</link>
+	</linkedResources>
+</projectDescription>

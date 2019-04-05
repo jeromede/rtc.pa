@@ -49,10 +49,11 @@ public class Main {
 			ser = new String(args[5]);
 			dir = new String(args[6]);
 		} catch (Exception e) {
-			monitor.err("arguments: url pa user password complete? serialization_file attachment_dir");
+			monitor.err("arguments: url pa user password complete serialization_file attachment_dir");
 			monitor.err(
-					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou true UU_PP.ser attachments_here"
-							+ "(\n\n\"not complete\" means only the last version of the type, state, and attribute values: no history, no links, no attachements...)");
+					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou true UU_PP.ser attachments_here");
+			monitor.err(
+					"note: not complete\" means only the last version of the type, state, and attribute values: no history, no links, no attachements...)");
 			System.err.print("Bad arguments:");
 			for (String arg : args) {
 				monitor.err(arg);

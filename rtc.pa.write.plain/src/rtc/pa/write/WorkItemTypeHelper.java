@@ -66,6 +66,7 @@ public class WorkItemTypeHelper {
 				return "can't find work item type \"" + typeId + "\" in target project";
 			}
 			tt.setExternalObject(typeId, type);
+			monitor.out("wi type: " + tt.getName() + " | " + type.getDisplayName());
 			attributesMap = new HashMap<String, IAttribute>();
 			result = getCustomAttributes(repo, monitor, type, attributesMap);
 			if (null != result) {

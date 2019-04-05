@@ -46,9 +46,25 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class WorkItemBuilder {
 
+	static String retrieveWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
+			IWorkItemCommon wiCommon, ProgressMonitor monitor, Project p, Task task) {
+
+		monitor.out("About to retrieve work item {" + task.getId() + "}");
+		IWorkItem wi;
+		try {
+			wi = wiClient.findWorkItemById(task.getId(), IWorkItem.FULL_PROFILE, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return "impossible to retrieve work item " + task.getId();
+		}
+		task.setExternalObject("" + wi.getId(), wi);
+		monitor.out("Just retrieved work item " + wi.getId() + " {" + task.getId() + '}');
+		return null;
+	}
+
 	static String createMinimalWorkItem(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
 			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			Task task, String dir) {
+			Task task) {
 
 		String result;
 		monitor.out("About to create minimal work item {" + task.getId() + "}");
@@ -106,7 +122,7 @@ public class WorkItemBuilder {
 		}
 		task.setExternalObject("" + wi.getId(), wi);
 		monitor.out("\tattached external object " + wi.getItemId().getUuidValue() + ", <" + wi.getId() + '>');
-		System.out.println("Just created minimal work item " + wi.getId() + " {" + task.getId() + '}');
+		monitor.out("Just created minimal work item " + wi.getId() + " {" + task.getId() + '}');
 		return null;
 	}
 
@@ -173,6 +189,7 @@ public class WorkItemBuilder {
 				if (null != previousType) {
 					if (!type.getIdentifier().equals(previousType.getIdentifier())) {
 						monitor.out("\tchanging work item type");
+						// https://www-01.ibm.com/support/docview.wss?uid=swg22006277
 						wiCommon.updateWorkItemType(wi, type, previousType, monitor);
 						s = wc.save(monitor);
 						if (!s.isOK()) {
@@ -297,6 +314,8 @@ public class WorkItemBuilder {
 		IWorkItem wi;
 		try {
 			wi = (IWorkItem) task.getExternalObject();
+			monitor.out("version: " + v);
+			monitor.out("version type: " + v.getType().getName());
 			type = (IWorkItemType) v.getType().getExternalObject();
 			previousState = wi.getState2().getStringIdentifier();
 			wiH = (IWorkItemHandle) wi.getItemHandle();
@@ -356,8 +375,11 @@ public class WorkItemBuilder {
 			if (s.isOK()) {
 				retry = false;
 			} else {
+				monitor.out("Error adding new work item " + wi.getId() + " version: " + s.getDetails() + " | "
+						+ s.getMessage());
 				retry = true;
-				s.getException().printStackTrace();
+				if (null != s.getException())
+					s.getException().printStackTrace();
 				monitor.out(
 						"Error adding new work item " + wi.getId() + " version, retrying by forcing state change...");
 			}

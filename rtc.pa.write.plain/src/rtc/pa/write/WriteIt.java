@@ -40,8 +40,8 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class WriteIt {
 
-	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor, Project p,
-			Map<String, String> matchingUserIDs, String dir, String whenother)
+	public static String execute(ITeamRepository repo, IProjectArea pa, boolean complete, ProgressMonitor monitor,
+			Project p, Map<String, String> matchingUserIDs, String dir, String whenother)
 			throws TeamRepositoryException, IOException {
 
 		String message;
@@ -58,13 +58,17 @@ public class WriteIt {
 		message = WorkItemTypeHelper.matchWorkItemTypes(repo, pa, wiClient, monitor, p);
 		if (null != message)
 			return message;
-		message = writeCategories(repo, pa, wiCommon, monitor, p);
-		if (null != message)
-			return message;
-		message = writeDevelopmentLines(repo, pa, service, pCopier, monitor, p);
-		if (null != message)
-			return message;
-		message = writeWorkItems(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, dir);
+		if (complete) {
+			message = writeCategories(repo, pa, wiCommon, monitor, p);
+			if (null != message)
+				return message;
+		}
+		if (complete) {
+			message = writeDevelopmentLines(repo, pa, service, pCopier, monitor, p);
+			if (null != message)
+				return message;
+		}
+		message = writeWorkItems(repo, pa, complete, wiClient, wiCommon, wiCopier, monitor, p, dir);
 		if (null != message)
 			return message;
 
@@ -160,18 +164,26 @@ public class WriteIt {
 		return null;
 	}
 
-	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, IWorkItemClient wiClient,
-			IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier, ProgressMonitor monitor, Project p,
-			String dir) {
+	private static String writeWorkItems(ITeamRepository repo, IProjectArea pa, boolean complete,
+			IWorkItemClient wiClient, IWorkItemCommon wiCommon, IWorkItemWorkingCopyManager wiCopier,
+			ProgressMonitor monitor, Project p, String dir) {
 
 		String result;
 		//
-		// Create work items and match the IDs before/after (source/target)
+		// Create or retrieve work items and match the IDs before/after
+		// (source/target)
 		//
 		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.createMinimalWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t, dir);
-			if (null != result) {
-				return "error creating minimal work item " + t.getId() + " (id in source): " + result;
+			if (complete) {
+				result = WorkItemBuilder.createMinimalWorkItem(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t);
+				if (null != result) {
+					return "error creating minimal work item " + t.getId() + " (id in source): " + result;
+				}
+			} else {
+				result = WorkItemBuilder.retrieveWorkItem(repo, pa, wiClient, wiCommon, monitor, p, t);
+				if (null != result) {
+					return "error retrieving work item " + t.getId() + " : " + result;
+				}
 			}
 		}
 		Map<String, String> tasks = new HashMap<String, String>();
@@ -181,21 +193,25 @@ public class WriteIt {
 		//
 		// Add all versions
 		//
-		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
-					monitor, tasks, p, t);
-			if (null != result) {
-				return "error updating work item with versions " + t.getId() + " (id in source): " + result;
+		if (complete) {
+			for (Task t : p.getTasks()) {
+				result = WorkItemBuilder.createUpdateWorkItemWithAllVersions(repo, pa, wiClient, wiCommon, wiCopier,
+						monitor, tasks, p, t);
+				if (null != result) {
+					return "error updating work item with versions " + t.getId() + " (id in source): " + result;
+				}
 			}
 		}
 		//
 		// Update with links
 		//
-		for (Task t : p.getTasks()) {
-			result = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
-					dir);
-			if (null != result) {
-				return "error updating work item with links, etc. " + t.getId() + " (id in source): " + result;
+		if (complete) {
+			for (Task t : p.getTasks()) {
+				result = WorkItemBuilder.updateWorkItemWithLinks(repo, pa, wiClient, wiCommon, wiCopier, monitor, p, t,
+						dir);
+				if (null != result) {
+					return "error updating work item with links, etc. " + t.getId() + " (id in source): " + result;
+				}
 			}
 		}
 		//

@@ -87,8 +87,9 @@ public class Project extends Item implements Serializable {
 		return this.summary;
 	}
 
-	public void putMember(Member user) {
+	public Member putMember(Member user) {
 		members.put(user.getSourceId(), user);
+		return user;
 	}
 
 	public Member getMember(String userId) {
@@ -99,16 +100,18 @@ public class Project extends Item implements Serializable {
 		return members.values();
 	}
 
-	public void putAdministrator(Administrator user) {
+	public Administrator putAdministrator(Administrator user) {
 		administrators.put(user.getSourceId(), user);
+		return user;
 	}
 
 	public Administrator getAdministrator(String sourceId) {
 		return administrators.get(sourceId);
 	}
 
-	public void putCategory(Category category) {
+	public Category putCategory(Category category) {
 		categories.put(category.getSourceId(), category);
+		return category;
 	}
 
 	public Category getCategory(String categoryId) {
@@ -119,8 +122,9 @@ public class Project extends Item implements Serializable {
 		return categories.values();
 	}
 
-	public void putLine(Line line) {
+	public Line putLine(Line line) {
 		lines.put(line.getSourceId(), line);
+		return line;
 	}
 
 	public Line getLine(String sourceId) {
@@ -146,20 +150,31 @@ public class Project extends Item implements Serializable {
 		return iterations.get(sourceId);
 	}
 
-	public void putTask(Task task) {
+	public Task putTask(Task task) {
 		tasks.put(task.getSourceId(), task);
+		return task;
 	}
 
 	public Task getTask(String sourceId) {
 		return tasks.get(sourceId);
 	}
 
+	public Task getTask(int id) {
+		for (Task t : tasks.values()) {
+			if (id == t.getId()) {
+				return t;
+			}
+		}
+		return null;
+	}
+
 	public Collection<Task> getTasks() {
 		return tasks.values();
 	}
 
-	public void putTaskType(TaskType taskType) {
+	public TaskType putTaskType(TaskType taskType) {
 		taskTypes.put(taskType.getSourceId(), taskType);
+		return taskType;
 	}
 
 	public TaskType getTaskType(String id) {
@@ -170,9 +185,10 @@ public class Project extends Item implements Serializable {
 		return taskTypes.values();
 	}
 
-	public void putAttribute(TaskType taskType, Attribute attribute) {
+	public Attribute putAttribute(TaskType taskType, Attribute attribute) {
 		taskType.putAttribute(attribute);
 		attributes.put(attribute.getSourceId(), attribute);
+		return attribute;
 	}
 
 	public Attribute getAttribute(String id) {
@@ -183,9 +199,10 @@ public class Project extends Item implements Serializable {
 		return attributes.values();
 	}
 
-	public void putTaskVersion(TaskVersion version) {
+	public TaskVersion putTaskVersion(TaskVersion version) {
 		version.getTask().putTaskVersion(version);
 		history.put(version.getModified(), version);
+		return version;
 	}
 
 	public Collection<TaskVersion> getHistory() {
