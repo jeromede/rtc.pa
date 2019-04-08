@@ -54,6 +54,7 @@ import com.ibm.team.workitem.common.model.IAttribute;
 import com.ibm.team.workitem.common.model.IAttributeHandle;
 import com.ibm.team.workitem.common.model.IEnumeration;
 import com.ibm.team.workitem.common.model.ILiteral;
+import com.ibm.team.workitem.common.model.IResolution;
 import com.ibm.team.workitem.common.model.IState;
 import com.ibm.team.workitem.common.model.IWorkItem;
 import com.ibm.team.workitem.common.model.IWorkItemHandle;
@@ -148,6 +149,7 @@ public class Main {
 	static Map<String, String> enumlist_map;
 	static Map<String, String> enum_map;
 	static Map<String, String> literal_map;
+	static Map<String, String> resolution_map;
 	static Map<String, String> state_map;
 	static Map<String, String> type_map;
 
@@ -213,6 +215,12 @@ public class Main {
 		}
 		literal_map = new HashMap<String, String>();
 		message = readMap(literal_map, tsv_dir + "literal_map.tsv");
+		if (null != message) {
+			monitor.out("KO: " + message);
+			return;
+		}
+		resolution_map = new HashMap<String, String>();
+		message = readMap(resolution_map, tsv_dir + "resolution.tsv");
 		if (null != message) {
 			monitor.out("KO: " + message);
 			return;
@@ -307,9 +315,14 @@ public class Main {
 			IItemManager itemManager, ProgressMonitor monitor) {
 
 		String previousStateIdentifier = wi.getState2().getStringIdentifier();
+		Identifier<IResolution> resolution2Id = wi.getResolution2();
+		String previousResolutionIdentifier = null;
+		if (null != resolution2Id) {
+			previousResolutionIdentifier = resolution2Id.getStringIdentifier();
+		}
 		monitor.out("\n" + indent + "Now changing work item " + wi.getId() + " (current type: " + wi.getWorkItemType()
-				+ ", current state: " + previousStateIdentifier + ")");
-		boolean changed = false;
+				+ ", current state: " + previousStateIdentifier + ", current resolution: "
+				+ previousResolutionIdentifier + ")");
 		IWorkItemHandle wiH;
 		WorkItemWorkingCopy wc;
 		IWorkItem wic;
@@ -327,7 +340,7 @@ public class Main {
 		// Change type
 		//
 		try {
-			changed = changeType(indent, pa, wiCommon, wic, monitor);
+			changeType(indent, pa, wiCommon, wic, monitor);
 		} catch (TeamRepositoryException e1) {
 			e1.printStackTrace();
 			return "impossible to update work item type for work item (" + wi.getId() + ")";
@@ -337,38 +350,35 @@ public class Main {
 		//
 		// Save
 		//
-		if (changed) {
-			detailedStatus = wc.save(monitor);
-			if (!detailedStatus.isOK()) {
-				return "error\n\t" + detailedStatus.getMessage() + "\nwhile changing version for work item "
-						+ wic.getId() + " after changing its type";
-			}
-			monitor.out(indent + "... work item " + wic.getId() + " version saved after type change, now type: "
-					+ wic.getWorkItemType() + ", state: " + wic.getState2().getStringIdentifier());
-		}
+		//detailedStatus = wc.save(monitor);
+		//if (!detailedStatus.isOK()) {
+		//	return "error\n\t" + detailedStatus.getMessage() + "\nwhile changing version for work item " + wic.getId()
+		//			+ " after changing its type";
+		//}
+		//monitor.out(indent + "... work item " + wic.getId() + " version saved after type change, now type: "
+		//		+ wic.getWorkItemType() + ", state: " + wic.getState2().getStringIdentifier());
 		//
 		// Change state
 		//
 		try {
-			changed = changeState("\t" + indent, pa, wiCommon, wic, monitor, previousStateIdentifier);
+			changeState("\t" + indent, pa, wiCommon, wic, monitor, previousStateIdentifier,
+					previousResolutionIdentifier);
 		} catch (TeamRepositoryException e) {
 			e.printStackTrace();
 			monitor.out(indent + "Error: couldn't change wi " + wic.getId() + " state");
 		}
 		monitor.out(indent + "... work item " + wic.getId() + " type: " + wic.getWorkItemType() + ", state: "
-				+ wic.getState2().getStringIdentifier());
+				+ wic.getState2().getStringIdentifier() + ", resolution: " + wic.getResolution2());
 		//
 		// Save
 		//
-		if (changed) {
-		detailedStatus = wc.save(monitor);
-		if (!detailedStatus.isOK()) {
-			return "error\n\t" + detailedStatus.getMessage() + "\nwhile changing version for work item " + wic.getId()
-					+ " after changing its state";
-		}
+		//detailedStatus = wc.save(monitor);
+		//if (!detailedStatus.isOK()) {
+		//	return "error\n\t" + detailedStatus.getMessage() + "\nwhile changing version for work item " + wic.getId()
+		//			+ " after changing its state";
+		//}
 		monitor.out(indent + "... work item " + wic.getId() + " version saved after state change, now type: "
 				+ wic.getWorkItemType() + ", state: " + wic.getState2().getStringIdentifier());
-		}
 		//
 		// Change custom attributes
 		//
@@ -411,37 +421,53 @@ public class Main {
 		return null;
 	}
 
-	static boolean changeType(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
+	static void changeType(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
 			ProgressMonitor monitor) throws TeamRepositoryException {
 
 		String newTypeId = type_map.get(wi.getWorkItemType());
 		if (null == newTypeId) {
 			monitor.out(indent + "Can't find new work item type identifier matching " + wi.getWorkItemType()
 					+ ", skip change");
-			return false;
+			return;
 		}
 		IWorkItemType previousType = wiCommon.findWorkItemType2(pa, wi.getWorkItemType(), monitor);
 		IWorkItemType type = previousType;
 		type = wiCommon.findWorkItemType2(pa, newTypeId, monitor);
 		if (null == type) {
 			monitor.out(indent + "Can't find new work item type for " + newTypeId + ", skip change");
-			return false;
+			return;
 		}
 		monitor.out(indent + "Found new work item type " + type.getDisplayName() + " " + type.getIdentifier());
 		wiCommon.updateWorkItemType(wi, type, previousType, monitor);
-		return true;
+		return;
 	}
 
-	static boolean changeState(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
-			ProgressMonitor monitor, String previousStateIdentifier) throws TeamRepositoryException {
+	static void changeState(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
+			ProgressMonitor monitor, String previousStateIdentifier, String previousResolutionIdentifier)
+			throws TeamRepositoryException {
 
-		String newState = state_map.get(previousStateIdentifier);
-		if (null == newState) {
-			monitor.out(indent + "can't find new state for previous state " + previousStateIdentifier
-					+ ", skip change");
-			return false;
+		String newStateIdentifier = state_map.get(previousStateIdentifier);
+		if (null == newStateIdentifier) {
+			monitor.out(
+					indent + "can't find new state for previous state " + previousStateIdentifier + ", skip change");
+			return;
 		}
-		return forceState("\t" + indent, pa, wiCommon, wi, monitor, newState);
+		forceState("\t" + indent, pa, wiCommon, wi, monitor, newStateIdentifier);
+		monitor.out(indent + "(in copy) state changed from: " + previousStateIdentifier + " to: "
+				+ wi.getState2().getStringIdentifier());
+		String newResolutionIdentifier = resolution_map.get(previousResolutionIdentifier);
+		if (null != newResolutionIdentifier) {
+			if (newResolutionIdentifier.isEmpty()) {
+				newResolutionIdentifier = null;
+			}
+		}
+		Identifier<IResolution> resolution2Id = null;
+		if (null != newResolutionIdentifier) {
+			resolution2Id = Identifier.create(IResolution.class, newResolutionIdentifier);
+		}
+		wi.setResolution2(resolution2Id);
+		monitor.out(indent + "(in copy) resolution changed from: " + previousStateIdentifier + " to: "
+				+ newResolutionIdentifier);
 	}
 
 	static void changeAttributes(String indent, ITeamRepository repo, IProjectArea pa, IWorkItemCommon wiCommon,
@@ -573,7 +599,7 @@ public class Main {
 	}
 
 	@SuppressWarnings("deprecation")
-	static boolean forceState(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
+	static void forceState(String indent, IProjectArea pa, IWorkItemCommon wiCommon, IWorkItem wi,
 			ProgressMonitor monitor, String state) throws TeamRepositoryException {
 
 		Identifier<IState> target = null;
@@ -588,11 +614,11 @@ public class Main {
 		if (null == target) {
 			monitor.out(indent + "Problem: didn't find state " + state + " for wi " + wi.getId() + " of type "
 					+ wi.getWorkItemType() + ", nothing to change");
-			return false;
+			return;
 		}
 		wi.setState2(target);
 		monitor.out(indent + "wi " + wi.getId() + " forced to state " + wi.getState2().getStringIdentifier());
-		return true;
+		return;
 	}
 
 	static String readMap(Map<String, String> map, String filename) {
@@ -605,7 +631,11 @@ public class Main {
 				l = line.trim();
 				if (!l.isEmpty()) {
 					i = l.indexOf('\t');
-					map.put(l.substring(0, i), l.substring(i, l.length()).trim());
+					if (-1 == i) {
+						map.put(l, null);
+					} else {
+						map.put(l.substring(0, i), l.substring(i, l.length()).trim());
+					}
 				}
 			}
 		} catch (Exception e) {
