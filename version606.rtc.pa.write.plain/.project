@@ -26,5 +26,10 @@
 			<type>2</type>
 			<locationURI>WORKSPACE_LOC/rtc.pa.write.plain/src/rtc/pa/write</locationURI>
 		</link>
+		<link>
+			<name>src/rtc/pa/write/text</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/rtc.pa.write.plain/src/rtc/pa/write/text</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

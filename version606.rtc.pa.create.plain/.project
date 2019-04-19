@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>version604.rtc.pa.connection_test.plain</name>
+	<name>version606.rtc.pa.create.plain</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -16,14 +16,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>src/rtc/pa/read</name>
+			<name>src/rtc/pa/create</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/rtc.pa.connection_test.plain/src/rtc/pa/read</locationURI>
-		</link>
-		<link>
-			<name>src/rtc/pa/utils</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/rtc.pa.utils.plain/src/rtc/pa/utils</locationURI>
+			<locationURI>WORKSPACE_LOC/rtc.pa.create.plain/src/rtc/pa/create</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

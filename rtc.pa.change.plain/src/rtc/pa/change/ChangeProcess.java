@@ -141,7 +141,7 @@ class ProgressMonitor implements IProgressMonitor {
 
 }
 
-public class Main {
+public class ChangeProcess {
 
 	static Map<String, String> att_enumlist_map;
 	static Map<String, String> att_enum_map;
@@ -178,7 +178,6 @@ public class Main {
 		}
 		monitor.out("Target server URL: " + url);
 		monitor.out("Target project: " + proj);
-		monitor.out("URL: " + user);
 		monitor.out("User ID: " + user);
 		monitor.out("Password: " + "***");
 		monitor.out("TSV files dir: " + tsv_dir);
@@ -249,7 +248,7 @@ public class Main {
 			IProjectArea pa = null;
 			if (null != pa0 && pa0 instanceof IProjectArea) {
 				pa = (IProjectArea) pa0;
-				message = execute("", repo, pa, monitor, state_map, literal_map);
+				message = execute("", repo, pa, monitor);
 			} else {
 				message = uri + " is not a project area";
 			}
@@ -269,8 +268,7 @@ public class Main {
 		}
 	}
 
-	static String execute(String indent, ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor,
-			Map<String, String> state_map, Map<String, String> literal_map)
+	static String execute(String indent, ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);

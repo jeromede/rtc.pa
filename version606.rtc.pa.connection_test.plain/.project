@@ -16,9 +16,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>src/rtc/pa/read</name>
+			<name>src/rtc/pa/connection_test</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/rtc.pa.connection_test.plain/src/rtc/pa/read</locationURI>
+			<locationURI>WORKSPACE_LOC/rtc.pa.connection_test.plain/src/rtc/pa/connection_test</locationURI>
 		</link>
 		<link>
 			<name>src/rtc/pa/utils</name>

@@ -41,7 +41,7 @@ import rtc.pa.model.Task;
 import rtc.pa.utils.Login;
 import rtc.pa.utils.ProgressMonitor;
 
-public class Main {
+public class Write {
 
 	public static void main(String[] args) {
 
@@ -106,7 +106,7 @@ public class Main {
 		TeamPlatform.startup();
 		try {
 			ITeamRepository repo = Login.login(url, user, password, monitor);
-			URI uri = URI.create(proj.replaceAll(" ", "%20").replaceAll("\\|", "%7C"));
+			URI uri = URI.create(proj.replaceAll(" ", "%20").replaceAll("\\|", "%7C")); // replace necessary?
 			IProcessClientService processClient = (IProcessClientService) repo
 					.getClientLibrary(IProcessClientService.class);
 			IProcessArea pa0 = (IProcessArea) (processClient.findProcessArea(uri, IProcessItemService.ALL_PROPERTIES,

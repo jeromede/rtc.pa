@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-package rtc.pa.read;
+package rtc.pa.connection_test;
 
 import java.io.IOException;
 import java.util.Collections;
