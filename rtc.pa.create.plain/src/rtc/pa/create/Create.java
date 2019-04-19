@@ -18,25 +18,35 @@ package rtc.pa.create;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
+import com.ibm.team.process.client.IClientProcess;
 import com.ibm.team.process.client.IProcessClientService;
 import com.ibm.team.process.client.IProcessItemService;
+import com.ibm.team.process.client.workingcopies.IProcessAreaWorkingCopy;
+import com.ibm.team.process.common.IDescription;
 import com.ibm.team.process.common.IProcessArea;
+import com.ibm.team.process.common.IProcessDefinition;
+import com.ibm.team.process.common.IProcessItem;
 import com.ibm.team.process.common.IProjectArea;
+import com.ibm.team.process.common.IRole;
 import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.client.TeamPlatform;
+import com.ibm.team.repository.common.IContributor;
 import com.ibm.team.repository.common.IFetchResult;
 import com.ibm.team.repository.common.TeamRepositoryException;
 import com.ibm.team.workitem.client.IAuditableClient;
@@ -150,29 +160,37 @@ public class Create {
 		ProgressMonitor monitor = new ProgressMonitor();
 		String message;
 
-		String url, proj, user, password, pm, integ, valid, tm1, tm2, cat;
+		String url, proj, proc, summ, user, password, pm, integ, valid, tm1, tm2, cat;
 		Date date;
 		int current, weeks, number;
+		URI uri;
 		try {
-			url = new String(args[0]);
+			url = URI.create(args[0]).toASCIIString();
 			proj = new String(args[1]);
-			user = new String(args[2]);
-			password = new String(args[3]);
-			pm = new String(args[4]);
-			integ = new String(args[5]);
-			valid = new String(args[6]);
-			tm1 = new String(args[7]);
-			tm2 = new String(args[8]);
-			date = (new SimpleDateFormat("yyyy-MM-dd")).parse(args[9]);
-			number = new Integer(args[10]).intValue();
-			weeks = new Integer(args[11]).intValue();
-			current = new Integer(args[12]).intValue();
-			cat = new String(args[13]);
+			uri = URI.create(URLEncoder.encode(args[1], StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+			proc = new String(args[2]);
+			summ = new String(args[3]);
+			user = new String(args[4]);
+			password = new String(args[5]);
+			pm = new String(args[6]);
+			valid = new String(args[7]);
+			integ = new String(args[8]);
+			tm1 = new String(args[9]);
+			tm2 = new String(args[10]);
+			date = (new SimpleDateFormat("yyyy-MM-dd")).parse(args[11]);
+			number = new Integer(args[12]).intValue();
+			weeks = new Integer(args[13]).intValue();
+			current = new Integer(args[14]).intValue();
+			if (14 == args.length) {
+				cat = new String(args[15]);
+			} else {
+				cat = proj;
+			}
 		} catch (Exception e) {
 			monitor.out(
-					"arguments: ccm_url project_area_name jazz_admin_id password projectmanager_ID integrator_ID validator_ID teammember1_ID teammember2_ID start_date number_of_iterations number_of_weeks_in_an_iteration current_iteration category_name");
+					"arguments: ccm_url project_area_name process_ID project_summary jazz_admin_id password projectmanager_ID validator_ID integrator_ID teammember1_ID teammember2_ID start_date number_of_iterations number_of_weeks_in_an_iteration current_iteration category_name");
 			monitor.out(
-					"example: http://rtc.my.rational.com/ccm \"Training 3\" rational nopassword paula ian victoria alice bernard 2020-01-31 6 2 4 \"Simulator Service\"");
+					"example: http://rtc.my.rational.com/ccm \"Training 3\" \"Summary of project here\" scrum2.process.ibm.com rational nopassword paula victoria ian alice bernard 2020-01-31 6 2 4 \"Simulator Service\"");
 			monitor.out("bad args:");
 			for (String arg : args) {
 				monitor.out(' ' + arg);
@@ -181,12 +199,14 @@ public class Create {
 			return;
 		}
 		monitor.out("RTC server URL: " + url);
-		monitor.out("Project: " + proj);
+		monitor.out("Project name: " + proj + " (" + uri.toASCIIString() + ")");
+		monitor.out("Process ID: " + proc);
+		monitor.out("Project description: " + summ);
 		monitor.out("JazzAdmin user ID: " + user);
 		monitor.out("Password: " + "***");
 		monitor.out("Project Manager ID: " + pm);
-		monitor.out("Integrator ID: " + integ);
 		monitor.out("Validator ID: " + valid);
+		monitor.out("Integrator ID: " + integ);
 		monitor.out("Team Member 1 ID: " + tm1);
 		monitor.out("Team Member 2 ID: " + tm2);
 		monitor.out("Iteration start date" + date);
@@ -198,18 +218,24 @@ public class Create {
 		TeamPlatform.startup();
 		try {
 			ITeamRepository repo = Login.login(url, user, password, monitor);
-			URI uri = URI.create(proj);
-			monitor.out("URI: "+ uri.toASCIIString());
 			IProcessClientService processClient = (IProcessClientService) repo
 					.getClientLibrary(IProcessClientService.class);
 			IProcessArea pa0 = (IProcessArea) (processClient.findProcessArea(uri, IProcessItemService.ALL_PROPERTIES,
 					monitor));
-			IProjectArea pa = null;
-			if (null != pa0 && pa0 instanceof IProjectArea) {
+			IProjectArea pa;
+			if (null == pa0) {
+				monitor.out("About to create PA: " + proj);
+				pa = createPa(repo, proj, summ, proc, monitor);
+			} else if (pa0 instanceof IProjectArea) {
+				monitor.out("PA already exists, found: " + proj);
 				pa = (IProjectArea) pa0;
-				message = execute("", repo, pa, monitor);
 			} else {
-				message = uri + " is not a project area";
+				pa = null;
+			}
+			if (null != pa) {
+				message = execute(repo, pa, pm, valid, integ, tm1, tm2, date, number, weeks, current, cat, monitor);
+			} else {
+				message = uri.toASCIIString() + " is not a project area and its creation failed";
 			}
 			if (null == message) {
 				monitor.out("OK, done.");
@@ -227,10 +253,81 @@ public class Create {
 		}
 	}
 
-	static String execute(String indent, ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor)
+	private static IProjectArea createPa(ITeamRepository repo, String proj, String summ, String proc,
+			ProgressMonitor monitor) throws TeamRepositoryException {
+
+		monitor.out(proj + " is not a project area, let's create it...");
+		IProjectArea pa = null;
+		IProcessItemService processItem = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IProcessDefinition definition = processItem.findProcessDefinition(proc, null, monitor);
+		if (null == definition) {
+			throw new TeamRepositoryException("Process template " + proc + " does not exist.");
+		}
+		pa = processItem.createProjectArea();
+		pa.setName(proj);
+		pa.setProcessDefinition(definition);
+		IDescription description = pa.getDescription();
+		description.setSummary(summ);
+		pa = (IProjectArea) processItem.save(pa, monitor);
+		processItem.initialize(pa, monitor);
+		return pa;
+	}
+	
+	private static String execute(ITeamRepository repo, IProjectArea pa, String pm, String valid, String integ,
+			String tm1, String tm2, Date date, int number, int weeks, int current, String cat, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
+		IRole pmRole = getRoleFromID("Software Project Manager", pa, monitor);
+		IRole validRole = getRoleFromID("Software Validator", pa, monitor);
+		IRole integRole = getRoleFromID("Software Integrator", pa, monitor);
+		IRole tmRole = getRoleFromID("Team Member", pa, monitor);
+		addMember(repo, pa, pm, new IRole[] { pmRole }, monitor);
+		addMember(repo, pa, valid, new IRole[] { validRole }, monitor);
+		addMember(repo, pa, integ, new IRole[] { integRole, tmRole }, monitor);
+		addMember(repo, pa, tm1, new IRole[] { tmRole }, monitor);
+		addMember(repo, pa, tm2, new IRole[] { tmRole }, monitor);
 		return null;
+	}
+
+	private static IContributor addMember(ITeamRepository repo, IProjectArea pa, String userId, IRole[] roles,
+			ProgressMonitor monitor) throws TeamRepositoryException {
+
+		monitor.out("About to add/replace member " + userId + " (ID) with roles ");
+		for (IRole role : roles) {
+			monitor.out("\t" + role.getId());
+		}
+		IContributor member = null;
+		try {
+			member = repo.contributorManager().fetchContributorByUserId(userId, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return null;
+		}
+		if (null == member) {
+			return null;
+		}
+		IProcessItemService processItem = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IProcessAreaWorkingCopy paWc = (IProcessAreaWorkingCopy) processItem.getWorkingCopyManager()
+				.createPrivateWorkingCopy(pa);
+		paWc.getTeam().addContributorsSettingRoleCast(new IContributor[] { member }, roles);
+		paWc.save(monitor);
+		monitor.out("... member added/replaced");
+		return member;
+	}
+
+	private static IRole getRoleFromID(String roleId, IProcessArea pa, ProgressMonitor monitor)
+			throws TeamRepositoryException {
+
+		ITeamRepository repo = (ITeamRepository) pa.getOrigin();
+		IProcessItemService processItem = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IClientProcess clientProcess = processItem.getClientProcess(pa, monitor);
+		IRole[] availableRoles = clientProcess.getRoles(pa, monitor);
+		for (int i = 0; i < availableRoles.length; i++) {
+			IRole role = availableRoles[i];
+			if (role.getId().equalsIgnoreCase(roleId))
+				return role;
+		}
+		throw new TeamRepositoryException("Role " + roleId + " does not exist.");
 	}
 
 }
