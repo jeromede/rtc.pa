@@ -20,18 +20,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 
 import com.ibm.team.process.client.IClientProcess;
 import com.ibm.team.process.client.IProcessClientService;
@@ -40,118 +32,16 @@ import com.ibm.team.process.client.workingcopies.IProcessAreaWorkingCopy;
 import com.ibm.team.process.common.IDescription;
 import com.ibm.team.process.common.IProcessArea;
 import com.ibm.team.process.common.IProcessDefinition;
-import com.ibm.team.process.common.IProcessItem;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.process.common.IRole;
-import com.ibm.team.repository.client.IItemManager;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.client.TeamPlatform;
 import com.ibm.team.repository.common.IContributor;
-import com.ibm.team.repository.common.IFetchResult;
+import com.ibm.team.repository.common.IContributorHandle;
 import com.ibm.team.repository.common.TeamRepositoryException;
-import com.ibm.team.workitem.client.IAuditableClient;
-import com.ibm.team.workitem.client.IDetailedStatus;
-import com.ibm.team.workitem.client.IQueryClient;
-import com.ibm.team.workitem.client.IWorkItemClient;
-import com.ibm.team.workitem.client.IWorkItemWorkingCopyManager;
-import com.ibm.team.workitem.client.WorkItemWorkingCopy;
-import com.ibm.team.workitem.common.IWorkItemCommon;
-import com.ibm.team.workitem.common.expression.AttributeExpression;
-import com.ibm.team.workitem.common.expression.Expression;
-import com.ibm.team.workitem.common.expression.IQueryableAttribute;
-import com.ibm.team.workitem.common.expression.QueryableAttributes;
-import com.ibm.team.workitem.common.model.AttributeOperation;
-import com.ibm.team.workitem.common.model.AttributeTypes;
-import com.ibm.team.workitem.common.model.IAttribute;
-import com.ibm.team.workitem.common.model.IAttributeHandle;
-import com.ibm.team.workitem.common.model.IEnumeration;
-import com.ibm.team.workitem.common.model.ILiteral;
-import com.ibm.team.workitem.common.model.IResolution;
-import com.ibm.team.workitem.common.model.IState;
-import com.ibm.team.workitem.common.model.IWorkItem;
-import com.ibm.team.workitem.common.model.IWorkItemHandle;
-import com.ibm.team.workitem.common.model.IWorkItemType;
-import com.ibm.team.workitem.common.model.Identifier;
-import com.ibm.team.workitem.common.query.IQueryResult;
-import com.ibm.team.workitem.common.query.IResolvedResult;
-import com.ibm.team.workitem.common.workflow.IWorkflowInfo;
 
-class Login {
-
-	public static ITeamRepository login(String repositoryAddress, final String user, final String password,
-			IProgressMonitor monitor) throws TeamRepositoryException {
-
-		ITeamRepository repository = TeamPlatform.getTeamRepositoryService().getTeamRepository(repositoryAddress);
-		repository.registerLoginHandler(new ITeamRepository.ILoginHandler() {
-			public ILoginInfo challenge(ITeamRepository repository) {
-				return new ILoginInfo() {
-					public String getUserId() {
-						return user;
-					}
-
-					public String getPassword() {
-						return password;
-					}
-				};
-			}
-		});
-		monitor.subTask("Contacting " + repository.getRepositoryURI() + "...");
-		repository.login(monitor);
-		monitor.subTask("Connected");
-		return repository;
-	}
-
-}
-
-class ProgressMonitor implements IProgressMonitor {
-
-	public void beginTask(String name, int totalWork) {
-		out(name);
-	}
-
-	public void done() {
-	}
-
-	public void internalWorked(double work) {
-	}
-
-	public boolean isCanceled() {
-		return false;
-	}
-
-	public void setCanceled(boolean value) {
-	}
-
-	public void setTaskName(String name) {
-		out(name);
-	}
-
-	public void subTask(String name) {
-		out(name);
-	}
-
-	public void worked(int work) {
-	}
-
-	public void out() {
-		System.out.println();
-	}
-
-	public void out(String message) {
-		if (null != message && !"".equals(message))
-			System.out.println(message);
-	}
-
-	public void err() {
-		System.err.println();
-	}
-
-	public void err(String message) {
-		if (null != message && !"".equals(message))
-			System.err.println(message);
-	}
-
-}
+import rtc.pa.utils.Login;
+import rtc.pa.utils.ProgressMonitor;
 
 public class Create {
 
@@ -160,52 +50,35 @@ public class Create {
 		ProgressMonitor monitor = new ProgressMonitor();
 		String message;
 
-		String url, proj, proc, summ, user, password, cat;
-		String[] role = new String[5];
-		String[] tm = new String[5];
-		Date date;
-		int current, weeks, number;
+		String url, proj, proc, summ, user, password;
+		String[] role;
+		String[] tm;
+		int a = 0;
 		URI uri;
 		try {
-			url = URI.create(args[0]).toASCIIString();
-			proj = new String(args[1]);
+			url = URI.create(args[a++]).toASCIIString();
+			proj = new String(args[a++]);
 			uri = URI.create(URLEncoder.encode(args[1], StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
-			proc = new String(args[2]);
-			summ = new String(args[3]);
-			user = new String(args[4]);
-			password = new String(args[5]);
-			role[0] = new String(args[6]);
-			tm[0] = new String(args[7]);
-			role[1] = new String(args[8]);
-			tm[1] = new String(args[9]);
-			role[2] = new String(args[10]);
-			tm[2] = new String(args[11]);
-			role[3] = new String(args[12]);
-			tm[3] = new String(args[13]);
-			role[4] = new String(args[14]);
-			tm[4] = new String(args[15]);
-			date = (new SimpleDateFormat("yyyy-MM-dd")).parse(args[16]);
-			number = new Integer(args[17]).intValue();
-			weeks = new Integer(args[18]).intValue();
-			current = new Integer(args[19]).intValue();
-			if (14 == args.length) {
-				cat = new String(args[20]);
-			} else {
-				cat = proj;
+			proc = new String(args[a++]);
+			summ = new String(args[a++]);
+			user = new String(args[a++]);
+			password = new String(args[a++]);
+			int m = (args.length - a) / 2;
+			role = new String[m];
+			tm = new String[m];
+			int i = 0;
+			while (a < args.length) {
+				tm[i] = new String(args[a++]);
+				role[i++] = new String(args[a++]);
 			}
 		} catch (Exception e) {
-			monitor.out("arguments: ccm_url project_area_name process_ID project_summary" + " jazz_admin_id password"
-					+ " teammember1_role teammember1_ID" + " teammember2_role teammember2_ID"
-					+ " teammember3_role teammember3_ID" + " teammember4_role teammember4_ID"
-					+ " teammember5_role teammember5_ID"
-					+ " start_date number_of_iterations number_of_weeks_in_an_iteration current_iteration"
-					+ " [category_name]");
+			monitor.out("arguments: ccm_url project_area_name process_ID project_summary" + " jazz_project_admin_id password"
+					+ " teammember1_ID teammember1_role" + " ...");
 			monitor.out(
-					"example: http://rtc.my.rational.com/ccm \"Training 3\" scrum2.process.ibm.com \"Summary of project here\""
-							+ " rational nopassword" + " \"Software Project Manager\" paula"
-							+ " \"Software Validator\" victoria" + " \"Software Integrator\" ian"
-							+ " \"Team Member\" alice" + " \"Team Member\" bernard" + " 2020-01-31 6 2 4"
-							+ " \"Simulator Service\"");
+					"example: http://rtc.my.rational.com/ccm \"Training 3\" process4.example.com \"Summary of project here\""
+							+ " rational nopassword" + " paula \"Software Project Manager\""
+							+ " victoria \"Software Validator\"" + " ian \"Software Integrator\""
+							+ " ian \"Team Member\"" + " alice \"Team Member\"" + " bernard \"Team Member\"");
 			monitor.out("bad args:");
 			for (String arg : args) {
 				monitor.out(' ' + arg);
@@ -217,17 +90,12 @@ public class Create {
 		monitor.out("Project name: " + proj + " (" + uri.toASCIIString() + ")");
 		monitor.out("Process ID: " + proc);
 		monitor.out("Project description: " + summ);
-		monitor.out("JazzAdmin user ID: " + user);
+		monitor.out("JazzProjectAdmin user ID: " + user);
 		monitor.out("Password: " + "***");
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < role.length; i++) {
 			monitor.out("Member role " + i + ": " + role[i]);
 			monitor.out("Member ID " + i + ": " + tm[i]);
 		}
-		monitor.out("Iteration start date" + date);
-		monitor.out("Number of iterations: " + number);
-		monitor.out("Number of weeks in an iteration: " + weeks);
-		monitor.out("Current iteration number: " + current);
-		monitor.out("Category name: " + cat);
 
 		TeamPlatform.startup();
 		try {
@@ -247,7 +115,7 @@ public class Create {
 				pa = null;
 			}
 			if (null != pa) {
-				message = execute(pa, role, tm, date, number, weeks, current, cat, monitor);
+				message = execute(pa, user, role, tm, monitor);
 			} else {
 				message = uri.toASCIIString() + " is not a project area and its creation failed";
 			}
@@ -287,21 +155,50 @@ public class Create {
 		return pa;
 	}
 
-	private static String execute(IProjectArea pa, String[] role, String[] tm, Date date,
-			int number, int weeks, int current, String cat, ProgressMonitor monitor)
+	private static String execute(IProjectArea pa, String user, String[] role, String[] tm, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
-		for (int i = 0; i < 5; i++) {
-			addMember(pa, tm[i], new IRole[] { getRoleFromID(role[i], pa, monitor) }, monitor);
+		addAdministrator(pa, monitor);
+		Map<String, List<IRole>> members = new HashMap<String, List<IRole>>();
+		List<IRole> roles;
+		for (int i = 0; i < tm.length; i++) {
+			if (members.containsKey(tm[i])) {
+				roles = members.get(tm[i]);
+			} else {
+				roles = new LinkedList<IRole>();
+				members.put(tm[i], roles);
+			}
+			roles.add(getRoleFromID(role[i], pa, monitor));
+		}
+		IRole[] r;
+		for (String id : members.keySet()) {
+			r = new IRole[members.get(id).size()];
+			r = (IRole[]) members.get(id).toArray(r);
+			addMember(pa, id, r, monitor);
 		}
 		return null;
 	}
 
-	private static IContributor addMember(IProjectArea pa, String userId, IRole[] roles,
-			ProgressMonitor monitor) throws TeamRepositoryException {
+	private static IContributor addAdministrator(IProjectArea pa, ProgressMonitor monitor)
+			throws TeamRepositoryException {
 
 		ITeamRepository repo = (ITeamRepository) pa.getOrigin();
-		monitor.out("About to add/replace member " + userId + " (ID) with roles ");
+		monitor.out("About to add administrator...");
+		IContributor admin = repo.loggedInContributor();
+		IProcessItemService processItem = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IProcessAreaWorkingCopy paWc = (IProcessAreaWorkingCopy) processItem.getWorkingCopyManager()
+				.createPrivateWorkingCopy(pa);
+		paWc.getAdministrators().addContributors(new IContributor[] { admin });
+		paWc.save(monitor);
+		monitor.out("... administrator added.");
+		return admin;
+	}
+
+	private static IContributor addMember(IProjectArea pa, String userId, IRole[] roles, ProgressMonitor monitor)
+			throws TeamRepositoryException {
+
+		ITeamRepository repo = (ITeamRepository) pa.getOrigin();
+		monitor.out("About to add/replace member " + userId + " (ID) with roles...");
 		for (IRole role : roles) {
 			monitor.out("\t" + role.getId());
 		}
@@ -320,7 +217,32 @@ public class Create {
 				.createPrivateWorkingCopy(pa);
 		paWc.getTeam().addContributorsSettingRoleCast(new IContributor[] { member }, roles);
 		paWc.save(monitor);
-		monitor.out("... member added/replaced");
+		monitor.out("... member added/replaced.");
+		return member;
+	}
+
+	@SuppressWarnings("unused")
+	private static IContributor removeMember(IProjectArea pa, String userId, ProgressMonitor monitor)
+			throws TeamRepositoryException {
+
+		ITeamRepository repo = (ITeamRepository) pa.getOrigin();
+		monitor.out("About to remove member " + userId + " ...");
+		IContributor member = null;
+		try {
+			member = repo.contributorManager().fetchContributorByUserId(userId, monitor);
+		} catch (TeamRepositoryException e) {
+			e.printStackTrace();
+			return null;
+		}
+		if (null == member) {
+			return null;
+		}
+		IProcessItemService processItem = (IProcessItemService) repo.getClientLibrary(IProcessItemService.class);
+		IProcessAreaWorkingCopy paWc = (IProcessAreaWorkingCopy) processItem.getWorkingCopyManager()
+				.createPrivateWorkingCopy(pa);
+		paWc.getTeam().removeContributors(new IContributorHandle[] { member });
+		paWc.save(monitor);
+		monitor.out("... member removed.");
 		return member;
 	}
 
@@ -338,5 +260,6 @@ public class Create {
 		}
 		throw new TeamRepositoryException("Role " + roleId + " does not exist.");
 	}
+
 
 }

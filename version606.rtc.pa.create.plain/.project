@@ -16,6 +16,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>src/rtc/pa/utils</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/rtc.pa.utils.plain/src/rtc/pa/utils</locationURI>
+		</link>
+		<link>
 			<name>src/rtc/pa/create</name>
 			<type>2</type>
 			<locationURI>WORKSPACE_LOC/rtc.pa.create.plain/src/rtc/pa/create</locationURI>
