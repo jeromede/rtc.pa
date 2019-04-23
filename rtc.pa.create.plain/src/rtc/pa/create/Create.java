@@ -160,7 +160,9 @@ public class Create {
 		ProgressMonitor monitor = new ProgressMonitor();
 		String message;
 
-		String url, proj, proc, summ, user, password, pm, integ, valid, tm1, tm2, cat;
+		String url, proj, proc, summ, user, password, cat;
+		String[] role = new String[5];
+		String[] tm = new String[5];
 		Date date;
 		int current, weeks, number;
 		URI uri;
@@ -172,25 +174,38 @@ public class Create {
 			summ = new String(args[3]);
 			user = new String(args[4]);
 			password = new String(args[5]);
-			pm = new String(args[6]);
-			valid = new String(args[7]);
-			integ = new String(args[8]);
-			tm1 = new String(args[9]);
-			tm2 = new String(args[10]);
-			date = (new SimpleDateFormat("yyyy-MM-dd")).parse(args[11]);
-			number = new Integer(args[12]).intValue();
-			weeks = new Integer(args[13]).intValue();
-			current = new Integer(args[14]).intValue();
+			role[0] = new String(args[6]);
+			tm[0] = new String(args[7]);
+			role[1] = new String(args[8]);
+			tm[1] = new String(args[9]);
+			role[2] = new String(args[10]);
+			tm[2] = new String(args[11]);
+			role[3] = new String(args[12]);
+			tm[3] = new String(args[13]);
+			role[4] = new String(args[14]);
+			tm[4] = new String(args[15]);
+			date = (new SimpleDateFormat("yyyy-MM-dd")).parse(args[16]);
+			number = new Integer(args[17]).intValue();
+			weeks = new Integer(args[18]).intValue();
+			current = new Integer(args[19]).intValue();
 			if (14 == args.length) {
-				cat = new String(args[15]);
+				cat = new String(args[20]);
 			} else {
 				cat = proj;
 			}
 		} catch (Exception e) {
+			monitor.out("arguments: ccm_url project_area_name process_ID project_summary" + " jazz_admin_id password"
+					+ " teammember1_role teammember1_ID" + " teammember2_role teammember2_ID"
+					+ " teammember3_role teammember3_ID" + " teammember4_role teammember4_ID"
+					+ " teammember5_role teammember5_ID"
+					+ " start_date number_of_iterations number_of_weeks_in_an_iteration current_iteration"
+					+ " [category_name]");
 			monitor.out(
-					"arguments: ccm_url project_area_name process_ID project_summary jazz_admin_id password projectmanager_ID validator_ID integrator_ID teammember1_ID teammember2_ID start_date number_of_iterations number_of_weeks_in_an_iteration current_iteration category_name");
-			monitor.out(
-					"example: http://rtc.my.rational.com/ccm \"Training 3\" \"Summary of project here\" scrum2.process.ibm.com rational nopassword paula victoria ian alice bernard 2020-01-31 6 2 4 \"Simulator Service\"");
+					"example: http://rtc.my.rational.com/ccm \"Training 3\" scrum2.process.ibm.com \"Summary of project here\""
+							+ " rational nopassword" + " \"Software Project Manager\" paula"
+							+ " \"Software Validator\" victoria" + " \"Software Integrator\" ian"
+							+ " \"Team Member\" alice" + " \"Team Member\" bernard" + " 2020-01-31 6 2 4"
+							+ " \"Simulator Service\"");
 			monitor.out("bad args:");
 			for (String arg : args) {
 				monitor.out(' ' + arg);
@@ -204,11 +219,10 @@ public class Create {
 		monitor.out("Project description: " + summ);
 		monitor.out("JazzAdmin user ID: " + user);
 		monitor.out("Password: " + "***");
-		monitor.out("Project Manager ID: " + pm);
-		monitor.out("Validator ID: " + valid);
-		monitor.out("Integrator ID: " + integ);
-		monitor.out("Team Member 1 ID: " + tm1);
-		monitor.out("Team Member 2 ID: " + tm2);
+		for (int i = 0; i < 5; i++) {
+			monitor.out("Member role " + i + ": " + role[i]);
+			monitor.out("Member ID " + i + ": " + tm[i]);
+		}
 		monitor.out("Iteration start date" + date);
 		monitor.out("Number of iterations: " + number);
 		monitor.out("Number of weeks in an iteration: " + weeks);
@@ -233,7 +247,7 @@ public class Create {
 				pa = null;
 			}
 			if (null != pa) {
-				message = execute(repo, pa, pm, valid, integ, tm1, tm2, date, number, weeks, current, cat, monitor);
+				message = execute(pa, role, tm, date, number, weeks, current, cat, monitor);
 			} else {
 				message = uri.toASCIIString() + " is not a project area and its creation failed";
 			}
@@ -272,26 +286,21 @@ public class Create {
 		processItem.initialize(pa, monitor);
 		return pa;
 	}
-	
-	private static String execute(ITeamRepository repo, IProjectArea pa, String pm, String valid, String integ,
-			String tm1, String tm2, Date date, int number, int weeks, int current, String cat, ProgressMonitor monitor)
+
+	private static String execute(IProjectArea pa, String[] role, String[] tm, Date date,
+			int number, int weeks, int current, String cat, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
-		IRole pmRole = getRoleFromID("Software Project Manager", pa, monitor);
-		IRole validRole = getRoleFromID("Software Validator", pa, monitor);
-		IRole integRole = getRoleFromID("Software Integrator", pa, monitor);
-		IRole tmRole = getRoleFromID("Team Member", pa, monitor);
-		addMember(repo, pa, pm, new IRole[] { pmRole }, monitor);
-		addMember(repo, pa, valid, new IRole[] { validRole }, monitor);
-		addMember(repo, pa, integ, new IRole[] { integRole, tmRole }, monitor);
-		addMember(repo, pa, tm1, new IRole[] { tmRole }, monitor);
-		addMember(repo, pa, tm2, new IRole[] { tmRole }, monitor);
+		for (int i = 0; i < 5; i++) {
+			addMember(pa, tm[i], new IRole[] { getRoleFromID(role[i], pa, monitor) }, monitor);
+		}
 		return null;
 	}
 
-	private static IContributor addMember(ITeamRepository repo, IProjectArea pa, String userId, IRole[] roles,
+	private static IContributor addMember(IProjectArea pa, String userId, IRole[] roles,
 			ProgressMonitor monitor) throws TeamRepositoryException {
 
+		ITeamRepository repo = (ITeamRepository) pa.getOrigin();
 		monitor.out("About to add/replace member " + userId + " (ID) with roles ");
 		for (IRole role : roles) {
 			monitor.out("\t" + role.getId());
