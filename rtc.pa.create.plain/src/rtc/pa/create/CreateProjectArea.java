@@ -43,7 +43,7 @@ import com.ibm.team.repository.common.TeamRepositoryException;
 import rtc.pa.utils.Login;
 import rtc.pa.utils.ProgressMonitor;
 
-public class Create {
+public class CreateProjectArea {
 
 	public static void main(String[] args) {
 
