@@ -51,11 +51,25 @@ import rtc.pa.utils.ProgressMonitor;
 
 public class TestReadIt {
 
+	private static void tracePaModifications(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor)
+			throws TeamRepositoryException {
+		IItemManager itemManager = repo.itemManager();
+		@SuppressWarnings("unchecked")
+		List<IProjectArea> pas = itemManager.fetchCompleteStates(itemManager.fetchAllStateHandles(pa, monitor),
+				monitor);
+		int i = 0;
+		for (IProjectArea p : pas) {
+			monitor.out("Version: " + i + " Modification date: " + p.modified());
+			i++;
+		}
+	}
+
 	public static String execute(ITeamRepository repo, IProjectArea pa, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
 		monitor.out(
 				"Successfully connected to project area " + pa.getName() + " (process: " + pa.getProcessName() + ")");
+		tracePaModifications(repo, pa, monitor);
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		String result;
@@ -145,7 +159,7 @@ public class TestReadIt {
 			for (Identifier<IState> state : wf.getAllStateIds()) {
 				states.put(state.getStringIdentifier(), state);
 			}
-			for (Identifier<IState> state: states.values()) {
+			for (Identifier<IState> state : states.values()) {
 				monitor.out("\t\tstate: " + state.getStringIdentifier() + " (" + wf.getStateName(state) + ")");
 				actions = new TreeMap<String, Identifier<IWorkflowAction>>();
 				for (Identifier<IWorkflowAction> action : wf.getActionIds(state)) {

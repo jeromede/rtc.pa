@@ -53,7 +53,7 @@ public class Read {
 			monitor.err(
 					"example: https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou true UU_PP.ser attachments_here");
 			monitor.err(
-					"note: not complete\" means only the last version of the type, state, and attribute values: no history, no links, no attachements...)");
+					"note: \"not complete\" (complete=false) means only the last version of the type, state, and attribute values: no history, no links, no attachements...)");
 			System.err.print("Bad arguments:");
 			for (String arg : args) {
 				monitor.err(arg);
