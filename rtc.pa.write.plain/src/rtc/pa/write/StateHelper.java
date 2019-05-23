@@ -54,7 +54,7 @@ public class StateHelper {
 			}
 		}
 		// monitor.out("\t\t\tbegin state: " + begin);
-		// monitor.out("\t\t\tend   state: " + end);
+		// monitor.out("\t\t\tend state: " + end);
 		//
 		// Search workflow
 		//
@@ -68,7 +68,8 @@ public class StateHelper {
 				for (Identifier<IWorkflowAction> a : actions) {
 					// monitor.out("\t\t\taction? " + a.getStringIdentifier());
 					if (wf.getActionResultState(a).getStringIdentifier().equals(end)) {
-						// monitor.out("\t\t\taction! " + a.getStringIdentifier());
+						// monitor.out("\t\t\taction! " +
+						// a.getStringIdentifier());
 						return a.getStringIdentifier();
 					}
 				}

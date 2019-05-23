@@ -44,11 +44,11 @@ public class Transposition {
 	}
 
 	public static String prefix(String content, int id) {
-		return "{" + id + "} " + content;
+		return /* "{" + id + "} + */ content;
 	}
 
 	public static String prefix(String content, String id) {
-		return "{" + id + "} " + content;
+		return /* "{" + id + "} " + */ content;
 	}
 
 }

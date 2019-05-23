@@ -366,14 +366,18 @@ public class WorkItemHelper {
 				monitor.out("\t\t\t\tcustom value is enum");
 				@SuppressWarnings("unchecked")
 				Identifier<? extends ILiteral> id = (Identifier<? extends ILiteral>) w.getValue(attribute);
-				l = a.getLiteral(id.getStringIdentifier());
-				monitor.out("\t\t\t\tcustom value (" + a.getSourceId() + ":" + a.getType() + "): "
-						+ id.getStringIdentifier());
-				version.addValue(new Value(//
-						attribute.getIdentifier(), //
-						a, //
-						l//
-				));
+				if (null == id) {
+					monitor.out("\t\t\t\tcustom value unknown: skip");
+				} else {
+					l = a.getLiteral(id.getStringIdentifier());
+					monitor.out("\t\t\t\tcustom value (" + a.getSourceId() + ":" + a.getType() + "): "
+							+ id.getStringIdentifier());
+					version.addValue(new Value(//
+							attribute.getIdentifier(), //
+							a, //
+							l//
+					));
+				}
 			} else {
 				monitor.out(
 						"\t\t\t\tcustom value (" + a.getSourceId() + ":" + a.getType() + "): " + w.getValue(attribute));
