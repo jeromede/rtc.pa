@@ -70,6 +70,7 @@ public class TestReadIt {
 		monitor.out(
 				"Successfully connected to project area " + pa.getName() + " (process: " + pa.getProcessName() + ")");
 		tracePaModifications(repo, pa, monitor);
+		monitor.out(pa.toString());
 		IWorkItemClient wiClient = (IWorkItemClient) repo.getClientLibrary(IWorkItemClient.class);
 		IWorkItemCommon wiCommon = (IWorkItemCommon) repo.getClientLibrary(IWorkItemCommon.class);
 		String result;

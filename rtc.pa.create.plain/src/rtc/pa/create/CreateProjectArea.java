@@ -34,6 +34,7 @@ import com.ibm.team.process.common.IProcessArea;
 import com.ibm.team.process.common.IProcessDefinition;
 import com.ibm.team.process.common.IProjectArea;
 import com.ibm.team.process.common.IRole;
+import com.ibm.team.process.internal.common.ProjectArea;
 import com.ibm.team.repository.client.ITeamRepository;
 import com.ibm.team.repository.client.TeamPlatform;
 import com.ibm.team.repository.common.IContributor;
@@ -50,16 +51,23 @@ public class CreateProjectArea {
 		ProgressMonitor monitor = new ProgressMonitor();
 		String message;
 
-		String url, proj, proc, summ, user, password;
+		String url, proj, proc, parent, summ, user, password;
 		String[] role;
 		String[] tm;
 		int a = 0;
-		URI uri;
+		URI uri, parent_uri;
 		try {
 			url = URI.create(args[a++]).toASCIIString();
 			proj = new String(args[a++]);
-			uri = URI.create(URLEncoder.encode(args[1], StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+			uri = URI.create(URLEncoder.encode(proj, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
 			proc = new String(args[a++]);
+			parent = new String(args[a++]);
+			if (parent.length() == 0) {
+				parent_uri = null;
+			} else {
+				parent_uri = URI.create(
+						URLEncoder.encode(parent, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+			}
 			summ = new String(args[a++]);
 			user = new String(args[a++]);
 			password = new String(args[a++]);
@@ -72,10 +80,10 @@ public class CreateProjectArea {
 				role[i++] = new String(args[a++]);
 			}
 		} catch (Exception e) {
-			monitor.out("arguments: ccm_url project_area_name process_ID project_summary" + " jazz_project_admin_id password"
-					+ " teammember1_ID teammember1_role" + " ...");
+			monitor.out("arguments: ccm_url project_area_name process_ID parent_project_area_name project_summary"
+					+ " jazz_project_admin_id password" + " teammember1_ID teammember1_role" + " ...");
 			monitor.out(
-					"example: http://rtc.my.rational.com/ccm \"Training 3\" process4.example.com \"Summary of project here\""
+					"example: http://rtc.my.rational.com/ccm \"Training 3\" process4.example.com \"\" \"Summary of project here\""
 							+ " rational nopassword" + " paula \"Software Project Manager\""
 							+ " victoria \"Software Validator\"" + " ian \"Software Integrator\""
 							+ " ian \"Team Member\"" + " alice \"Team Member\"" + " bernard \"Team Member\"");
@@ -89,6 +97,8 @@ public class CreateProjectArea {
 		monitor.out("RTC server URL: " + url);
 		monitor.out("Project name: " + proj + " (" + uri.toASCIIString() + ")");
 		monitor.out("Process ID: " + proc);
+		monitor.out("Project parent name: " + parent
+				+ ((null == parent_uri) ? "" : " (" + parent_uri.toASCIIString() + ")"));
 		monitor.out("Project description: " + summ);
 		monitor.out("JazzProjectAdmin user ID: " + user);
 		monitor.out("Password: " + "***");
@@ -104,18 +114,40 @@ public class CreateProjectArea {
 					.getClientLibrary(IProcessClientService.class);
 			IProcessArea pa0 = (IProcessArea) (processClient.findProcessArea(uri, IProcessItemService.ALL_PROPERTIES,
 					monitor));
-			IProjectArea pa;
+			IProjectArea pa = null;
 			if (null == pa0) {
 				monitor.out("About to create PA: " + proj);
-				pa = createPa(repo, proj, summ, proc, monitor);
+				IProcessArea parent_pa0 = null;
+				IProjectArea parent_pa = null;
+				if (null != parent_uri) {
+					parent_pa0 = (IProcessArea) (processClient.findProcessArea(parent_uri,
+							IProcessItemService.ALL_PROPERTIES, monitor));
+
+					if (null == parent_pa0) {
+						message = parent_uri.toASCIIString() + " parent project area can't be found.";
+					} else if (parent_pa0 instanceof IProjectArea) {
+						parent_pa = (IProjectArea) parent_pa0;
+					}
+				}
+				if (null == parent_pa) {
+					pa = createPa(repo, proj, summ, proc, parent_pa, monitor);
+				} else {
+					if (((ProjectArea) parent_pa).isProcessProvider()) {
+						pa = createPa(repo, proj, summ, proc, parent_pa, monitor);
+					} else {
+						message = parent_uri.toASCIIString() + " parent project area doesn't export its process.";
+						parent_pa = null;
+						pa = null;
+					}
+				}
 			} else if (pa0 instanceof IProjectArea) {
-				monitor.out("PA already exists, found: " + proj);
+				monitor.out("PA already exists, found: " + proj + "\nNothig done.");
 				pa = (IProjectArea) pa0;
 			} else {
 				pa = null;
 			}
 			if (null != pa) {
-				message = execute(pa, user, role, tm, monitor);
+				message = addUsers(pa, user, role, tm, monitor);
 			} else {
 				message = uri.toASCIIString() + " is not a project area and its creation failed";
 			}
@@ -124,7 +156,9 @@ public class CreateProjectArea {
 			} else {
 				monitor.out("KO: " + message);
 			}
-		} catch (TeamRepositoryException e) {
+		} catch (
+
+		TeamRepositoryException e) {
 			e.printStackTrace();
 			monitor.out("Unable to perform: " + e.getMessage());
 		} catch (IOException e) {
@@ -136,7 +170,7 @@ public class CreateProjectArea {
 	}
 
 	private static IProjectArea createPa(ITeamRepository repo, String proj, String summ, String proc,
-			ProgressMonitor monitor) throws TeamRepositoryException {
+			IProjectArea parent_pa, ProgressMonitor monitor) throws TeamRepositoryException {
 
 		monitor.out(proj + " is not a project area, let's create it...");
 		IProjectArea pa = null;
@@ -148,6 +182,9 @@ public class CreateProjectArea {
 		pa = processItem.createProjectArea();
 		pa.setName(proj);
 		pa.setProcessDefinition(definition);
+		if (null != parent_pa) {
+			((ProjectArea) pa).setProcessProvider(parent_pa);
+		}
 		IDescription description = pa.getDescription();
 		description.setSummary(summ);
 		pa = (IProjectArea) processItem.save(pa, monitor);
@@ -155,7 +192,7 @@ public class CreateProjectArea {
 		return pa;
 	}
 
-	private static String execute(IProjectArea pa, String user, String[] role, String[] tm, ProgressMonitor monitor)
+	private static String addUsers(IProjectArea pa, String user, String[] role, String[] tm, ProgressMonitor monitor)
 			throws TeamRepositoryException, IOException {
 
 		addAdministrator(pa, monitor);
@@ -260,6 +297,5 @@ public class CreateProjectArea {
 		}
 		throw new TeamRepositoryException("Role " + roleId + " does not exist.");
 	}
-
 
 }
