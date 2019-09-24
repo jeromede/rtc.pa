@@ -42,8 +42,8 @@ public class ConnectionTest {
 			user = new String(args[2]);
 			password = new String(args[3]);
 		} catch (Exception e) {
-			monitor.err("usage: do_it url user password");
-			monitor.err("example: do_it https://hub.jazz.net/ccm01 \"UU | PPP\" jazz_admin iloveyou");
+			monitor.err("usage: do_it ccm_url pa_name user password");
+			monitor.err("example: do_it https://rtc.example.com/ccm \"PA | 01\" jazz_admin iloveyou");
 			monitor.err("bad args:");
 			for (String arg : args) {
 				monitor.err(' ' + arg);
