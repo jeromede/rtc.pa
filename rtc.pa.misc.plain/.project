@@ -3,7 +3,6 @@
 	<name>rtc.pa.misc.plain</name>
 	<comment></comment>
 	<projects>
-		<project>rtc.pa.utils</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

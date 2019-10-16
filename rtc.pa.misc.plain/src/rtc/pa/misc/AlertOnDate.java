@@ -23,6 +23,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 import com.ibm.team.process.client.IProcessClientService;
 import com.ibm.team.process.client.IProcessItemService;
 import com.ibm.team.process.common.IProcessArea;
@@ -55,8 +57,82 @@ import com.ibm.team.workitem.common.model.Identifier;
 import com.ibm.team.workitem.common.query.IQueryResult;
 import com.ibm.team.workitem.common.query.IResolvedResult;
 
-import rtc.pa.utils.Login;
-import rtc.pa.utils.ProgressMonitor;
+class Login {
+
+	public static ITeamRepository login(String repositoryAddress, final String user, final String password,
+			IProgressMonitor monitor) throws TeamRepositoryException {
+
+		ITeamRepository repository = TeamPlatform.getTeamRepositoryService().getTeamRepository(repositoryAddress);
+		repository.registerLoginHandler(new ITeamRepository.ILoginHandler() {
+			public ILoginInfo challenge(ITeamRepository repository) {
+				return new ILoginInfo() {
+					public String getUserId() {
+						return user;
+					}
+
+					public String getPassword() {
+						return password;
+					}
+				};
+			}
+		});
+		monitor.subTask("Contacting " + repository.getRepositoryURI() + "...");
+		repository.login(monitor);
+		monitor.subTask("Connected");
+		return repository;
+	}
+
+}
+
+class ProgressMonitor implements IProgressMonitor {
+
+	public void beginTask(String name, int totalWork) {
+		out(name);
+	}
+
+	public void done() {
+	}
+
+	public void internalWorked(double work) {
+	}
+
+	public boolean isCanceled() {
+		return false;
+	}
+
+	public void setCanceled(boolean value) {
+	}
+
+	public void setTaskName(String name) {
+		out(name);
+	}
+
+	public void subTask(String name) {
+		out(name);
+	}
+
+	public void worked(int work) {
+	}
+
+	public void out() {
+		System.out.println();
+	}
+
+	public void out(String message) {
+		if (null != message && !"".equals(message))
+			System.out.println(message);
+	}
+
+	public void err() {
+		System.err.println();
+	}
+
+	public void err(String message) {
+		if (null != message && !"".equals(message))
+			System.err.println(message);
+	}
+
+}
 
 public class AlertOnDate {
 
@@ -266,8 +342,9 @@ public class AlertOnDate {
 			newLiteralId = getLiteralId(wiCommon, monitor, attribute, newValue);
 			if (null == newLiteralId) {
 				monitor.out("no literal found in repository for (id) " + newValue);
+			} else {
+				wi.setValue(attribute, newLiteralId);
 			}
-			wi.setValue(attribute, newLiteralId);
 		} else {
 			switch (AttributeTypes.getAttributeType(attribute.getAttributeType()).getIdentifier()) {
 			case AttributeTypes.BOOLEAN:
